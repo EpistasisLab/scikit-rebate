@@ -19,7 +19,7 @@ class ReliefF(BaseEstimator):
     algorithms with RELIEFF (1997), Applied Intelligence, 7(1), p39-55
 
     """
-    def __init__(self, n_features_to_select=10,n_neighbors=10, dlimit=10, verbose=False):
+    def __init__(self, n_features_to_select=10, n_neighbors=10, dlimit=10, verbose=False):
         """Sets up ReliefF to perform feature selection.
 
         Parameters
@@ -70,7 +70,7 @@ class ReliefF(BaseEstimator):
         start = tm.time()
         self.feature_importances_ = np.array(self.runRelieff())
         
-        if(self.verbose):
+        if self.verbose:
             elapsed = tm.time() - start
             print('Completed scoring in ' + str(elapsed) + ' seconds')
         
@@ -380,7 +380,7 @@ class ReliefF(BaseEstimator):
             distArray = self.distarray_mixed_missing(xc, xd, cdiffs)
         else:
             distArray = self.distarray_clean
-        if(self.verbose):
+        if self.verbose:
             elapsed = tm.time() - start
             print('Created distance array in ' + str(elapsed) + ' seconds')
             print('ReliefF scoring under way ...')

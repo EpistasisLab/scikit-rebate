@@ -73,7 +73,7 @@ class MultiSURF(BaseEstimator):
         else:
             self.distArray = self.distarray_clean
             
-        if(self.verbose):
+        if self.verbose:
             elapsed = tm.time() - start
             print('Created distance array in ' + str(elapsed) + ' seconds.')
             print('MultiSURF scoring under way ...')
@@ -84,7 +84,7 @@ class MultiSURF(BaseEstimator):
         else:
             self.feature_importances_ = np.array(self.runMultiSURF())
 
-        if(self.verbose):
+        if self.verbose:
             elapsed = tm.time() - start
             print('Completed scoring in ' + str(elapsed) + ' seconds.')
 

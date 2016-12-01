@@ -72,7 +72,7 @@ class SURFstar(BaseEstimator):
         else:
             self.distArray = self.distarray_clean
             
-        if(self.verbose):
+        if self.verbose:
             elapsed = tm.time() - start
             print('Created distance array in ' + str(elapsed) + ' seconds.')
             print('SURF* scoring under way ...')
@@ -80,7 +80,7 @@ class SURFstar(BaseEstimator):
         start = tm.time()
         self.feature_importances_ = np.array(self.runSURFstar())
 
-        if(self.verbose):
+        if self.verbose:
             elapsed = tm.time() - start
             print('Completed scoring in ' + str(elapsed) + ' seconds.')
 
