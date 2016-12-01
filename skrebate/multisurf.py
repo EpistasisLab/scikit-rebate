@@ -17,29 +17,31 @@ class MultiSURF(object):
     the genetic analysis of complex human diseases. 
 
     """
-    def __init__(self, verbose=False,
-                       dlimit=10,  n_features_to_keep=10, hdr=None):
+    def __init__(self, n_features_to_keep=10, dlimit=10,
+                 verbose=False, hdr=None):
         """Sets up MultiSURF to perform feature selection.
 
         Parameters
         ----------
+        n_features_to_keep: int (default: 10)
+            The number of top features (according to the MultiSURF scores) to 
+            retain after feature selection is applied.
+        dlimit: int (default: 10)
+            Value used to determine if a feature is discrete or continuous.
+            If the number of unique levels in a feature is > dlimit, then it is
+            considered continuous, or discrete otherwise.
         verbose: bool (default: False)
             if True, output timing of distance array and scoring
-        dlimit: int (default: 10)
-            max value that determines if feature/class is discrete
-        n_features_to_keep: int (default: 10)
-            the number of top features (according to the relieff score) to 
-            retain after feature selection is applied.
         hdr: list (default: None)
             User can provided custom header list from CLI
 
         """
+        self.n_features_to_keep = n_features_to_keep
         self.dlimit = dlimit
         self.verbose = verbose
-        self.n_features_to_keep = n_features_to_keep
+        self.hdr = hdr
         self.feature_scores = None
         self.top_features = None
-        self.hdr = hdr
 
     #=========================================================================#
     def fit(self, X, y):
@@ -60,10 +62,9 @@ class MultiSURF(object):
         """
         self.x = X
         self.y = y
-        self.Scores = None
         self.distArray = None
-        #=====================================================================#
-        # get distance array
+        
+        # Compute the distance array between all data points
         start = tm.time()
         if(self.mdcnt > 0 or self.data_type == 'mixed'):
             attr = self.get_attribute_info
@@ -82,19 +83,16 @@ class MultiSURF(object):
             
         start = tm.time()
         if(self.class_type == 'multiclass'):
-            self.Scores = self.mcMultiSURF()
+            self.feature_scores = np.array(self.mcMultiSURF())
         else:
-            self.Scores = self.runMultiSURF()
+            self.feature_scores = np.array(self.runMultiSURF())
 
         if(self.verbose):
             elapsed = tm.time() - start
-            print('Completed scoring ' + str(elapsed) + ' seconds.')
-            
-        self.feature_scores = np.array(self.Scores)
+            print('Completed scoring in ' + str(elapsed) + ' seconds.')
 
-        # Compute indices of top features, cast scores to floating point.
+        # Compute indices of top features
         self.top_features = np.argsort(self.feature_scores)[::-1]
-        self.feature_scores = self.feature_scores.astype(np.float64)
         return self
 
     #=========================================================================#

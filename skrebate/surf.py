@@ -16,29 +16,31 @@ class SURF(object):
     the genetic analysis of complex human diseases. 
 
     """
-    def __init__(self, verbose=False,
-                       dlimit=10,  n_features_to_keep=10, hdr=None):
-        """sets up SURF to perform feature selection.
+    def __init__(self, n_features_to_keep=10, dlimit=10,
+                 verbose=False, hdr=None):
+        """Sets up SURF to perform feature selection.
 
         Parameters
         ----------
-        verbose: bool (default: False)
-            if True, output timing of distance array and scoring
-        dlimit: int (default: 10)
-            max value that determines if feature/class is discrete
         n_features_to_keep: int (default: 10)
             the number of top features (according to the relieff score) to 
             retain after feature selection is applied.
+        dlimit: int (default: 10)
+            Value used to determine if a feature is discrete or continuous.
+            If the number of unique levels in a feature is > dlimit, then it is
+            considered continuous, or discrete otherwise.
+        verbose: bool (default: False)
+            if True, output timing of distance array and scoring
         hdr: list (default: None)
             Allow user to specify header from CLI
 
         """
+        self.n_features_to_keep = n_features_to_keep
         self.dlimit = dlimit
         self.verbose = verbose
-        self.n_features_to_keep = n_features_to_keep
+        self.hdr = hdr
         self.feature_scores = None
         self.top_features = None
-        self.hdr = None
 
     #=========================================================================#
     def fit(self, X, y):
@@ -58,10 +60,9 @@ class SURF(object):
         """
         self.x = X
         self.y = y
-        self.Scores = None
         self.distArray = None
-        #=====================================================================#
-        # get distance array
+
+        # Compute the distance array between all data points
         start = tm.time()
         if(self.mdcnt > 0 or self.data_type == 'mixed'):
             attr = self.get_attribute_info
@@ -79,17 +80,14 @@ class SURF(object):
             print('SURF scoring under way ...')
             
         start = tm.time()
-        self.Scores = self.runSURF()
+        self.feature_scores = np.array(self.runSURF())
 
         if(self.verbose):
             elapsed = tm.time() - start
-            print('Completed scoring ' + str(elapsed) + ' seconds.')
-            
-        self.feature_scores = np.array(self.Scores)
+            print('Completed scoring in ' + str(elapsed) + ' seconds.')
 
         # Compute indices of top features, cast scores to floating point.
         self.top_features = np.argsort(self.feature_scores)[::-1]
-        self.feature_scores = self.feature_scores.astype(np.float64)
         return self
 
     #=========================================================================#

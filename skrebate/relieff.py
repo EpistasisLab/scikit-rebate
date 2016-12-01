@@ -19,37 +19,37 @@ class ReliefF(object):
     algorithms with RELIEFF (1997), Applied Intelligence, 7(1), p39-55
 
     """
-    def __init__(self, verbose=False, 
-                       n_neighbors=10, dlimit=10, n_features_to_keep=10,
-                       hdr=None):
+    def __init__(self, n_features_to_keep=10,n_neighbors=10, dlimit=10,
+                 verbose=False, hdr=None):
         """Sets up ReliefF to perform feature selection.
 
         Parameters
         ----------
-        verbose: bool (default: False)
-            If True output creation times of both distance array and scores
+        n_features_to_keep: int (default: 10)
+            The number of top features (according to the ReliefF scores) to 
+            retain after feature selection is applied.
         n_neighbors: int (default: 10)
             The number of neighbors to consider when assigning feature
-            importance scores.
-            More neighbors results in more accurate scores, but takes longer.
+            importance scores. More neighbors results in more accurate scores,
+            but takes longer.
         dlimit: int (default: 10)
-            max value to determine if attributes/class are discrete
-        n_features_to_keep: int (default: 10)
-            The number of top features (according to the ReliefF score) to 
-            retain after feature selection is applied.
+            Value used to determine if a feature is discrete or continuous.
+            If the number of unique levels in a feature is > dlimit, then it is
+            considered continuous, or discrete otherwise.
+        verbose: bool (default: False)
+            If True output creation times of both distance array and scores
         hdr: list (default: None)
             This is a list of attribute names for the data.  If this is  None
             one will be created by the header property.
 
         """
+        self.n_features_to_keep = n_features_to_keep
+        self.n_neighbors = n_neighbors
         self.dlimit = dlimit
         self.verbose = verbose
         self.hdr = hdr
-        self.n_neighbors = n_neighbors
-        self.n_features_to_keep = n_features_to_keep
         self.feature_scores = None
         self.top_features = None
-        self.Scores = None
 
     #=========================================================================#
     def fit(self, X, y):
@@ -70,15 +70,16 @@ class ReliefF(object):
         self.x = X
         self.y = y
         
+        # Compute the distance array between all data points
         start = tm.time()
-        self.Scores = self.runRelieff()
-        self.feature_scores = np.array(self.Scores)
-        # Compute indices of top features, cast scores to floating point.
-        self.top_features = np.argsort(self.feature_scores)[::-1]
-        self.feature_scores = self.feature_scores.astype(np.float64)
+        self.feature_scores = np.array(self.runRelieff())
+        
         if(self.verbose):
             elapsed = tm.time() - start
-            print('Created feature scores in ' + str(elapsed) + ' seconds')
+            print('Completed scoring in ' + str(elapsed) + ' seconds')
+        
+        # Compute indices of top features
+        self.top_features = np.argsort(self.feature_scores)[::-1]
         return self
 
     #=========================================================================#
