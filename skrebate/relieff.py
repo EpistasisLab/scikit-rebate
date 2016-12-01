@@ -24,7 +24,8 @@ class ReliefF(object):
 
     """
     def __init__(self, pname='Class', missing='NA', verbose=False, 
-                       n_neighbors=10, dlimit=10, n_features_to_keep=10):
+                       n_neighbors=10, dlimit=10, n_features_to_keep=10,
+                       hdr=None):
         """Sets up ReliefF to perform feature selection.
 
         Parameters
@@ -44,12 +45,16 @@ class ReliefF(object):
         n_features_to_keep: int (default: 10)
             The number of top features (according to the ReliefF score) to 
             retain after feature selection is applied.
+        hdr: list (default: None)
+            This is a list of attribute names for the data.  If this is  None
+            one will be created by the header property.
 
         """
         self.phenotype_name = pname
         self.dlimit = dlimit
         self.missing = missing
         self.verbose = verbose
+        self.hdr = hdr
         self.n_neighbors = n_neighbors
         self.n_features_to_keep = n_features_to_keep
         self.feature_scores = None
@@ -125,6 +130,16 @@ class ReliefF(object):
         return self.transform(X)
 
 ############################# Properties ###############################
+    @property
+    def header(self):
+        if(self.hdr == None):
+            xlen = len(self.x[0])
+            mxlen = len(str(xlen+1))
+            header = ['X' + str(i).zfill(mxlen) for i in range(1, xlen + 1)]
+        else:
+            header = self.hdr
+        return header
+    #==================================================================#    
     @property
     def datalen(self):
         return len(self.x)
