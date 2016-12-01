@@ -92,6 +92,7 @@ class ReliefF(object):
         if(self.verbose):
             elapsed = tm.time() - start
             print('Created feature scores in ' + str(elapsed) + ' seconds')
+        return self
 
     #=========================================================================#
     def transform(self, X):

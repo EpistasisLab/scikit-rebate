@@ -104,6 +104,7 @@ class SURFstar(object):
         # Compute indices of top features, cast scores to floating point.
         self.top_features = np.argsort(self.feature_scores)[::-1]
         self.feature_scores = self.feature_scores.astype(np.float64)
+        return self
 
     #=========================================================================#
     def transform(self, X):
