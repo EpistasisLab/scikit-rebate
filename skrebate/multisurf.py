@@ -21,7 +21,7 @@ class MultiSURF(object):
 
     """
     def __init__(self, pname='Class', missing='NA', verbose=False,
-                       dlimit=10,  n_features_to_keep=10, hdr=None):
+                       dlimit=10, n_features_to_keep=10):
         """Sets up MultiSURF to perform feature selection.
 
         Parameters
@@ -37,8 +37,6 @@ class MultiSURF(object):
         n_features_to_keep: int (default: 10)
             the number of top features (according to the relieff score) to 
             retain after feature selection is applied.
-        hdr: list (default: None)
-            User can provided custom header list from CLI
 
         """
         self.phenotype_name = pname
@@ -48,7 +46,6 @@ class MultiSURF(object):
         self.n_features_to_keep = n_features_to_keep
         self.feature_scores = None
         self.top_features = None
-        self.hdr = hdr
 
     #=========================================================================#
     def fit(self, X, y):
@@ -144,17 +141,7 @@ class MultiSURF(object):
         self.fit(X, y)
         return self.transform(X)
 
-############################# Properties ###############################
-    @property
-    def header(self):
-        if(self.hdr == None):
-            xlen = len(self.x[0])
-            mxlen = len(str(xlen+1))
-            header = ['X' + str(i).zfill(mxlen) for i in range(1, xlen + 1)]
-        else:
-            header = self.hdr
-        return header
-    #==================================================================#    
+############################# Properties ############################### 
     @property
     def datalen(self):
         return len(self.x)
