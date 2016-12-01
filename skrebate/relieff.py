@@ -19,8 +19,7 @@ class ReliefF(BaseEstimator):
     algorithms with RELIEFF (1997), Applied Intelligence, 7(1), p39-55
 
     """
-    def __init__(self, n_features_to_select=10,n_neighbors=10, dlimit=10,
-                 verbose=False, hdr=None):
+    def __init__(self, n_features_to_select=10,n_neighbors=10, dlimit=10, verbose=False):
         """Sets up ReliefF to perform feature selection.
 
         Parameters
@@ -38,16 +37,13 @@ class ReliefF(BaseEstimator):
             considered continuous, or discrete otherwise.
         verbose: bool (default: False)
             If True output creation times of both distance array and scores
-        hdr: list (default: None)
-            This is a list of attribute names for the data.  If this is  None
-            one will be created by the header property.
 
         """
         self.n_features_to_select = n_features_to_select
         self.n_neighbors = n_neighbors
         self.dlimit = dlimit
         self.verbose = verbose
-        self.hdr = hdr
+        self.headers = None
         self.feature_importances_ = None
         self.top_features_ = None
 
@@ -123,12 +119,12 @@ class ReliefF(BaseEstimator):
 ############################# Properties ###############################
     @property
     def header(self):
-        if(self.hdr == None):
+        if(self.headers == None):
             xlen = len(self.x[0])
             mxlen = len(str(xlen+1))
             header = ['X' + str(i).zfill(mxlen) for i in range(1, xlen + 1)]
         else:
-            header = self.hdr
+            header = self.headers
         return header
     #==================================================================#    
     @property

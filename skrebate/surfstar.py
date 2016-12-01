@@ -13,13 +13,12 @@ class SURFstar(BaseEstimator):
 
     Based on the SURF* algorithm as introduced in:
 
-    moore, jason et al. multiple threshold spatially uniform relieff for
-    the genetic analysis of complex human diseases. 
+    Moore, Jason et al. Multiple Threshold Spatially Uniform ReliefF
+    for the Genetic Analysis of Complex Human Diseases.
 
     """
-    def __init__(self, n_features_to_select=10, dlimit=10,
-                 verbose=False, hdr=None):
-        """Sets up SURFstar to perform feature selection.
+    def __init__(self, n_features_to_select=10, dlimit=10, verbose=False):
+        """Sets up SURF* to perform feature selection.
 
         Parameters
         ----------
@@ -32,14 +31,12 @@ class SURFstar(BaseEstimator):
             considered continuous, or discrete otherwise.
         verbose: bool (default: False)
             If True, output timing of distance array and scoring
-        hdr: list (default: None)
-            Allow user to provide header from CLI
 
         """
         self.n_features_to_select = n_features_to_select
         self.dlimit = dlimit
         self.verbose = verbose
-        self.hdr = hdr
+        self.headers = None
         self.feature_importances_ = None
         self.top_features_ = None
 
@@ -132,12 +129,12 @@ class SURFstar(BaseEstimator):
 ############################# Properties ###############################
     @property
     def header(self):
-        if(self.hdr == None):
+        if(self.headers == None):
             xlen = len(self.x[0])
             mxlen = len(str(xlen+1))
             header = ['X' + str(i).zfill(mxlen) for i in range(1, xlen + 1)]
         else:
-            header = self.hdr
+            header = self.headers
         return header
     #==================================================================#    
     @property

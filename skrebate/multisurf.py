@@ -18,8 +18,7 @@ class MultiSURF(BaseEstimator):
     the genetic analysis of complex human diseases. 
 
     """
-    def __init__(self, n_features_to_select=10, dlimit=10,
-                 verbose=False, hdr=None):
+    def __init__(self, n_features_to_select=10, dlimit=10, verbose=False):
         """Sets up MultiSURF to perform feature selection.
 
         Parameters
@@ -33,14 +32,12 @@ class MultiSURF(BaseEstimator):
             considered continuous, or discrete otherwise.
         verbose: bool (default: False)
             if True, output timing of distance array and scoring
-        hdr: list (default: None)
-            User can provided custom header list from CLI
 
         """
         self.n_features_to_select = n_features_to_select
         self.dlimit = dlimit
         self.verbose = verbose
-        self.hdr = hdr
+        self.headers = None
         self.feature_importances_ = None
         self.top_features_ = None
 
@@ -136,12 +133,12 @@ class MultiSURF(BaseEstimator):
 ############################# Properties ###############################
     @property
     def header(self):
-        if(self.hdr == None):
+        if(self.headers == None):
             xlen = len(self.x[0])
             mxlen = len(str(xlen+1))
             header = ['X' + str(i).zfill(mxlen) for i in range(1, xlen + 1)]
         else:
-            header = self.hdr
+            header = self.headers
         return header
     #==================================================================#    
     @property
