@@ -58,7 +58,7 @@ class SURF(BaseEstimator):
         """
         self.x = X
         self.y = y
-        self.distArray = None
+        self._distance_array = None
 
         # Compute the distance array between all data points
         start = tm.time()
@@ -68,9 +68,9 @@ class SURF(BaseEstimator):
             cdiffs = diffs[cidx]
             xc = self.x[:,cidx]
             xd = self.x[:,didx]
-            self.distArray = self.distarray_mixed_missing(xc, xd, cdiffs)
+            self._distance_array = self.distarray_mixed_missing(xc, xd, cdiffs)
         else:
-            self.distArray = self.distarray_clean
+            self._distance_array = self.distarray_clean
             
         if self.verbose:
             elapsed = tm.time() - start
@@ -84,8 +84,12 @@ class SURF(BaseEstimator):
             elapsed = tm.time() - start
             print('Completed scoring in ' + str(elapsed) + ' seconds.')
 
-        # Compute indices of top features, cast scores to floating point.
+        # Compute indices of top features
         self.top_features_ = np.argsort(self.feature_importances_)[::-1]
+
+        # Delete the internal distance array because it is no longer needed
+        del self._distance_array
+
         return self
 
     #=========================================================================#
@@ -354,7 +358,7 @@ class SURF(BaseEstimator):
         y = self.y
         header = self.header
         attr = self.get_attribute_info
-        distArray = self.distArray
+        distArray = self._distance_array
         #---------------------------------------------------------------------
         def find_nearest_neighbor():  # for SURF
             NN = []

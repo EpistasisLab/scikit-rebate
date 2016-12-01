@@ -357,9 +357,9 @@ class ReliefF(BaseEstimator):
             if(i == inst):
                 return sys.maxsize
             elif(i < inst):
-                return distArray[inst][i]
+                return distance_array[inst][i]
             else:
-                return distArray[i][inst]
+                return distance_array[i][inst]
         #==================================================================#
         def getsortTuple(x):
             return (getdistance(x),x)
@@ -377,9 +377,9 @@ class ReliefF(BaseEstimator):
             cdiffs = diffs[cidx]
             xc = self.x[:,cidx]
             xd = self.x[:,didx]
-            distArray = self.distarray_mixed_missing(xc, xd, cdiffs)
+            distance_array = self.distarray_mixed_missing(xc, xd, cdiffs)
         else:
-            distArray = self.distarray_clean
+            distance_array = self.distarray_clean
         if self.verbose:
             elapsed = tm.time() - start
             print('Created distance array in ' + str(elapsed) + ' seconds')

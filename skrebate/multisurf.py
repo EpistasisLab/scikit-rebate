@@ -59,7 +59,7 @@ class MultiSURF(BaseEstimator):
         """
         self.x = X
         self.y = y
-        self.distArray = None
+        self._distance_array = None
         
         # Compute the distance array between all data points
         start = tm.time()
@@ -69,9 +69,9 @@ class MultiSURF(BaseEstimator):
             cdiffs = diffs[cidx]
             xc = self.x[:,cidx]
             xd = self.x[:,didx]
-            self.distArray = self.distarray_mixed_missing(xc, xd, cdiffs)
+            self._distance_array = self.distarray_mixed_missing(xc, xd, cdiffs)
         else:
-            self.distArray = self.distarray_clean
+            self._distance_array = self.distarray_clean
             
         if self.verbose:
             elapsed = tm.time() - start
@@ -90,6 +90,10 @@ class MultiSURF(BaseEstimator):
 
         # Compute indices of top features
         self.top_features_ = np.argsort(self.feature_importances_)[::-1]
+        
+        # Delete the internal distance array because it is no longer needed
+        del self._distance_array
+        
         return self
 
     #=========================================================================#
@@ -350,7 +354,7 @@ class MultiSURF(BaseEstimator):
 ######################## MULTISURF ############################################
     def runMultiSURF(self):
         """ get multiSURF scores """
-        distArray = self.distArray
+        distArray = self._distance_array
         #----------------------------------------------------------------------
         def get_individual_distances(x):
             d=[]
@@ -490,7 +494,7 @@ class MultiSURF(BaseEstimator):
     def mcMultiSURF(self):
         """ get multiSURF scores for multiclass Class
             Controls major MultiSURF loops. """
-        distArray = self.distArray
+        distArray = self._distance_array
         #--------------------------------------------------------------------------
         def get_individual_distances():
             d=[]
