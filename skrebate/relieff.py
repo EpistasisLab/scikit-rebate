@@ -7,9 +7,9 @@ import math
 import time as tm
 from numpy import isnan, where, append, unique, delete, empty, double, array
 from numpy import std, subtract, logical_not, max, min, sum, absolute
-from numpy import subtract
+from sklearn.base import BaseEstimator
 
-class ReliefF(object):
+class ReliefF(BaseEstimator):
 
     """Feature selection using data-mined expert knowledge.
 

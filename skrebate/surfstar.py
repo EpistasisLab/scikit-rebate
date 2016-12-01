@@ -5,8 +5,9 @@ import numpy as np
 import time as tm
 from numpy import isnan, where, append, unique, delete, empty, double, array
 from numpy import std, subtract, logical_not, max, min, sum, absolute, subtract
+from sklearn.base import BaseEstimator
 
-class SURFstar(object):
+class SURFstar(BaseEstimator):
 
     """Feature selection using data-mined expert knowledge.
 
