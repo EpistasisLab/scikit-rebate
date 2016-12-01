@@ -49,13 +49,9 @@ class ReliefF(object):
             This is a list of attribute names for the data.  If this is  None
             one will be created by the header property.
 
-        Returns
-        -------
-        None
-
         """
         self.phenotype_name = pname
-        self.dlimit = dlimit  # discrete limit
+        self.dlimit = dlimit
         self.missing = missing
         self.verbose = verbose
         self.hdr = hdr
@@ -78,8 +74,9 @@ class ReliefF(object):
         
         Returns
         -------
-        None
-        """    
+        Copy of the ReliefF instance
+
+        """
         self.x = X
         self.y = y
         

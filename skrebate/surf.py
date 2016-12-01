@@ -22,7 +22,7 @@ class SURF(object):
     """
     def __init__(self, pname='Class', missing='NA', verbose=False,
                        dlimit=10,  n_features_to_keep=10, hdr=None):
-        """sets up relieff to perform feature selection.
+        """sets up SURF to perform feature selection.
 
         parameters
         ----------
@@ -40,13 +40,9 @@ class SURF(object):
         hdr: list (default: None)
             Allow user to specify header from CLI
 
-        Returns
-        -------
-        None
-
         """
         self.phenotype_name = pname
-        self.dlimit = dlimit  # discrete limit
+        self.dlimit = dlimit
         self.missing = missing
         self.verbose = verbose
         self.n_features_to_keep = n_features_to_keep
@@ -64,11 +60,10 @@ class SURF(object):
             Training instances to compute the feature importance scores from
         y: array-like {n_samples}
             Training labels
-        None
         
         Returns
         -------
-        None
+        Copy of the SURF instance
 
         """
         self.x = X

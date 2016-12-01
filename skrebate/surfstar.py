@@ -21,7 +21,7 @@ class SURFstar(object):
     """
     def __init__(self, pname='Class', missing='NA', verbose=False,
                        dlimit=10,  n_features_to_keep=10, hdr=None):
-        """sets up relieff to perform feature selection.
+        """Sets up SURFstar to perform feature selection.
 
         parameters
         ----------
@@ -39,13 +39,9 @@ class SURFstar(object):
         hdr: list (default: None)
             Allow user to provide header from CLI
 
-        Returns
-        -------
-        None
-
         """
         self.phenotype_name = pname
-        self.dlimit = dlimit  # discrete limit
+        self.dlimit = dlimit
         self.missing = missing
         self.verbose = verbose
         self.n_features_to_keep = n_features_to_keep
@@ -67,7 +63,7 @@ class SURFstar(object):
         
         Returns
         -------
-        None
+        Copy of the SURFstar instance
 
         """
         self.x = X

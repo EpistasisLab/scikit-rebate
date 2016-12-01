@@ -22,9 +22,9 @@ class MultiSURF(object):
     """
     def __init__(self, pname='Class', missing='NA', verbose=False,
                        dlimit=10,  n_features_to_keep=10, hdr=None):
-        """sets up relieff to perform feature selection.
+        """Sets up MultiSURF to perform feature selection.
 
-        parameters
+        Parameters
         ----------
         pname: str (default: 'Class')
             name of phenotype
@@ -40,13 +40,9 @@ class MultiSURF(object):
         hdr: list (default: None)
             User can provided custom header list from CLI
 
-        Returns
-        -------
-        None
-
         """
         self.phenotype_name = pname
-        self.dlimit = dlimit  # discrete limit
+        self.dlimit = dlimit
         self.missing = missing
         self.verbose = verbose
         self.n_features_to_keep = n_features_to_keep
@@ -68,7 +64,7 @@ class MultiSURF(object):
         
         Returns
         -------
-        None
+        Copy of the MultiSURF instance
 
         """
         self.x = X
