@@ -17,13 +17,13 @@ class MultiSURF(object):
     the genetic analysis of complex human diseases. 
 
     """
-    def __init__(self, n_features_to_keep=10, dlimit=10,
+    def __init__(self, n_features_to_select=10, dlimit=10,
                  verbose=False, hdr=None):
         """Sets up MultiSURF to perform feature selection.
 
         Parameters
         ----------
-        n_features_to_keep: int (default: 10)
+        n_features_to_select: int (default: 10)
             The number of top features (according to the MultiSURF scores) to 
             retain after feature selection is applied.
         dlimit: int (default: 10)
@@ -36,12 +36,12 @@ class MultiSURF(object):
             User can provided custom header list from CLI
 
         """
-        self.n_features_to_keep = n_features_to_keep
+        self.n_features_to_select = n_features_to_select
         self.dlimit = dlimit
         self.verbose = verbose
         self.hdr = hdr
-        self.feature_scores = None
-        self.top_features = None
+        self.feature_importances_ = None
+        self.top_features_ = None
 
     #=========================================================================#
     def fit(self, X, y):
@@ -82,21 +82,21 @@ class MultiSURF(object):
             
         start = tm.time()
         if(self.class_type == 'multiclass'):
-            self.feature_scores = np.array(self.mcMultiSURF())
+            self.feature_importances_ = np.array(self.mcMultiSURF())
         else:
-            self.feature_scores = np.array(self.runMultiSURF())
+            self.feature_importances_ = np.array(self.runMultiSURF())
 
         if(self.verbose):
             elapsed = tm.time() - start
             print('Completed scoring in ' + str(elapsed) + ' seconds.')
 
         # Compute indices of top features
-        self.top_features = np.argsort(self.feature_scores)[::-1]
+        self.top_features_ = np.argsort(self.feature_importances_)[::-1]
         return self
 
     #=========================================================================#
     def transform(self, X):
-        """Reduces the feature set down to the top `n_features_to_keep` features.
+        """Reduces the feature set down to the top `n_features_to_select` features.
 
         Parameters
         ----------
@@ -105,16 +105,16 @@ class MultiSURF(object):
 
         Returns
         -------
-        X_reduced: array-like {n_samples, n_features_to_keep}
+        X_reduced: array-like {n_samples, n_features_to_select}
             Reduced feature matrix
 
         """
-        return X[:, self.top_features[:self.n_features_to_keep]]
+        return X[:, self.top_features_[:self.n_features_to_select]]
 
     #=========================================================================#
     def fit_transform(self, X, y):
         """Computes the feature importance scores from the training data, then
-        reduces the feature set down to the top `n_features_to_keep` features.
+        reduces the feature set down to the top `n_features_to_select` features.
 
         Parameters
         ----------
@@ -125,7 +125,7 @@ class MultiSURF(object):
 
         Returns
         -------
-        X_reduced: array-like {n_samples, n_features_to_keep}
+        X_reduced: array-like {n_samples, n_features_to_select}
             Reduced feature matrix
 
         """

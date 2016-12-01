@@ -16,13 +16,13 @@ class SURF(object):
     the genetic analysis of complex human diseases. 
 
     """
-    def __init__(self, n_features_to_keep=10, dlimit=10,
+    def __init__(self, n_features_to_select=10, dlimit=10,
                  verbose=False, hdr=None):
         """Sets up SURF to perform feature selection.
 
         Parameters
         ----------
-        n_features_to_keep: int (default: 10)
+        n_features_to_select: int (default: 10)
             the number of top features (according to the relieff score) to 
             retain after feature selection is applied.
         dlimit: int (default: 10)
@@ -35,12 +35,12 @@ class SURF(object):
             Allow user to specify header from CLI
 
         """
-        self.n_features_to_keep = n_features_to_keep
+        self.n_features_to_select = n_features_to_select
         self.dlimit = dlimit
         self.verbose = verbose
         self.hdr = hdr
-        self.feature_scores = None
-        self.top_features = None
+        self.feature_importances_ = None
+        self.top_features_ = None
 
     #=========================================================================#
     def fit(self, X, y):
@@ -80,19 +80,19 @@ class SURF(object):
             print('SURF scoring under way ...')
             
         start = tm.time()
-        self.feature_scores = np.array(self.runSURF())
+        self.feature_importances_ = np.array(self.runSURF())
 
         if(self.verbose):
             elapsed = tm.time() - start
             print('Completed scoring in ' + str(elapsed) + ' seconds.')
 
         # Compute indices of top features, cast scores to floating point.
-        self.top_features = np.argsort(self.feature_scores)[::-1]
+        self.top_features_ = np.argsort(self.feature_importances_)[::-1]
         return self
 
     #=========================================================================#
     def transform(self, X):
-        """Reduces the feature set down to the top `n_features_to_keep` features.
+        """Reduces the feature set down to the top `n_features_to_select` features.
 
         Parameters
         ----------
@@ -101,16 +101,16 @@ class SURF(object):
 
         Returns
         -------
-        X_reduced: array-like {n_samples, n_features_to_keep}
+        X_reduced: array-like {n_samples, n_features_to_select}
             Reduced feature matrix
 
         """
-        return X[:, self.top_features[:self.n_features_to_keep]]
+        return X[:, self.top_features_[:self.n_features_to_select]]
 
     #=========================================================================#
     def fit_transform(self, X, y):
         """Computes the feature importance scores from the training data, then
-        reduces the feature set down to the top `n_features_to_keep` features.
+        reduces the feature set down to the top `n_features_to_select` features.
 
         Parameters
         ----------
@@ -121,7 +121,7 @@ class SURF(object):
 
         Returns
         -------
-        X_reduced: array-like {n_samples, n_features_to_keep}
+        X_reduced: array-like {n_samples, n_features_to_select}
             Reduced feature matrix
 
         """
