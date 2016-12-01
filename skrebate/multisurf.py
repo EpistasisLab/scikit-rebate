@@ -4,7 +4,6 @@ Mon Sep 19 09:56:38 EDT 2016
 """
 from __future__ import print_function
 import numpy as np
-import sys
 import math
 import time as tm
 from numpy import isnan, where, append, unique, delete, empty, double, array
@@ -20,14 +19,12 @@ class MultiSURF(object):
     the genetic analysis of complex human diseases. 
 
     """
-    def __init__(self, pname='Class', missing='NA', verbose=False,
+    def __init__(self, missing='NA', verbose=False,
                        dlimit=10,  n_features_to_keep=10, hdr=None):
         """Sets up MultiSURF to perform feature selection.
 
         Parameters
         ----------
-        pname: str (default: 'Class')
-            name of phenotype
         missing: str (default: 'NA')
             missing data value 
         verbose: bool (default: False)
@@ -41,7 +38,6 @@ class MultiSURF(object):
             User can provided custom header list from CLI
 
         """
-        self.phenotype_name = pname
         self.dlimit = dlimit
         self.missing = missing
         self.verbose = verbose
@@ -265,8 +261,6 @@ class MultiSURF(object):
              indices. Return array of max/min diffs of attributes. """
         attrtype = []
         attrdiff = []
-        pname = self.phenotype_name
-        #attr = self.get_attribute_info
         
         for key in self.header:
             if(attr[key][0] == 'continuous'):
@@ -384,7 +378,6 @@ class MultiSURF(object):
         numattr = self.num_attributes
         datalen = self.datalen
         same_class_bound = self.phenSD
-        pname = self.phenotype_name
         classtype = self.class_type
         mmdiff = j = 0
         ScoreList = [0] * numattr

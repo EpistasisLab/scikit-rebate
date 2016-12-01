@@ -23,18 +23,16 @@ class ReliefF(object):
     algorithms with RELIEFF (1997), Applied Intelligence, 7(1), p39-55
 
     """
-    def __init__(self, pname='Class', missing='NA', verbose=False, 
+    def __init__(self, missing='NA', verbose=False, 
                        n_neighbors=10, dlimit=10, n_features_to_keep=10,
                        hdr=None):
         """Sets up ReliefF to perform feature selection.
 
         Parameters
         ----------
-        pname: str (default: 'Class') 
-            name of phenotype 
         missing: str (default: 'NA') 
             missing data value
-        verbose: bool (default = False)
+        verbose: bool (default: False)
             If True output creation times of both distance array and scores
         n_neighbors: int (default: 10)
             The number of neighbors to consider when assigning feature
@@ -50,7 +48,6 @@ class ReliefF(object):
             one will be created by the header property.
 
         """
-        self.phenotype_name = pname
         self.dlimit = dlimit
         self.missing = missing
         self.verbose = verbose
@@ -250,8 +247,6 @@ class ReliefF(object):
              indices. Return array of max/min diffs of attributes. """
         attrtype = []
         attrdiff = []
-        pname = self.phenotype_name
-        #attr = self.get_attribute_info
         
         for key in self.header:
             if(attr[key][0] == 'continuous'):

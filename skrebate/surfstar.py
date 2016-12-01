@@ -4,7 +4,6 @@ Mon Sep 19 09:56:05 EDT 2016
 """
 from __future__ import print_function
 import numpy as np
-import sys
 import time as tm
 from numpy import isnan, where, append, unique, delete, empty, double, array
 from numpy import std, subtract, logical_not, max, min, sum, absolute, subtract
@@ -19,14 +18,12 @@ class SURFstar(object):
     the genetic analysis of complex human diseases. 
 
     """
-    def __init__(self, pname='Class', missing='NA', verbose=False,
+    def __init__(self, missing='NA', verbose=False,
                        dlimit=10,  n_features_to_keep=10, hdr=None):
         """Sets up SURFstar to perform feature selection.
 
         parameters
         ----------
-        pname: str (default: 'Class')
-            name of phenotype
         missing: str (default: 'NA')
             missing data value 
         verbose: bool (default: False)
@@ -34,13 +31,12 @@ class SURFstar(object):
         dlimit: int (default: 10)
             max value that determines if feature/class is discrete
         n_features_to_keep: int (default: 10)
-            the number of top features (according to the relieff score) to 
+            the number of top features (according to the feature scores) to 
             retain after feature selection is applied.
         hdr: list (default: None)
             Allow user to provide header from CLI
 
         """
-        self.phenotype_name = pname
         self.dlimit = dlimit
         self.missing = missing
         self.verbose = verbose
@@ -261,8 +257,6 @@ class SURFstar(object):
              indices. Return array of max/min diffs of attributes. """
         attrtype = []
         attrdiff = []
-        pname = self.phenotype_name
-        #attr = self.get_attribute_info
         
         for key in self.header:
             if(attr[key][0] == 'continuous'):
@@ -409,8 +403,6 @@ class SURFstar(object):
                 mcmap[each] = mcmap[each]/float(maxInst)
                 
             return mcmap
-        #--------------------------------------------------------------------------
-        pname = self.phenotype_name
     
         #------------------------------#
         # calculate avgDist

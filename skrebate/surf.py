@@ -5,7 +5,6 @@ Mon Sep 19 09:55:26 EDT 2016
 
 from __future__ import print_function
 import numpy as np
-import sys
 import time as tm
 from numpy import isnan, where, append, unique, delete, empty, double, array
 from numpy import std, subtract, logical_not, max, min, sum, absolute, subtract
@@ -20,14 +19,12 @@ class SURF(object):
     the genetic analysis of complex human diseases. 
 
     """
-    def __init__(self, pname='Class', missing='NA', verbose=False,
+    def __init__(self, missing='NA', verbose=False,
                        dlimit=10,  n_features_to_keep=10, hdr=None):
         """sets up SURF to perform feature selection.
 
         parameters
         ----------
-        pname: str (default: 'Class')
-            name of phenotype
         missing: str (default: 'NA')
             missing data value 
         verbose: bool (default: False)
@@ -41,7 +38,6 @@ class SURF(object):
             Allow user to specify header from CLI
 
         """
-        self.phenotype_name = pname
         self.dlimit = dlimit
         self.missing = missing
         self.verbose = verbose
@@ -261,8 +257,6 @@ class SURF(object):
              indices. Return array of max/min diffs of attributes. """
         attrtype = []
         attrdiff = []
-        pname = self.phenotype_name
-        #attr = self.get_attribute_info
         
         for key in self.header:
             if(attr[key][0] == 'continuous'):
@@ -405,8 +399,6 @@ class SURF(object):
                 mcmap[each] = mcmap[each]/float(maxInst)
                 
             return mcmap
-        #--------------------------------------------------------------------------
-        pname = self.phenotype_name
     
         #------------------------------#
         # calculate avgDist
