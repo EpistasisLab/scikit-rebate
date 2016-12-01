@@ -52,7 +52,6 @@ class SURFstar(object):
             Training instances to compute the feature importance scores from
         y: array-like {n_samples}
             Training labels
-        None
         
         Returns
         -------
