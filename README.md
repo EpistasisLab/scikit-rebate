@@ -2,7 +2,7 @@
 
 A sklearn-compatible Python implementation of ReBATE, a suite of Relief-based feature selection algorithms.
 
-# Relief-based Algorithms
+## Relief-based Algorithms
 
 This suite includes stand-alone Python code to run any of
 the included/available Relief-based algorithms designed for attribute
