@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Mon Sep 19 09:56:38 EDT 2016
-"""
+
 from __future__ import print_function
 import numpy as np
 import math
@@ -19,14 +17,12 @@ class MultiSURF(object):
     the genetic analysis of complex human diseases. 
 
     """
-    def __init__(self, missing='NA', verbose=False,
+    def __init__(self, verbose=False,
                        dlimit=10,  n_features_to_keep=10, hdr=None):
         """Sets up MultiSURF to perform feature selection.
 
         Parameters
         ----------
-        missing: str (default: 'NA')
-            missing data value 
         verbose: bool (default: False)
             if True, output timing of distance array and scoring
         dlimit: int (default: 10)
@@ -39,7 +35,6 @@ class MultiSURF(object):
 
         """
         self.dlimit = dlimit
-        self.missing = missing
         self.verbose = verbose
         self.n_features_to_keep = n_features_to_keep
         self.feature_scores = None

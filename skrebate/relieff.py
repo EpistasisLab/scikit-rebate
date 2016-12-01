@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""
-Mon Sep 19 09:55:01 EDT 2016
-"""
-
 from __future__ import print_function
 import numpy as np
 import sys
@@ -23,15 +19,13 @@ class ReliefF(object):
     algorithms with RELIEFF (1997), Applied Intelligence, 7(1), p39-55
 
     """
-    def __init__(self, missing='NA', verbose=False, 
+    def __init__(self, verbose=False, 
                        n_neighbors=10, dlimit=10, n_features_to_keep=10,
                        hdr=None):
         """Sets up ReliefF to perform feature selection.
 
         Parameters
         ----------
-        missing: str (default: 'NA') 
-            missing data value
         verbose: bool (default: False)
             If True output creation times of both distance array and scores
         n_neighbors: int (default: 10)
@@ -49,7 +43,6 @@ class ReliefF(object):
 
         """
         self.dlimit = dlimit
-        self.missing = missing
         self.verbose = verbose
         self.hdr = hdr
         self.n_neighbors = n_neighbors
