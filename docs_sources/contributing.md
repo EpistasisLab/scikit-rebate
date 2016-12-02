@@ -7,7 +7,8 @@ The latest stable release of scikit-rebate is on the [master branch](https://git
 In terms of directory structure:
 
 * All of scikit-rebate's code sources are in the `skrebate` directory
-* The documentation sources are in the `docs` directory
+* The documentation sources are in the `docs_sources` directory
+* The latest documentation build is in the `docs` directory
 * Unit tests for scikit-rebate are in the `tests.py` file
 
 Make sure to familiarize yourself with the project layout before making any major contributions, and especially make sure to send all code changes to the `development` branch.
@@ -63,7 +64,7 @@ Before you submit a pull request for your contribution, please work through this
 
 If your contribution changes scikit-rebate in any way:
 
-* Update the [documentation](https://github.com/EpistasisLab/scikit-rebate/tree/master/docs/sources) so all of your changes are reflected there.
+* Update the [documentation](https://github.com/EpistasisLab/scikit-rebate/tree/master/docs_sources) so all of your changes are reflected there.
 
 * Update the [README](https://github.com/EpistasisLab/scikit-rebate/blob/master/README.md) if anything there has changed.
 
@@ -85,7 +86,7 @@ If your contribution requires a new library dependency:
 
 ## Updating the documentation
 
-We use [mkdocs](http://www.mkdocs.org/) to manage our [documentation](http://EpistasisLab.github.io/scikit-rebate/). This allows us to write the docs in Markdown and compile them to HTML as needed. Below are a few useful commands to know when updating the documentation. Make sure that you are running them in the base documentation directory, `docs`.
+We use [mkdocs](http://www.mkdocs.org/) to manage our [documentation](http://EpistasisLab.github.io/scikit-rebate/). This allows us to write the docs in Markdown and compile them to HTML as needed. Below are a few useful commands to know when updating the documentation. Make sure that you are running them in the base repository directory.
 
 * `mkdocs serve`: Hosts of a local version of the documentation that you can access at the provided URL. The local version will update automatically as you save changes to the documentation.
 
