@@ -83,14 +83,19 @@ print(np.mean(cross_val_score(clf, features, labels)))
 >>> 0.795
 ```
 
-For more information on the Relief algorithms available in this package, please refer to our documentation. [documentation coming soon]
+For more information on the Relief algorithms available in this package and how to use them, please refer to our [usage documentation](https://EpistasisLab.github.io/scikit-rebate/using/).
 
 ## Contributing to scikit-rebate
 
 We welcome you to [check the existing issues](https://github.com/EpistasisLab/scikit-rebate/issues/) for bugs or enhancements to work on. If you have an idea for an extension to scikit-rebate, please [file a new issue](https://github.com/EpistasisLab/scikit-rebate/issues/new) so we can discuss it.
 
+Please refer to our [contribution guidelines](https://EpistasisLab.github.io/scikit-rebate/contributing/) prior to working on a new feature or bug fix.
+
 ## Citing scikit-rebate
 
-If you use scikit-rebate as part of your workflow in a scientific publication, please consider citing the scikit-rebate repository with the following DOI:
+If you use scikit-rebate in a scientific publication, please consider citing at least one of the following papers:
 
-[coming soon]
+Igor Kononenko et al. Overcoming the myopia of inductive learning algorithms with RELIEFF (1997), Applied Intelligence, 7(1), pp. 39-55.
+
+Casey S Greene, Nadia M Penrod, Jeff Kiralis, and Jason H Moore. Spatially Uniform ReliefF (SURF) for computationally-efficient filtering of gene-gene interactions (2009), BioData Mining 2(5).
+
