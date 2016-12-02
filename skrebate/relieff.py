@@ -38,7 +38,7 @@ class ReliefF(BaseEstimator):
     algorithms with RELIEFF (1997), Applied Intelligence, 7(1), p39-55
 
     """
-    def __init__(self, n_features_to_select=10, n_neighbors=10, dlimit=10, verbose=False):
+    def __init__(self, n_features_to_select=10, n_neighbors=100, dlimit=10, verbose=False):
         """Sets up ReliefF to perform feature selection.
 
         Parameters
@@ -46,7 +46,7 @@ class ReliefF(BaseEstimator):
         n_features_to_select: int (default: 10)
             The number of top features (according to the ReliefF scores) to 
             retain after feature selection is applied.
-        n_neighbors: int (default: 10)
+        n_neighbors: int (default: 100)
             The number of neighbors to consider when assigning feature
             importance scores. More neighbors results in more accurate scores,
             but takes longer.
