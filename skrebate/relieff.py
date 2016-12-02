@@ -138,7 +138,7 @@ class ReliefF(BaseEstimator):
 ############################# Properties ###############################
     @property
     def header(self):
-        if(self.headers == None):
+        if(self.headers is None):
             xlen = len(self.x[0])
             mxlen = len(str(xlen+1))
             header = ['X' + str(i).zfill(mxlen) for i in range(1, xlen + 1)]
@@ -181,7 +181,7 @@ class ReliefF(BaseEstimator):
     @property
     def get_attribute_info(self):
         attr = dict()
-        c = d = 0
+        d = 0
         limit = self.dlimit
         w = self.x.transpose()
         md = self.mdcnt

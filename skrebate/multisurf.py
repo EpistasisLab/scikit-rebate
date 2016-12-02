@@ -21,10 +21,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from __future__ import print_function
 import numpy as np
-import math
 import time as tm
 from numpy import isnan, where, append, unique, delete, empty, double, array
-from numpy import std, subtract, logical_not, max, min, sum, absolute, subtract
+from numpy import std, subtract, logical_not, max, min, sum, absolute
 from sklearn.base import BaseEstimator
 
 class MultiSURF(BaseEstimator):
@@ -156,7 +155,7 @@ class MultiSURF(BaseEstimator):
 ############################# Properties ###############################
     @property
     def header(self):
-        if(self.headers == None):
+        if(self.headers is None):
             xlen = len(self.x[0])
             mxlen = len(str(xlen+1))
             header = ['X' + str(i).zfill(mxlen) for i in range(1, xlen + 1)]
@@ -199,7 +198,7 @@ class MultiSURF(BaseEstimator):
     @property
     def get_attribute_info(self):
         attr = dict()
-        c = d = 0
+        d = 0
         limit = self.dlimit
         w = self.x.transpose()
         md = self.mdcnt
@@ -534,7 +533,7 @@ class MultiSURF(BaseEstimator):
                         locator = [each,other]
                         if(each < other): locator.reverse()
                         tempString = str(locator[0]) + str(locator[1])
-                        if (not classPair_map.has_key(tempString)):
+                        if (not (tempString in classPair_map)):
                             classPair_map[tempString] = [0,0]
             return classPair_map
         #--------------------------------------------------------------------------

@@ -23,7 +23,7 @@ from __future__ import print_function
 import numpy as np
 import time as tm
 from numpy import isnan, where, append, unique, delete, empty, double, array
-from numpy import std, subtract, logical_not, max, min, sum, absolute, subtract
+from numpy import std, subtract, logical_not, max, min, sum, absolute
 from sklearn.base import BaseEstimator
 
 class SURF(BaseEstimator):
@@ -152,7 +152,7 @@ class SURF(BaseEstimator):
 ############################# Properties ###############################
     @property
     def header(self):
-        if(self.headers == None):
+        if(self.headers is None):
             xlen = len(self.x[0])
             mxlen = len(str(xlen+1))
             header = ['X' + str(i).zfill(mxlen) for i in range(1, xlen + 1)]
@@ -195,7 +195,7 @@ class SURF(BaseEstimator):
     @property
     def get_attribute_info(self):
         attr = dict()
-        c = d = 0
+        d = 0
         limit = self.dlimit
         w = self.x.transpose()
         md = self.mdcnt
@@ -368,8 +368,6 @@ class SURF(BaseEstimator):
     
 ############################# SURF ############################################
     def runSURF(self):
-        
-        from math import isnan
         maxInst = self.datalen
         numattr = self.num_attributes
         Scores = [0] * numattr
