@@ -19,7 +19,7 @@ def test_relieff_pipeline():
     clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100),
                         RandomForestClassifier(n_estimators=100))
 
-    assert np.mean(cross_val_score(clf, features, labels, cv=3)) == 0.75486205337
+    assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
 
 def test_surf_pipeline():
     """Ensure that SURF works in a sklearn pipeline"""
@@ -28,7 +28,7 @@ def test_surf_pipeline():
     clf = make_pipeline(SURF(n_features_to_select=2),
                         RandomForestClassifier(n_estimators=100))
 
-    assert np.mean(cross_val_score(clf, features, labels, cv=3)) == 0.75486205337
+    assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
 
 def test_surfstar_pipeline():
     """Ensure that SURF* works in a sklearn pipeline"""
@@ -37,7 +37,7 @@ def test_surfstar_pipeline():
     clf = make_pipeline(SURFstar(n_features_to_select=2),
                         RandomForestClassifier(n_estimators=100))
 
-    assert np.mean(cross_val_score(clf, features, labels, cv=3)) == 0.75486205337
+    assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
 
 def test_multisurf_pipeline():
     """Ensure that MultiSURF works in a sklearn pipeline"""
@@ -46,4 +46,4 @@ def test_multisurf_pipeline():
     clf = make_pipeline(MultiSURF(n_features_to_select=2),
                         RandomForestClassifier(n_estimators=100))
 
-    assert np.mean(cross_val_score(clf, features, labels, cv=3)) == 0.75486205337
+    assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
