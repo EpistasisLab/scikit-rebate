@@ -1,0 +1,26 @@
+site_name: scikit-rebate
+site_url: http://EpistasisLab.github.io/scikit-rebate
+site_author: Randal S. Olson and Ryan J. Urbanowicz
+site_description: A sklearn-compatible Python implementation of ReBATE, a suite of Relief-based feature selection algorithms.
+
+repo_url: https://github.com/EpistasisLab/scikit-rebate
+
+docs_dir: sources
+theme: readthedocs
+
+markdown_extensions:
+  - tables
+  - fenced_code
+
+copyright: Copyright &copy; 2016-Present <a href="http://epistasis.org/">Epistasis Lab</a>
+
+pages:
+- Home: index.md
+- Installation: installing.md
+- Using skrebate: using.md
+- Examples:
+  - examples/GAMETES_Example.md
+- Contributing: contributing.md
+- Release Notes: releases.md
+- Citing: citing.md
+- Support: support.md

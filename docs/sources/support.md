@@ -1,0 +1,1 @@
+scikit-rebate was developed in the [Computational Genetics Lab](http://epistasis.org) with funding from the [NIH](http://www.nih.gov). We are incredibly grateful for their support during the development of this project.
