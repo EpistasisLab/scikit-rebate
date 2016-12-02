@@ -1,4 +1,4 @@
-scikit-rebate is a sklearn-compatible Python implementation of ReBATE, a suite of Relief-based feature selection algorithms for machine learning.
+scikit-rebate is a scikit-learn-compatible Python implementation of ReBATE, a suite of Relief-based feature selection algorithms for Machine Learning.
 
 This package contains implementations of the [Relief](https://en.wikipedia.org/wiki/Relief_(feature_selection)) family of feature selection algorithms. **It is still under active development** and we encourage you to check back on this repository regularly for updates.
 
