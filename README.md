@@ -1,3 +1,11 @@
+[![Build Status](https://travis-ci.org/EpistasisLab/scikit-rebate.svg?branch=master)](https://travis-ci.org/EpistasisLab/scikit-rebate)
+[![Code Health](https://landscape.io/github/EpistasisLab/scikit-rebate/master/landscape.svg?style=flat)](https://landscape.io/github/EpistasisLab/scikit-rebate/master)
+[![Coverage Status](https://coveralls.io/repos/github/EpistasisLab/scikit-rebate/badge.svg?branch=master)](https://coveralls.io/github/EpistasisLab/scikit-rebate?branch=master)
+![Python 2.7](https://img.shields.io/badge/python-2.7-blue.svg)
+![Python 3.5](https://img.shields.io/badge/python-3.5-blue.svg)
+![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)
+[![PyPI version](https://badge.fury.io/py/skrebate.svg)](https://badge.fury.io/py/skrebate)
+
 # scikit-rebate
 
 A sklearn-compatible Python implementation of ReBATE, a suite of Relief-based feature selection algorithms for machine learning.
