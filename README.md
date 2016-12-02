@@ -8,7 +8,7 @@
 
 # scikit-rebate
 
-A sklearn-compatible Python implementation of ReBATE, a suite of Relief-based feature selection algorithms for machine learning.
+A scikit-learn-compatible Python implementation of ReBATE, a suite of Relief-based feature selection algorithms for Machine Learning.
 
 ## Relief-based algorithms
 
