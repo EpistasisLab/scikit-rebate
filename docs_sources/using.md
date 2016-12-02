@@ -1,6 +1,8 @@
-# ReliefF
+We have designed the Relief algorithms to be integrated directly into scikit-learn machine learning workflows. Below, we provide code samples showing how the various Relief algorithms can be used in a scikit-learn pipeline.
 
-We have designed the Relief algorithms to be integrated directly into scikit-learn machine learning workflows. For example, the ReliefF algorithm can be used as a feature selection step in a scikit-learn pipeline as follows.
+## ReliefF
+
+ReliefF is the most basic of the Relief-based algorithms, and it requires you to specify
 
 ```python
 import pandas as pd
@@ -20,3 +22,18 @@ clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100),
 print(np.mean(cross_val_score(clf, features, labels)))
 >>> 0.795
 ```
+
+## SURF
+
+
+
+## SURF*
+
+
+
+## MultiSURF
+
+
+
+## TURF
+
