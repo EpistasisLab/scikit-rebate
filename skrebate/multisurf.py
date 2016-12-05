@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (c) 2016 Randal S. Olson and Ryan J. Urbanowicz
+Copyright (c) 2016 Randal S. Olson, Pete Schmitt, and Ryan J. Urbanowicz
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -32,8 +32,8 @@ class MultiSURF(BaseEstimator):
 
     Based on the MultiSURF algorithm as introduced in:
 
-    moore, jason et al. multiple threshold spatially uniform relieff for
-    the genetic analysis of complex human diseases. 
+    Moore, Jason et al. Multiple Threshold Spatially Uniform ReliefF
+    for the Genetic Analysis of Complex Human Diseases.
 
     """
     def __init__(self, n_features_to_select=10, dlimit=10, verbose=False):
