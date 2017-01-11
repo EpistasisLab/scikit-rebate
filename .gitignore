@@ -62,3 +62,7 @@ target/
 .ipynb_checkpoints
 
 testing.ipynb
+
+*.lprof
+
+*.prof
