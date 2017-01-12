@@ -61,7 +61,6 @@ class SURF(BaseEstimator):
         self.discrete_threshold = discrete_threshold
         self.verbose = verbose
         self.n_jobs = n_jobs
-        self.headers = None
         self.feature_importances_ = None
         self.top_features_ = None
 
@@ -81,41 +80,65 @@ class SURF(BaseEstimator):
         Copy of the SURF instance
 
         """
-        self.x = X
-        self.y = y
-        self._distance_array = None
+        self._X = X
+        self._y = y
         
         # Set up the properties for SURF
-        self.datalen = len(self.x)
-        self.phenotype_list = list(set(self.y))
-        self.discrete_phenotype = (len(self.phenotype_list) <= self.discrete_threshold)
+        self._datalen = len(self._X)
+        self._label_list = list(set(self._y))
+        discrete_label = (len(self._label_list) <= self.discrete_threshold)
 
-        if self.discrete_phenotype and len(self.phenotype_list) > 2:
-            self.class_type = 'multiclass'
-        elif self.discrete_phenotype:
-            self.class_type = 'discrete'
+        if discrete_label and len(self._label_list) > 2:
+            self._class_type = 'multiclass'
+        elif discrete_label:
+            self._class_type = 'discrete'
         else:
-            self.class_type = 'continuous'
-        
-        self.num_attributes = len(self.x[0])
+            self._class_type = 'continuous'
 
-        xlen = len(self.x[0])
+        # Training labels standard deviation -- only used if the training labels are continuous
+        self._labels_std = 0.
+        if len(self._label_list) > self.discrete_threshold:
+            self._labels_std = std(self._y, ddof=1)
+        
+        self._num_attributes = len(self._X[0])
+        self._missing_data_count = isnan(self._X).sum()
+
+        # Assign internal headers for the features
+        xlen = len(self._X[0])
         mxlen = len(str(xlen + 1))
-        self.header = ['X{}'.format(str(i).zfill(mxlen)) for i in range(1, xlen + 1)]
+        self._headers = ['X{}'.format(str(i).zfill(mxlen)) for i in range(1, xlen + 1)]
+        
+        # Determine the data type
+        C = D = False
+        attr = self._get_attribute_info()
+        for key in attr.keys():
+            if attr[key][0] == 'discrete':
+                D = True
+            if attr[key][0] == 'continuous':
+                C = True
+
+        if C and D: 
+            self.data_type = 'mixed'
+        elif D and not C:
+            self.data_type = 'discrete'
+        elif C and not D:
+            self.data_type = 'continuous'
+        else:
+            raise ValueError('Invalid data type in data set.')
 
         # Compute the distance array between all data points
         start = tm.time()
 
-        attr = self.get_attribute_info()
-        diffs, cidx, didx = self.dtypeArray(attr)
+        attr = self._get_attribute_info()
+        diffs, cidx, didx = self._dtype_array(attr)
         cdiffs = diffs[cidx]
-        xc = self.x[:,cidx]
-        xd = self.x[:,didx]
+        xc = self._X[:,cidx]
+        xd = self._X[:,didx]
 
-        if self.mdcnt > 0:
-            self._distance_array = self.distarray_missing(xc, xd, cdiffs)
+        if self._missing_data_count > 0:
+            self._distance_array = self._distarray_missing(xc, xd, cdiffs)
         else:
-            self._distance_array = self.distarray_no_missing(xc, xd)
+            self._distance_array = self._distarray_no_missing(xc, xd)
 
         if self.verbose:
             elapsed = tm.time() - start
@@ -123,7 +146,7 @@ class SURF(BaseEstimator):
             print('SURF scoring under way ...')
             
         start = tm.time()
-        self.feature_importances_ = np.array(self.runSURF())
+        self.feature_importances_ = self._run_SURF()
 
         if self.verbose:
             elapsed = tm.time() - start
@@ -175,69 +198,33 @@ class SURF(BaseEstimator):
         self.fit(X, y)
         return self.transform(X)
 
-############################# Properties ###############################
-    #==================================================================#    
-    @property 
-    def mdcnt(self):  
-        """ missing data count """
-        return isnan(self.x).sum()
-    #==================================================================#    
-    @property
-    def phenSD(self):
-        """ standard deviation of class if continuous """
-        if len(self.phenotype_list) <= self.discrete_threshold:
-            return 0
-        else:
-            return std(self.y, ddof=1)
-    #==================================================================#
-    def get_attribute_info(self):
+############################# Properties ###############################  
+    def _get_attribute_info(self):
         attr = dict()
         d = 0
         limit = self.discrete_threshold
-        w = self.x.transpose()
-        md = self.mdcnt
+        w = self._X.transpose()
         
         for idx in range(len(w)):
-            h = self.header[idx]
+            h = self._headers[idx]
             z = w[idx]
-            if md > 0:
+            if self._missing_data_count > 0:
                 z = z[logical_not(isnan(z))]
             zlen = len(unique(z)) 
             if zlen <= limit:
-                attr[h] = ('discrete',0,0,0)
+                attr[h] = ('discrete', 0, 0, 0)
                 d += 1
             else:
                 mx = max(z)
                 mn = min(z)
-                attr[h] = ('continuous',mx, mn, mx - mn)
+                attr[h] = ('continuous', mx, mn, mx - mn)
         
         return attr
     #==================================================================#    
-    @property
-    def data_type(self):
-        C = D = False
-        
-        attr = self.get_attribute_info()
-        
-        for key in attr.keys():
-            if attr[key][0] == 'discrete':
-                D = True
-            if attr[key][0] == 'continuous':
-                C = True
-                
-        if C and D: 
-            return 'mixed'
-        elif D and not C:
-            return 'discrete'
-        elif C and not D:
-            return 'continuous'
-        else:
-            raise ValueError('Invalid data type in data set.')
-    #==================================================================#    
-    def distarray_no_missing(self, xc, xd):
+    def _distarray_no_missing(self, xc, xd):
         """ distance array for data with no missing values """
         from scipy.spatial.distance import pdist, squareform
-        attr = self.get_attribute_info()
+        attr = self._get_attribute_info()
         #------------------------------------------#
         def pre_normalize(x):
             idx = 0
@@ -250,23 +237,23 @@ class SURF(BaseEstimator):
             return x
         #------------------------------------------#
         if self.data_type == 'discrete':
-            return squareform(pdist(self.x, metric='hamming'))
+            return squareform(pdist(self._X, metric='hamming'))
         elif self.data_type == 'mixed':
             d_dist = squareform(pdist(xd, metric='hamming'))
             c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock'))
-            return np.add(d_dist, c_dist) / self.num_attributes
+            return np.add(d_dist, c_dist) / self._num_attributes
         else:
-            self.x = pre_normalize(self.x)
-            return squareform(pdist(self.x, metric='cityblock'))
+            self._X = pre_normalize(self._X)
+            return squareform(pdist(self._X, metric='cityblock'))
     
 ######################### SUPPORTING METHODS ###########################
-    def dtypeArray(self, attr):
+    def _dtype_array(self, attr):
         """  Return mask for discrete(0)/continuous(1) attributes and their 
              indices. Return array of max/min diffs of attributes. """
         attrtype = []
         attrdiff = []
         
-        for key in self.header:
+        for key in self._headers:
             if attr[key][0] == 'continuous':
                 attrtype.append(1)
             else:
@@ -280,18 +267,18 @@ class SURF(BaseEstimator):
         attrdiff = array(attrdiff)
         return attrdiff, cidx, didx
     #==================================================================#
-    def distarray_missing(self, xc, xd, cdiffs):
+    def _distarray_missing(self, xc, xd, cdiffs):
         """ distance array for data with missing values """
         cindices = []
         dindices = []
-        for i in range(self.datalen):
+        for i in range(self._datalen):
             cindices.append(where(isnan(xc[i]))[0])
             dindices.append(where(isnan(xd[i]))[0])
     
-        dist_array = Parallel(n_jobs=self.n_jobs)(delayed(self.get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self.datalen))
+        dist_array = Parallel(n_jobs=self.n_jobs)(delayed(self._get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
         return np.array(dist_array)
     #==================================================================#
-    def get_row_missing(self, xc, xd, cdiffs, index, cindices, dindices):
+    def _get_row_missing(self, xc, xd, cdiffs, index, cindices, dindices):
         row = empty(0, dtype=double)
         cinst1 = xc[index]
         dinst1 = xd[index]
@@ -325,11 +312,11 @@ class SURF(BaseEstimator):
         return row
     
 ############################# SURF ############################################
-    def find_nearest_neighbor(self, inst, avgDist):  # for SURF
+    def _find_nearest_neighbors(self, inst, avgDist):  # for SURF
         NN = []
         min_indicies = []
 
-        for i in range(self.datalen):
+        for i in range(self._datalen):
             if inst != i:
                 locator = [inst,i]
                 if i > inst:
@@ -341,30 +328,30 @@ class SURF(BaseEstimator):
             NN.append(min_indicies[i])
         return NN
 
-    def compute_scores(self, inst, attr, mcmap, nan_entries, avgDist):
-        scores = np.zeros(self.num_attributes)
-        NN = self.find_nearest_neighbor(inst, avgDist)
+    def _compute_scores(self, inst, attr, mcmap, nan_entries, avgDist):
+        scores = np.zeros(self._num_attributes)
+        NN = self._find_nearest_neighbors(inst, avgDist)
         NN = np.array(NN, dtype=np.int32)
         if len(NN) <= 0:
             return scores
-        for feature_num in range(self.num_attributes):
-            scores[feature_num] += self.evaluate_SURF(attr, NN, feature_num, inst, mcmap, nan_entries)
+        for feature_num in range(self._num_attributes):
+            scores[feature_num] += self._evaluate_SURF(attr, NN, feature_num, inst, mcmap, nan_entries)
         return scores
 
-    def runSURF(self):
+    def _run_SURF(self):
         #---------------------------------------------------------------------
         # Find number of classes in the dataset and store them into the map
-        def getMultiClassMap():
+        def get_multiclass_map():
             mcmap = dict()
-            y = self.y
+            y = self._y
     
-            for i in range(self.datalen):
-                if self.y[i] not in mcmap:
-                    mcmap[self.y[i]] = 0
+            for i in range(self._datalen):
+                if self._y[i] not in mcmap:
+                    mcmap[self._y[i]] = 0
                 else:
-                    mcmap[self.y[i]] += 1
+                    mcmap[self._y[i]] += 1
     
-            for each in self.phenotype_list:
+            for each in self._label_list:
                 mcmap[each] = mcmap[each] / float(maxInst)
 
             return mcmap
@@ -372,33 +359,30 @@ class SURF(BaseEstimator):
         #------------------------------#
         # calculate avgDist
         sm = cnt = 0
-        for i in range(self.datalen):
+        for i in range(self._datalen):
             sm += sum(self._distance_array[i])
             cnt += len(self._distance_array[i])
         avgDist = sm / float(cnt)
         #------------------------------#
     
-        if(self.class_type == 'multiclass'):
-            mcmap = getMultiClassMap()
+        if self._class_type == 'multiclass':
+            mcmap = get_multiclass_map()
         else:
             mcmap = 0
         
-        attr = self.get_attribute_info()
-        nan_entries = isnan(self.x)
-        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self.compute_scores)(instance_num, attr, mcmap, nan_entries, avgDist) for instance_num in range(self.datalen)), axis=0)
-        
-        # Non-parallelized
-        #scores = np.sum([self.compute_scores(instance_num, attr, mcmap, isnan(self.x), avgDist) for instance_num in range(self.datalen)], axis=0)
+        attr = self._get_attribute_info()
+        nan_entries = isnan(self._X)
+        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self._compute_scores)(instance_num, attr, mcmap, nan_entries, avgDist) for instance_num in range(self._datalen)), axis=0)
     
-        return scores
+        return np.array(scores)
 
     ###############################################################################
-    def evaluate_SURF(self, attr, NN, feature, inst, mcmap, nan_entries):
+    def _evaluate_SURF(self, attr, NN, feature, inst, mcmap, nan_entries):
         """ evaluates both SURF and SURF* scores """
-    
-        fname = self.header[feature]
+
+        fname = self._headers[feature]
         ftype = attr[fname][0]  # feature type
-        ctype = self.class_type # class type
+        ctype = self._class_type # class type
         diff_hit = diff_miss = 0.0 
         count_hit = count_miss = 0.0
         mmdiff = 1
@@ -407,66 +391,66 @@ class SURF(BaseEstimator):
         if nan_entries[inst][feature]:
             return 0.
 
-        xinstfeature = self.x[inst][feature]
-    
+        xinstfeature = self._X[inst][feature]
+
         if ctype == 'multiclass':
             class_store = dict()
             miss_class_psum = 0   # for SURF
             for each in mcmap:
-                if each != self.y[inst]:
+                if each != self._y[inst]:
                     class_store[each] = [0, 0]
                     miss_class_psum += mcmap[each]  # for SURF
-    
+
             for i in range(len(NN)):
                 if nan_entries[NN[i]][feature]:
                     continue
 
                 NN[i] = int(NN[i])
-                xNNifeature = self.x[NN[i]][feature]
+                xNNifeature = self._X[NN[i]][feature]
                 absvalue = abs(xinstfeature - xNNifeature) / mmdiff
-    
-                if self.y[inst] == self.y[NN[i]]:  # HIT
+
+                if self._y[inst] == self._y[NN[i]]:  # HIT
                     count_hit += 1
                     if xinstfeature != xNNifeature:
                         if ftype == 'continuous':
                             diff_hit -= absvalue
                         else:  # discrete
                             diff_hit -= 1
-    
+
                 else:  # MISS
                     for miss_class in class_store:
-                        if self.y[NN[i]] == miss_class:
+                        if self._y[NN[i]] == miss_class:
                             class_store[miss_class][0] += 1
                             if xinstfeature != xNNifeature:
                                 if ftype == 'continuous':
                                     class_store[miss_class][1] += absvalue
                                 else:  # discrete
                                     class_store[miss_class][1] += 1
-    
+
             # corrects for both multiple classes as well as missing data
             missSum = 0
             for each in class_store:
                 missSum += class_store[each][0]
             missAverage = missSum / float(len(class_store))
-    
+
             hit_proportion = count_hit / float(len(NN)) # Correct for NA
             for each in class_store:
                 diff_miss += (mcmap[each] / float(miss_class_psum)) * class_store[each][1]
-    
+
             diff = diff_miss * hit_proportion
             miss_proportion = missAverage / float(len(NN))
             diff += diff_hit * miss_proportion
-    
+
         #--------------------------------------------------------------------------
         elif ctype == 'discrete':
             for i in range(len(NN)):
                 if nan_entries[NN[i]][feature]:
                     continue
 
-                xNNifeature = self.x[NN[i]][feature]
+                xNNifeature = self._X[NN[i]][feature]
                 absvalue = abs(xinstfeature - xNNifeature) / mmdiff
     
-                if self.y[inst] == self.y[NN[i]]:   # HIT
+                if self._y[inst] == self._y[NN[i]]:   # HIT
                     count_hit += 1
                     if xinstfeature != xNNifeature:
                         if ftype == 'continuous':
@@ -487,16 +471,16 @@ class SURF(BaseEstimator):
         #--------------------------------------------------------------------------
         else: # CONTINUOUS endpoint
             mmdiff = attr[fname][3]
-            same_class_bound = self.phenSD
+            same_class_bound = self._labels_std
 
             for i in range(len(NN)):
                 if nan_entries[NN[i]][feature]:
                     continue
 
-                xNNifeature = self.x[NN[i]][feature]
+                xNNifeature = self._X[NN[i]][feature]
                 absvalue = abs(xinstfeature - xNNifeature) / mmdiff
 
-                if abs(self.y[inst] - self.y[NN[i]]) < same_class_bound: # HIT
+                if abs(self._y[inst] - self._y[NN[i]]) < same_class_bound: # HIT
                     count_hit += 1
                     if xinstfeature != xNNifeature:
                         if ftype == 'continuous':
@@ -510,11 +494,11 @@ class SURF(BaseEstimator):
                             diff_miss += absvalue
                         else: # discrete
                             diff_miss += 1
-    
+
             hit_proportion = count_hit / float(len(NN))
             miss_proportion = count_miss / float(len(NN))
             diff = diff_hit * miss_proportion + diff_miss * hit_proportion
-    
+
         return diff
 
 def main():
