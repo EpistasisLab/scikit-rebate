@@ -105,16 +105,18 @@ class SURF(BaseEstimator):
 
         # Compute the distance array between all data points
         start = tm.time()
-        if self.mdcnt > 0 or self.data_type == 'mixed':
-            attr = self.get_attribute_info()
-            diffs, cidx, didx = self.dtypeArray(attr)
-            cdiffs = diffs[cidx]
-            xc = self.x[:,cidx]
-            xd = self.x[:,didx]
-            self._distance_array = self.distarray_mixed_missing(xc, xd, cdiffs)
+
+        attr = self.get_attribute_info()
+        diffs, cidx, didx = self.dtypeArray(attr)
+        cdiffs = diffs[cidx]
+        xc = self.x[:,cidx]
+        xd = self.x[:,didx]
+
+        if self.mdcnt > 0:
+            self._distance_array = self.distarray_missing(xc, xd, cdiffs)
         else:
-            self._distance_array = self.distarray_clean()
-            
+            self._distance_array = self.distarray_no_missing(xc, xd)
+
         if self.verbose:
             elapsed = tm.time() - start
             print('Created distance array in {} seconds.'.format(elapsed))
@@ -232,8 +234,8 @@ class SURF(BaseEstimator):
         else:
             raise ValueError('Invalid data type in data set.')
     #==================================================================#    
-    def distarray_clean(self):
-        """ distance array for clean contiguous data """
+    def distarray_no_missing(self, xc, xd):
+        """ distance array for data with no missing values """
         from scipy.spatial.distance import pdist, squareform
         attr = self.get_attribute_info()
         #------------------------------------------#
@@ -249,6 +251,10 @@ class SURF(BaseEstimator):
         #------------------------------------------#
         if self.data_type == 'discrete':
             return squareform(pdist(self.x, metric='hamming'))
+        elif self.data_type == 'mixed':
+            d_dist = squareform(pdist(xd, metric='hamming'))
+            c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock'))
+            return np.add(d_dist, c_dist) / self.num_attributes
         else:
             self.x = pre_normalize(self.x)
             return squareform(pdist(self.x, metric='cityblock'))
@@ -273,31 +279,18 @@ class SURF(BaseEstimator):
         
         attrdiff = array(attrdiff)
         return attrdiff, cidx, didx
-    #==================================================================# 
-    def distarray_mixed_missing(self, xc, xd, cdiffs):
-        """ distance array for mixed/missing data """
-        
-        dist_array = []
-        missing = self.mdcnt
-        
-        if missing > 0:
-            cindices = []
-            dindices = []
-            for i in range(self.datalen):
-                cindices.append(where(isnan(xc[i]))[0])
-                dindices.append(where(isnan(xd[i]))[0])
-        
-        for index in range(self.datalen):
-            if missing > 0:
-                row = self.get_row_missing(xc, xd, cdiffs, index, cindices, dindices)
-            else:
-                row = self.get_row_mixed(xc, xd, cdiffs, index)
-                
-            row = list(row)
-            dist_array.append(row)
-            
-        return dist_array
-    #==================================================================#    
+    #==================================================================#
+    def distarray_missing(self, xc, xd, cdiffs):
+        """ distance array for data with missing values """
+        cindices = []
+        dindices = []
+        for i in range(self.datalen):
+            cindices.append(where(isnan(xc[i]))[0])
+            dindices.append(where(isnan(xd[i]))[0])
+    
+        dist_array = Parallel(n_jobs=self.n_jobs)(delayed(self.get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self.datalen))
+        return np.array(dist_array)
+    #==================================================================#
     def get_row_missing(self, xc, xd, cdiffs, index, cindices, dindices):
         row = empty(0, dtype=double)
         cinst1 = xc[index]
@@ -329,27 +322,6 @@ class SURF(BaseEstimator):
             dist += sum(absolute(subtract(c1, c2)) / cdf)
 
             row = append(row, dist)
-
-        return row
-    #==================================================================#    
-    def get_row_mixed(self, xc, xd, cdiffs, index):
-
-        row = empty(0, dtype=double)
-        d1 = xd[index]
-        c1 = xc[index]
-        for j in range(index):
-            dist = 0
-            d2 = xd[j]
-            c2 = xc[j]
-    
-            # discrete first
-            dist += len(d1[d1 != d2])
-
-            # now continuous
-            dist += sum(absolute(subtract(c1,c2)) / cdiffs)
-    
-            row = append(row,dist)
-
         return row
     
 ############################# SURF ############################################
@@ -412,7 +384,8 @@ class SURF(BaseEstimator):
             mcmap = 0
         
         attr = self.get_attribute_info()
-        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self.compute_scores)(instance_num, attr, mcmap, isnan(self.x), avgDist) for instance_num in range(self.datalen)), axis=0)
+        nan_entries = isnan(self.x)
+        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self.compute_scores)(instance_num, attr, mcmap, nan_entries, avgDist) for instance_num in range(self.datalen)), axis=0)
         
         # Non-parallelized
         #scores = np.sum([self.compute_scores(instance_num, attr, mcmap, isnan(self.x), avgDist) for instance_num in range(self.datalen)], axis=0)
@@ -441,7 +414,7 @@ class SURF(BaseEstimator):
             miss_class_psum = 0   # for SURF
             for each in mcmap:
                 if each != self.y[inst]:
-                    class_store[each] = [0,0]
+                    class_store[each] = [0, 0]
                     miss_class_psum += mcmap[each]  # for SURF
     
             for i in range(len(NN)):
@@ -474,7 +447,7 @@ class SURF(BaseEstimator):
             missSum = 0
             for each in class_store:
                 missSum += class_store[each][0]
-            missAverage = missSum/float(len(class_store))
+            missAverage = missSum / float(len(class_store))
     
             hit_proportion = count_hit / float(len(NN)) # Correct for NA
             for each in class_store:
@@ -507,7 +480,7 @@ class SURF(BaseEstimator):
                             diff_miss += absvalue
                         else: # discrete
                             diff_miss += 1
-    
+
             hit_proportion = count_hit / float(len(NN))
             miss_proportion = count_miss / float(len(NN))
             diff = diff_hit * miss_proportion + diff_miss * hit_proportion
@@ -522,7 +495,7 @@ class SURF(BaseEstimator):
 
                 xNNifeature = self.x[NN[i]][feature]
                 absvalue = abs(xinstfeature - xNNifeature) / mmdiff
-    
+
                 if abs(self.y[inst] - self.y[NN[i]]) < same_class_bound: # HIT
                     count_hit += 1
                     if xinstfeature != xNNifeature:
@@ -548,11 +521,12 @@ def main():
     import numpy as np
     import pandas as pd
 
-    data = pd.read_csv('~/Downloads/VDR-data/VDR_Data.tsv', sep='\t').sample(frac=1.)
+    #data = pd.read_csv('~/Downloads/VDR_Data-messy.tsv', sep='\t')#.sample(frac=1.)
+    data = pd.read_csv('~/Downloads/VDR-Data/VDR_Data.tsv', sep='\t').sample(frac=1.)
     features = data.drop('class', axis=1).values
     labels = data['class'].values
 
-    clf = SURF(n_jobs=-1)
+    clf = SURF(n_jobs=-1, verbose=True)
     clf.fit(features, labels)
 
     print(data.columns[np.argsort(clf.feature_importances_)][::-1])
