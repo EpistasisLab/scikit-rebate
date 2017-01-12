@@ -37,7 +37,7 @@ class SURF(BaseEstimator):
     for the Genetic Analysis of Complex Human Diseases.
 
     """
-    def __init__(self, n_features_to_select=10, dlimit=10, verbose=False):
+    def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False):
         """Sets up SURF to perform feature selection.
 
         Parameters
@@ -45,16 +45,16 @@ class SURF(BaseEstimator):
         n_features_to_select: int (default: 10)
             the number of top features (according to the relieff score) to 
             retain after feature selection is applied.
-        dlimit: int (default: 10)
+        discrete_threshold: int (default: 10)
             Value used to determine if a feature is discrete or continuous.
-            If the number of unique levels in a feature is > dlimit, then it is
+            If the number of unique levels in a feature is > discrete_threshold, then it is
             considered continuous, or discrete otherwise.
         verbose: bool (default: False)
             if True, output timing of distance array and scoring
 
         """
         self.n_features_to_select = n_features_to_select
-        self.dlimit = dlimit
+        self.discrete_threshold = discrete_threshold
         self.verbose = verbose
         self.headers = None
         self.feature_importances_ = None
@@ -83,7 +83,7 @@ class SURF(BaseEstimator):
         # Set up the properties for SURF
         self.datalen = len(self.x)
         self.phenotype_list = list(set(self.y))
-        self.discrete_phenotype = (len(self.phenotype_list) <= self.dlimit)
+        self.discrete_phenotype = (len(self.phenotype_list) <= self.discrete_threshold)
 
         if(self.discrete_phenotype and len(self.phenotype_list) > 2):
             self.class_type = 'multiclass'
@@ -178,7 +178,7 @@ class SURF(BaseEstimator):
     @property
     def phenSD(self):
         """ standard deviation of class if continuous """
-        if(len(self.phenotype_list) <= self.dlimit):
+        if len(self.phenotype_list) <= self.discrete_threshold:
             return 0
         else:
             return std(self.y, ddof=1)
@@ -186,16 +186,17 @@ class SURF(BaseEstimator):
     def get_attribute_info(self):
         attr = dict()
         d = 0
-        limit = self.dlimit
+        limit = self.discrete_threshold
         w = self.x.transpose()
         md = self.mdcnt
         
         for idx in range(len(w)):
             h = self.header[idx]
             z = w[idx]
-            if(md > 0): z = z[logical_not(isnan(z))]
+            if md > 0:
+                z = z[logical_not(isnan(z))]
             zlen = len(unique(z)) 
-            if(zlen <= limit):
+            if zlen <= limit:
                 attr[h] = ('discrete',0,0,0)
                 d += 1
             else:
@@ -212,15 +213,19 @@ class SURF(BaseEstimator):
         attr = self.get_attribute_info()
         
         for key in attr.keys():
-            if(attr[key][0] == 'discrete'): D = True
-            if(attr[key][0] == 'continuous'): C = True
+            if attr[key][0] == 'discrete':
+                D = True
+            if attr[key][0] == 'continuous':
+                C = True
                 
-        if(C and D): 
+        if C and D: 
             return 'mixed'
-        elif(D and not C):
+        elif D and not C:
             return 'discrete'
-        elif(C and not D):
+        elif C and not D:
             return 'continuous'
+        else:
+            raise ValueError('Invalid data type in data set.')
     #==================================================================#    
     def distarray_clean(self):
         """ distance array for clean contiguous data """
@@ -237,7 +242,7 @@ class SURF(BaseEstimator):
                 idx += 1
             return x
         #------------------------------------------#
-        if(self.data_type == 'discrete'):
+        if self.data_type == 'discrete':
             return squareform(pdist(self.x, metric='hamming'))
         else:
             self.x = pre_normalize(self.x)
@@ -251,7 +256,7 @@ class SURF(BaseEstimator):
         attrdiff = []
         
         for key in self.header:
-            if(attr[key][0] == 'continuous'):
+            if attr[key][0] == 'continuous':
                 attrtype.append(1)
             else:
                 attrtype.append(0)
@@ -270,7 +275,7 @@ class SURF(BaseEstimator):
         dist_array = []
         missing = self.mdcnt
         
-        if(missing > 0):
+        if missing > 0:
             cindices = []
             dindices = []
             for i in range(self.datalen):
@@ -278,9 +283,8 @@ class SURF(BaseEstimator):
                 dindices.append(where(isnan(xd[i]))[0])
         
         for index in range(self.datalen):
-            if(missing > 0):
-                row = self.get_row_missing(xc, xd, cdiffs, index, 
-                                           cindices, dindices)
+            if missing > 0:
+                row = self.get_row_missing(xc, xd, cdiffs, index, cindices, dindices)
             else:
                 row = self.get_row_mixed(xc, xd, cdiffs, index)
                 
@@ -290,8 +294,7 @@ class SURF(BaseEstimator):
         return dist_array
     #==================================================================#    
     def get_row_missing(self, xc, xd, cdiffs, index, cindices, dindices):
-
-        row = empty(0,dtype=double)
+        row = empty(0, dtype=double)
         cinst1 = xc[index]
         dinst1 = xd[index]
         can = cindices[index]
@@ -303,30 +306,30 @@ class SURF(BaseEstimator):
 
             # continuous
             cbn = cindices[j]
-            idx = unique(append(can,cbn))   # create unique list
-            c1 = delete(cinst1,idx)       # remove elements by idx
-            c2 = delete(cinst2,idx)
-            cdf = delete(cdiffs,idx)
+            idx = unique(append(can, cbn))   # create unique list
+            c1 = delete(cinst1, idx)       # remove elements by idx
+            c2 = delete(cinst2, idx)
+            cdf = delete(cdiffs, idx)
 
             # discrete
             dbn = dindices[j]
-            idx = unique(append(dan,dbn))
-            d1 = delete(dinst1,idx)
-            d2 = delete(dinst2,idx)
+            idx = unique(append(dan, dbn))
+            d1 = delete(dinst1, idx)
+            d2 = delete(dinst2, idx)
             
             # discrete first
             dist += len(d1[d1 != d2])
 
             # now continuous
-            dist += sum(absolute(subtract(c1,c2)) / cdf)
+            dist += sum(absolute(subtract(c1, c2)) / cdf)
 
-            row = append(row,dist)
+            row = append(row, dist)
 
         return row
     #==================================================================#    
     def get_row_mixed(self, xc, xd, cdiffs, index):
 
-        row = empty(0,dtype=double)
+        row = empty(0, dtype=double)
         d1 = xd[index]
         c1 = xc[index]
         for j in range(index):
@@ -350,23 +353,23 @@ class SURF(BaseEstimator):
         min_indicies = []
 
         for i in range(self.datalen):
-            if(inst != i):
+            if inst != i:
                 locator = [inst,i]
-                if(i > inst): locator.reverse()
+                if i > inst:
+                    locator.reverse()
                 d = self._distance_array[locator[0]][locator[1]]
-                if(d < avgDist):
+                if d < avgDist:
                     min_indicies.append(i)
-
         for i in range(len(min_indicies)):
             NN.append(min_indicies[i])
-
         return NN
 
     def compute_scores(self, inst, attr, mcmap, nan_entries, avgDist):
         scores = np.zeros(self.num_attributes)
         NN = self.find_nearest_neighbor(inst, avgDist)
         NN = np.array(NN, dtype=np.int32)
-        if(len(NN) <= 0): return
+        if len(NN) <= 0:
+            return
         for feature_num in range(self.num_attributes):
             scores[feature_num] += self.evaluate_SURF(attr, NN, feature_num, inst, mcmap, nan_entries)
         return scores
@@ -379,13 +382,13 @@ class SURF(BaseEstimator):
             y = self.y
     
             for i in range(self.datalen):
-                if(self.y[i] not in mcmap):
+                if self.y[i] not in mcmap:
                     mcmap[self.y[i]] = 0
                 else:
                     mcmap[self.y[i]] += 1
     
             for each in self.phenotype_list:
-                mcmap[each] = mcmap[each]/float(maxInst)
+                mcmap[each] = mcmap[each] / float(maxInst)
 
             return mcmap
     
@@ -395,7 +398,7 @@ class SURF(BaseEstimator):
         for i in range(self.datalen):
             sm += sum(self._distance_array[i])
             cnt += len(self._distance_array[i])
-        avgDist = sm/float(cnt)
+        avgDist = sm / float(cnt)
         #------------------------------#
     
         if(self.class_type == 'multiclass'):
