@@ -37,7 +37,7 @@ class SURF(BaseEstimator):
     for the Genetic Analysis of Complex Human Diseases.
 
     """
-    def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False):
+    def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up SURF to perform feature selection.
 
         Parameters
@@ -50,12 +50,17 @@ class SURF(BaseEstimator):
             If the number of unique levels in a feature is > discrete_threshold, then it is
             considered continuous, or discrete otherwise.
         verbose: bool (default: False)
-            if True, output timing of distance array and scoring
+            If True, output timing of distance array and scoring
+        n_jobs: int (default: 1)
+            The number of cores to dedicate to computing the scores with joblib.
+            Assigning this parameter to -1 will dedicate as many cores as are available on your system.
+            We recommend setting this parameter to -1 to speed up the algorithm as much as possible.
 
         """
         self.n_features_to_select = n_features_to_select
         self.discrete_threshold = discrete_threshold
         self.verbose = verbose
+        self.n_jobs = n_jobs
         self.headers = None
         self.feature_importances_ = None
         self.top_features_ = None
@@ -249,7 +254,7 @@ class SURF(BaseEstimator):
             return squareform(pdist(self.x, metric='cityblock'))
     
 ######################### SUPPORTING METHODS ###########################
-    def dtypeArray(self,attr):
+    def dtypeArray(self, attr):
         """  Return mask for discrete(0)/continuous(1) attributes and their 
              indices. Return array of max/min diffs of attributes. """
         attrtype = []
@@ -268,7 +273,7 @@ class SURF(BaseEstimator):
         
         attrdiff = array(attrdiff)
         return attrdiff, cidx, didx
-    #==================================================================#    
+    #==================================================================# 
     def distarray_mixed_missing(self, xc, xd, cdiffs):
         """ distance array for mixed/missing data """
         
@@ -369,7 +374,7 @@ class SURF(BaseEstimator):
         NN = self.find_nearest_neighbor(inst, avgDist)
         NN = np.array(NN, dtype=np.int32)
         if len(NN) <= 0:
-            return
+            return scores
         for feature_num in range(self.num_attributes):
             scores[feature_num] += self.evaluate_SURF(attr, NN, feature_num, inst, mcmap, nan_entries)
         return scores
@@ -407,7 +412,10 @@ class SURF(BaseEstimator):
             mcmap = 0
         
         attr = self.get_attribute_info()
-        scores = np.sum(Parallel(n_jobs=-1)(delayed(self.compute_scores)(instance_num, attr, mcmap, isnan(self.x), avgDist) for instance_num in range(self.datalen)), axis=0)
+        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self.compute_scores)(instance_num, attr, mcmap, isnan(self.x), avgDist) for instance_num in range(self.datalen)), axis=0)
+        
+        # Non-parallelized
+        #scores = np.sum([self.compute_scores(instance_num, attr, mcmap, isnan(self.x), avgDist) for instance_num in range(self.datalen)], axis=0)
     
         return scores
 
@@ -544,7 +552,7 @@ def main():
     features = data.drop('class', axis=1).values
     labels = data['class'].values
 
-    clf = SURF()
+    clf = SURF(n_jobs=-1)
     clf.fit(features, labels)
 
     print(data.columns[np.argsort(clf.feature_importances_)][::-1])
