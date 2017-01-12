@@ -312,7 +312,7 @@ class SURF(BaseEstimator):
         return row
     
 ############################# SURF ############################################
-    def _find_nearest_neighbors(self, inst, avgDist):  # for SURF
+    def _find_nearest_neighbors(self, inst, avg_dist):  # for SURF
         NN = []
         min_indicies = []
 
@@ -322,16 +322,15 @@ class SURF(BaseEstimator):
                 if i > inst:
                     locator.reverse()
                 d = self._distance_array[locator[0]][locator[1]]
-                if d < avgDist:
+                if d < avg_dist:
                     min_indicies.append(i)
         for i in range(len(min_indicies)):
             NN.append(min_indicies[i])
-        return NN
+        return np.array(NN, dtype=np.int32)
 
-    def _compute_scores(self, inst, attr, mcmap, nan_entries, avgDist):
+    def _compute_scores(self, inst, attr, mcmap, nan_entries, avg_dist):
         scores = np.zeros(self._num_attributes)
-        NN = self._find_nearest_neighbors(inst, avgDist)
-        NN = np.array(NN, dtype=np.int32)
+        NN = self._find_nearest_neighbors(inst, avg_dist)
         if len(NN) <= 0:
             return scores
         for feature_num in range(self._num_attributes):
@@ -357,12 +356,12 @@ class SURF(BaseEstimator):
             return mcmap
     
         #------------------------------#
-        # calculate avgDist
+        # calculate avg_dist
         sm = cnt = 0
         for i in range(self._datalen):
             sm += sum(self._distance_array[i])
             cnt += len(self._distance_array[i])
-        avgDist = sm / float(cnt)
+        avg_dist = sm / float(cnt)
         #------------------------------#
     
         if self._class_type == 'multiclass':
@@ -372,7 +371,7 @@ class SURF(BaseEstimator):
         
         attr = self._get_attribute_info()
         nan_entries = isnan(self._X)
-        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self._compute_scores)(instance_num, attr, mcmap, nan_entries, avgDist) for instance_num in range(self._datalen)), axis=0)
+        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self._compute_scores)(instance_num, attr, mcmap, nan_entries, avg_dist) for instance_num in range(self._datalen)), axis=0)
     
         return np.array(scores)
 
@@ -428,17 +427,17 @@ class SURF(BaseEstimator):
                                     class_store[miss_class][1] += 1
 
             # corrects for both multiple classes as well as missing data
-            missSum = 0
+            miss_sum = 0
             for each in class_store:
-                missSum += class_store[each][0]
-            missAverage = missSum / float(len(class_store))
+                miss_sum += class_store[each][0]
+            miss_average = miss_sum / float(len(class_store))
 
             hit_proportion = count_hit / float(len(NN)) # Correct for NA
             for each in class_store:
                 diff_miss += (mcmap[each] / float(miss_class_psum)) * class_store[each][1]
 
             diff = diff_miss * hit_proportion
-            miss_proportion = missAverage / float(len(NN))
+            miss_proportion = miss_average / float(len(NN))
             diff += diff_hit * miss_proportion
 
         #--------------------------------------------------------------------------
@@ -506,7 +505,7 @@ def main():
     import pandas as pd
 
     #data = pd.read_csv('~/Downloads/VDR_Data-messy.tsv', sep='\t')#.sample(frac=1.)
-    data = pd.read_csv('~/Downloads/VDR-Data/VDR_Data.tsv', sep='\t').sample(frac=1.)
+    data = pd.read_csv('https://github.com/EpistasisLab/penn-ml-benchmarks/raw/master/datasets/GAMETES_Epistasis_2-Way_1000atts_0.4H_EDM-1_EDM-1_1/GAMETES_Epistasis_2-Way_1000atts_0.4H_EDM-1_EDM-1_1.csv.gz', sep='\t', compression='gzip').sample(frac=1.)
     features = data.drop('class', axis=1).values
     labels = data['class'].values
 
