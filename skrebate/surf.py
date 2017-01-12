@@ -85,9 +85,9 @@ class SURF(BaseEstimator):
         self.phenotype_list = list(set(self.y))
         self.discrete_phenotype = (len(self.phenotype_list) <= self.discrete_threshold)
 
-        if(self.discrete_phenotype and len(self.phenotype_list) > 2):
+        if self.discrete_phenotype and len(self.phenotype_list) > 2:
             self.class_type = 'multiclass'
-        elif(self.discrete_phenotype):
+        elif self.discrete_phenotype:
             self.class_type = 'discrete'
         else:
             self.class_type = 'continuous'
@@ -95,14 +95,14 @@ class SURF(BaseEstimator):
         self.num_attributes = len(self.x[0])
 
         xlen = len(self.x[0])
-        mxlen = len(str(xlen+1))
-        self.header = ['X' + str(i).zfill(mxlen) for i in range(1, xlen + 1)]
+        mxlen = len(str(xlen + 1))
+        self.header = ['X{}'.format(str(i).zfill(mxlen)) for i in range(1, xlen + 1)]
 
         # Compute the distance array between all data points
         start = tm.time()
-        if(self.mdcnt > 0 or self.data_type == 'mixed'):
+        if self.mdcnt > 0 or self.data_type == 'mixed':
             attr = self.get_attribute_info()
-            diffs,cidx,didx = self.dtypeArray(attr)
+            diffs, cidx, didx = self.dtypeArray(attr)
             cdiffs = diffs[cidx]
             xc = self.x[:,cidx]
             xd = self.x[:,didx]
@@ -112,7 +112,7 @@ class SURF(BaseEstimator):
             
         if self.verbose:
             elapsed = tm.time() - start
-            print('Created distance array in ' + str(elapsed) + ' seconds.')
+            print('Created distance array in {} seconds.'.format(elapsed))
             print('SURF scoring under way ...')
             
         start = tm.time()
@@ -120,7 +120,7 @@ class SURF(BaseEstimator):
 
         if self.verbose:
             elapsed = tm.time() - start
-            print('Completed scoring in ' + str(elapsed) + ' seconds.')
+            print('Completed scoring in {} seconds.'.format(elapsed))
 
         # Compute indices of top features
         self.top_features_ = np.argsort(self.feature_importances_)[::-1]
