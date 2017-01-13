@@ -34,8 +34,8 @@ class SURFstar(SURF):
 
     """
 
-############################# SURFstar ########################################
-    def _find_neighbors(self, inst, avg_dist):  # for SURFStar
+############################# SURF* ########################################
+    def _find_neighbors(self, inst, avg_dist):
         NN_near = []
         NN_far = []
         min_indices = []
@@ -64,7 +64,7 @@ class SURFstar(SURF):
         NN_near, NN_far = self._find_neighbors(inst, avg_dist)
         for feature_num in range(self._num_attributes):
             if len(NN_near) > 0:
-                scores[feature_num] += self._evaluate_SURF(attr, NN_near, feature_num, inst, nan_entries)
+                scores[feature_num] += self._compute_score(attr, NN_near, feature_num, inst, nan_entries)
             if len(NN_far) > 0:
-                scores[feature_num] -= self._evaluate_SURF(attr, NN_far, feature_num, inst, nan_entries)
+                scores[feature_num] -= self._compute_score(attr, NN_far, feature_num, inst, nan_entries)
         return scores

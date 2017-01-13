@@ -310,7 +310,7 @@ class SURF(BaseEstimator):
         return row
     
 ############################# SURF ############################################
-    def _find_neighbors(self, inst, avg_dist):  # for SURF
+    def _find_neighbors(self, inst, avg_dist):
         NN = []
         min_indicies = []
 
@@ -332,28 +332,24 @@ class SURF(BaseEstimator):
         if len(NN) <= 0:
             return scores
         for feature_num in range(self._num_attributes):
-            scores[feature_num] += self._evaluate_SURF(attr, NN, feature_num, inst, nan_entries)
+            scores[feature_num] += self._compute_score(attr, NN, feature_num, inst, nan_entries)
         return scores
 
     def _run_algorithm(self):
-        #------------------------------#
-        # calculate avg_dist
         sm = cnt = 0
         for i in range(self._datalen):
             sm += sum(self._distance_array[i])
             cnt += len(self._distance_array[i])
         avg_dist = sm / float(cnt)
-        #------------------------------#
 
         attr = self._get_attribute_info()
         nan_entries = isnan(self._X)
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self._compute_scores)(instance_num, attr, nan_entries, avg_dist) for instance_num in range(self._datalen)), axis=0)
-
         return np.array(scores)
 
     ###############################################################################
-    def _evaluate_SURF(self, attr, NN, feature, inst, nan_entries):
-        """ evaluates both SURF and SURF* scores """
+    def _compute_score(self, attr, NN, feature, inst, nan_entries):
+        """ evaluates SURF scores """
 
         fname = self._headers[feature]
         ftype = attr[fname][0]  # feature type
