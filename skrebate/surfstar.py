@@ -21,9 +21,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from __future__ import print_function
 import numpy as np
-from numpy import isnan, where, append, unique, delete, empty, double, array
-from numpy import std, subtract, logical_not, max, min, sum, absolute
-from sklearn.base import BaseEstimator
 from .surf import SURF
 
 class SURFstar(SURF):
