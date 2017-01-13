@@ -310,7 +310,7 @@ class SURF(BaseEstimator):
         return row
     
 ############################# SURF ############################################
-    def _find_nearest_neighbors(self, inst, avg_dist):  # for SURF
+    def _find_neighbors(self, inst, avg_dist):  # for SURF
         NN = []
         min_indicies = []
 
@@ -328,7 +328,7 @@ class SURF(BaseEstimator):
 
     def _compute_scores(self, inst, attr, nan_entries, avg_dist):
         scores = np.zeros(self._num_attributes)
-        NN = self._find_nearest_neighbors(inst, avg_dist)
+        NN = self._find_neighbors(inst, avg_dist)
         if len(NN) <= 0:
             return scores
         for feature_num in range(self._num_attributes):
@@ -427,21 +427,3 @@ class SURF(BaseEstimator):
             diff = diff_hit * miss_proportion + diff_miss * hit_proportion
 
         return diff
-
-def main():
-    import numpy as np
-    import pandas as pd
-
-    #data = pd.read_csv('~/Downloads/VDR_Data-messy.tsv', sep='\t')#.sample(frac=1.)
-    data = pd.read_csv('~/Downloads/VDR-Data/VDR_Data.tsv', sep='\t').sample(frac=1.)
-    features = data.drop('class', axis=1).values
-    labels = data['class'].values
-
-    clf = SURF(n_jobs=-1, verbose=True)
-    clf.fit(features, labels)
-
-    print(data.columns[np.argsort(clf.feature_importances_)][::-1])
-    print(clf.feature_importances_[np.argsort(clf.feature_importances_)][::-1])
-
-if __name__ == '__main__':
-    main()
