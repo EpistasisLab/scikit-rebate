@@ -29,6 +29,8 @@ from joblib import Parallel, delayed
 
 class SURF(BaseEstimator):
 
+#### TODO: Rework this to inherit from ReliefF class
+
     """Feature selection using data-mined expert knowledge.
 
     Based on the SURF algorithm as introduced in:
