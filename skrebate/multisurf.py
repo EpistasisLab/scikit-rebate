@@ -34,6 +34,7 @@ class MultiSURF(SURFstar):
     for the Genetic Analysis of Complex Human Diseases.
 
     """
+
 ############################# MultiSURF ########################################
     def _find_neighbors(self, inst):
         dist_vect = []
@@ -81,7 +82,8 @@ class MultiSURF(SURFstar):
         nan_entries = np.isnan(self._X)
         
         if self.n_jobs != 1:
-            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self._compute_scores)(instance_num, attr, nan_entries) for instance_num in range(self._datalen)), axis=0)
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+                self._compute_scores)(instance_num, attr, nan_entries) for instance_num in range(self._datalen)), axis=0)
         else:
             scores = np.sum([self._compute_scores(instance_num, attr, nan_entries) for instance_num in range(self._datalen)], axis=0)
         
