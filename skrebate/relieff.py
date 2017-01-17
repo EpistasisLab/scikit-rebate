@@ -68,8 +68,6 @@ class ReliefF(BaseEstimator):
         self.discrete_threshold = discrete_threshold
         self.verbose = verbose
         self.n_jobs = n_jobs
-        self.feature_importances_ = None
-        self.top_features_ = None
 
     #=========================================================================#
     def fit(self, X, y):
@@ -420,22 +418,3 @@ class ReliefF(BaseEstimator):
             diff = diff_hit * miss_proportion + diff_miss * hit_proportion
 
         return diff
-
-def main():
-    import numpy as np
-    import pandas as pd
-
-    #data = pd.read_csv('~/Downloads/VDR_Data-messy.tsv', sep='\t')#.sample(frac=1.)
-    #data = pd.read_csv('~/Downloads/VDR-Data/VDR_Data.tsv', sep='\t')#.sample(frac=1.)
-    data = pd.read_csv('https://github.com/EpistasisLab/penn-ml-benchmarks/raw/master/datasets/GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1/GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz', sep='\t', compression='gzip')#.sample(frac=0.2, random_state=1)
-    features = data.drop('class', axis=1).values
-    labels = data['class'].values
-
-    clf = ReliefF(n_jobs=-1, verbose=True)
-    clf.fit(features, labels)
-
-    print(data.columns[np.argsort(clf.feature_importances_)][::-1])
-    print(clf.feature_importances_[np.argsort(clf.feature_importances_)][::-1])
-
-if __name__ == '__main__':
-    main()
