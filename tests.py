@@ -28,7 +28,7 @@ def test_relieff_init():
     assert clf.n_jobs == 3
 
 def test_surf_init():
-    """Ensure that the SURF constructor stores custom values correctly"""
+    """Ensure that the SURF, SURF*, and MultiSURF constructors store custom values correctly"""
     clf = SURF(n_features_to_select=7,
                discrete_threshold=20,
                verbose=True,
