@@ -21,12 +21,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from __future__ import print_function
 import numpy as np
-import sys
-import math
-import time as tm
+import time
 import warnings
-from numpy import isnan, where, append, unique, delete, empty, double, array
-from numpy import std, subtract, logical_not, max, min, sum, absolute
+import sys
 from sklearn.base import BaseEstimator
 from joblib import Parallel, delayed
 
@@ -40,6 +37,7 @@ class ReliefF(BaseEstimator):
     algorithms with RELIEFF (1997), Applied Intelligence, 7(1), p39-55
 
     """
+
     def __init__(self, n_features_to_select=10, n_neighbors=100, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up ReliefF to perform feature selection.
 
@@ -107,10 +105,10 @@ class ReliefF(BaseEstimator):
         # Training labels standard deviation -- only used if the training labels are continuous
         self._labels_std = 0.
         if len(self._label_list) > self.discrete_threshold:
-            self._labels_std = std(self._y, ddof=1)
+            self._labels_std = np.std(self._y, ddof=1)
 
         self._num_attributes = len(self._X[0])
-        self._missing_data_count = isnan(self._X).sum()
+        self._missing_data_count = np.isnan(self._X).sum()
 
         # Assign internal headers for the features
         xlen = len(self._X[0])
@@ -136,7 +134,7 @@ class ReliefF(BaseEstimator):
             raise ValueError('Invalid data type in data set.')
 
         # Compute the distance array between all data points
-        start = tm.time()
+        start = time.time()
 
         attr = self._get_attribute_info()
         diffs, cidx, didx = self._dtype_array(attr)
@@ -150,15 +148,15 @@ class ReliefF(BaseEstimator):
             self._distance_array = self._distarray_no_missing(xc, xd)
 
         if self.verbose:
-            elapsed = tm.time() - start
+            elapsed = time.time() - start
             print('Created distance array in {} seconds.'.format(elapsed))
             print('Feature scoring under way ...')
 
-        start = tm.time()
+        start = time.time()
         self.feature_importances_ = self._run_algorithm()
 
         if self.verbose:
-            elapsed = tm.time() - start
+            elapsed = time.time() - start
             print('Completed scoring in {} seconds.'.format(elapsed))
 
         # Compute indices of top features
@@ -188,8 +186,7 @@ class ReliefF(BaseEstimator):
 
     #=========================================================================#
     def fit_transform(self, X, y):
-        """Computes the feature importance scores from the training data, then
-        reduces the feature set down to the top `n_features_to_select` features.
+        """Computes the feature importance scores from the training data, then reduces the feature set down to the top `n_features_to_select` features.
 
         Parameters
         ----------
@@ -218,24 +215,25 @@ class ReliefF(BaseEstimator):
             h = self._headers[idx]
             z = w[idx]
             if self._missing_data_count > 0:
-                z = z[logical_not(isnan(z))]
-            zlen = len(unique(z)) 
+                z = z[np.logical_not(np.isnan(z))]
+            zlen = len(np.unique(z)) 
             if zlen <= limit:
                 attr[h] = ('discrete', 0, 0, 0)
                 d += 1
             else:
-                mx = max(z)
-                mn = min(z)
+                mx = np.max(z)
+                mn = np.min(z)
                 attr[h] = ('continuous', mx, mn, mx - mn)
         
         return attr
     #==================================================================#    
     def _distarray_no_missing(self, xc, xd):
-        """ distance array for data with no missing values """
+        """Distance array for data with no missing values"""
         from scipy.spatial.distance import pdist, squareform
         attr = self._get_attribute_info()
         #------------------------------------------#
         def pre_normalize(x):
+            """Normalizes continuous features so they are in the same range"""
             idx = 0
             for i in attr:
                 cmin = attr[i][2]
@@ -257,8 +255,7 @@ class ReliefF(BaseEstimator):
 
     #==================================================================#
     def _dtype_array(self, attr):
-        """  Return mask for discrete(0)/continuous(1) attributes and their 
-             indices. Return array of max/min diffs of attributes. """
+        """Return mask for discrete(0)/continuous(1) attributes and their indices. Return array of max/min diffs of attributes."""
         attrtype = []
         attrdiff = []
         
@@ -269,26 +266,26 @@ class ReliefF(BaseEstimator):
                 attrtype.append(0)
             attrdiff.append(attr[key][3])
             
-        attrtype = array(attrtype)
-        cidx = where(attrtype == 1)[0]
-        didx = where(attrtype == 0)[0]
+        attrtype = np.array(attrtype)
+        cidx = np.where(attrtype == 1)[0]
+        didx = np.where(attrtype == 0)[0]
         
-        attrdiff = array(attrdiff)
+        attrdiff = np.array(attrdiff)
         return attrdiff, cidx, didx
     #==================================================================#
     def _distarray_missing(self, xc, xd, cdiffs):
-        """ distance array for data with missing values """
+        """Distance array for data with missing values"""
         cindices = []
         dindices = []
         for i in range(self._datalen):
-            cindices.append(where(isnan(xc[i]))[0])
-            dindices.append(where(isnan(xd[i]))[0])
+            cindices.append(np.where(np.isnan(xc[i]))[0])
+            dindices.append(np.where(np.isnan(xd[i]))[0])
     
         dist_array = Parallel(n_jobs=self.n_jobs)(delayed(self._get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
         return np.array(dist_array)
     #==================================================================#
     def _get_row_missing(self, xc, xd, cdiffs, index, cindices, dindices):
-        row = empty(0, dtype=double)
+        row = np.empty(0, dtype=np.double)
         cinst1 = xc[index]
         dinst1 = xd[index]
         can = cindices[index]
@@ -300,24 +297,24 @@ class ReliefF(BaseEstimator):
 
             # continuous
             cbn = cindices[j]
-            idx = unique(append(can, cbn))   # create unique list
-            c1 = delete(cinst1, idx)       # remove elements by idx
-            c2 = delete(cinst2, idx)
-            cdf = delete(cdiffs, idx)
+            idx = np.unique(np.append(can, cbn))   # create unique list
+            c1 = np.delete(cinst1, idx)       # remove elements by idx
+            c2 = np.delete(cinst2, idx)
+            cdf = np.delete(cdiffs, idx)
 
             # discrete
             dbn = dindices[j]
-            idx = unique(append(dan, dbn))
-            d1 = delete(dinst1, idx)
-            d2 = delete(dinst2, idx)
+            idx = np.unique(np.append(dan, dbn))
+            d1 = np.delete(dinst1, idx)
+            d2 = np.delete(dinst2, idx)
             
             # discrete first
             dist += len(d1[d1 != d2])
 
             # now continuous
-            dist += sum(absolute(subtract(c1, c2)) / cdf)
+            dist += np.sum(np.absolute(np.subtract(c1, c2)) / cdf)
 
-            row = append(row, dist)
+            row = np.append(row, dist)
         return row
     
 ############################# ReliefF ############################################
@@ -344,10 +341,11 @@ class ReliefF(BaseEstimator):
 
     def _run_algorithm(self):
         attr = self._get_attribute_info()
-        nan_entries = isnan(self._X)
+        nan_entries = np.isnan(self._X)
         
         if self.n_jobs != 1:
-            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self._compute_scores)(instance_num, attr, nan_entries) for instance_num in range(self._datalen)), axis=0)
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+                self._compute_scores)(instance_num, attr, nan_entries) for instance_num in range(self._datalen)), axis=0)
         else:
             scores = np.sum([self._compute_scores(instance_num, attr, nan_entries) for instance_num in range(self._datalen)], axis=0)
 
@@ -355,7 +353,7 @@ class ReliefF(BaseEstimator):
 
     ###############################################################################
     def _compute_score(self, attr, NN, feature, inst, nan_entries):
-        """ evaluates ReliefF scores """
+        """Evaluates feature scores according to the ReliefF algorithm"""
 
         fname = self._headers[feature]
         ftype = attr[fname][0]  # feature type

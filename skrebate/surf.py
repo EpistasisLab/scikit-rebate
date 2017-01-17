@@ -34,6 +34,7 @@ class SURF(ReliefF):
     for the Genetic Analysis of Complex Human Diseases.
 
     """
+
     def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up ReliefF to perform feature selection.
 
@@ -96,7 +97,8 @@ class SURF(ReliefF):
         nan_entries = np.isnan(self._X)
 
         if self.n_jobs != 1:
-            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self._compute_scores)(instance_num, attr, nan_entries, avg_dist) for instance_num in range(self._datalen)), axis=0)
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+                self._compute_scores)(instance_num, attr, nan_entries, avg_dist) for instance_num in range(self._datalen)), axis=0)
         else:
             scores = np.sum([self._compute_scores(instance_num, attr, nan_entries, avg_dist) for instance_num in range(self._datalen)], axis=0)
 
