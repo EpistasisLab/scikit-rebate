@@ -40,7 +40,7 @@ def test_surf_init():
     assert clf.n_jobs == 3
 
 def test_relieff_pipeline():
-    """Ensure that ReliefF works in a sklearn pipeline"""
+    """Ensure that ReliefF works in a sklearn pipeline when it is parallelized"""
     np.random.seed(49082)
 
     clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100, n_jobs=-1),
@@ -50,8 +50,19 @@ def test_relieff_pipeline():
         warnings.simplefilter('ignore')
         assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
 
+def test_relieff_pipeline_parallel():
+    """Ensure that ReliefF works in a sklearn pipeline where cross_val_score is parallelized"""
+    np.random.seed(49082)
+
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100),
+                        RandomForestClassifier(n_estimators=100))
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        assert np.mean(cross_val_score(clf, features, labels, cv=3, n_jobs=-1)) > 0.7
+
 def test_surf_pipeline():
-    """Ensure that SURF works in a sklearn pipeline"""
+    """Ensure that SURF works in a sklearn pipeline when it is parallelized"""
     np.random.seed(240932)
 
     clf = make_pipeline(SURF(n_features_to_select=2, n_jobs=-1),
@@ -61,8 +72,19 @@ def test_surf_pipeline():
         warnings.simplefilter('ignore')
         assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
 
+def test_surf_pipeline_parallel():
+    """Ensure that SURF works in a sklearn pipeline where cross_val_score is parallelized"""
+    np.random.seed(240932)
+
+    clf = make_pipeline(SURF(n_features_to_select=2),
+                        RandomForestClassifier(n_estimators=100))
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        assert np.mean(cross_val_score(clf, features, labels, cv=3, n_jobs=-1)) > 0.7
+
 def test_surfstar_pipeline():
-    """Ensure that SURF* works in a sklearn pipeline"""
+    """Ensure that SURF* works in a sklearn pipeline when it is parallelized"""
     np.random.seed(9238745)
 
     clf = make_pipeline(SURFstar(n_features_to_select=2, n_jobs=-1),
@@ -72,8 +94,19 @@ def test_surfstar_pipeline():
         warnings.simplefilter('ignore')
         assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
 
+def test_surfstar_pipeline_parallel():
+    """Ensure that SURF* works in a sklearn pipeline where cross_val_score is parallelized"""
+    np.random.seed(9238745)
+
+    clf = make_pipeline(SURFstar(n_features_to_select=2),
+                        RandomForestClassifier(n_estimators=100))
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        assert np.mean(cross_val_score(clf, features, labels, cv=3, n_jobs=-1)) > 0.7
+
 def test_multisurf_pipeline():
-    """Ensure that MultiSURF works in a sklearn pipeline"""
+    """Ensure that MultiSURF works in a sklearn pipeline when it is parallelized"""
     np.random.seed(320931)
 
     clf = make_pipeline(MultiSURF(n_features_to_select=2, n_jobs=-1),
@@ -82,3 +115,14 @@ def test_multisurf_pipeline():
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
+
+def test_multisurf_pipeline():
+    """Ensure that MultiSURF works in a sklearn pipeline where cross_val_score is parallelized"""
+    np.random.seed(320931)
+
+    clf = make_pipeline(MultiSURF(n_features_to_select=2),
+                        RandomForestClassifier(n_estimators=100))
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        assert np.mean(cross_val_score(clf, features, labels, cv=3, n_jobs=-1)) > 0.7
