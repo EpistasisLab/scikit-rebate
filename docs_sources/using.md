@@ -22,6 +22,16 @@ ReliefF is the most basic of the Relief-based feature selection algorithms, and 
 <td>Any positive integer</td>
 <td>The number of nearest neighbors to consider in the ReliefF feature scoring process. Generally the more neighbors the algorithm considers, the better the scores are. However, considering more neighbors makes the algorithm run slower.</td>
 </tr>
+<tr>
+<td>discrete_limit</td>
+<td>Any positive integer</td>
+<td>Value used to determine if a feature is discrete or continuous. If the number of unique levels in a feature is > discrete_threshold, then it is considered continuous, or discrete otherwise.</td>
+</tr>
+<tr>
+<td>n_jobs</td>
+<td>Any positive integer or -1</td>
+<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores. Currently not supported in Python 2.</td>
+</tr>
 </table>
 
 ```python
@@ -60,6 +70,16 @@ SURF, SURF*, and MultiSURF are all extensions to the ReliefF algorithm that auto
 <td>Any positive integer</td>
 <td>The number of best features to retain after the feature selection process. The "best" features are the highest-scored features according to the SURF scoring process.</td>
 </tr>
+<tr>
+<td>discrete_limit</td>
+<td>Any positive integer</td>
+<td>Value used to determine if a feature is discrete or continuous. If the number of unique levels in a feature is > discrete_threshold, then it is considered continuous, or discrete otherwise.</td>
+</tr>
+<tr>
+<td>n_jobs</td>
+<td>Any positive integer or -1</td>
+<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores. Currently not supported in Python 2.</td>
+</tr>
 </table>
 
 ```python
@@ -96,6 +116,16 @@ print(np.mean(cross_val_score(clf, features, labels)))
 <td>Any positive integer</td>
 <td>The number of best features to retain after the feature selection process. The "best" features are the highest-scored features according to the SURF* scoring process.</td>
 </tr>
+<tr>
+<td>discrete_limit</td>
+<td>Any positive integer</td>
+<td>Value used to determine if a feature is discrete or continuous. If the number of unique levels in a feature is > discrete_threshold, then it is considered continuous, or discrete otherwise.</td>
+</tr>
+<tr>
+<td>n_jobs</td>
+<td>Any positive integer or -1</td>
+<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores. Currently not supported in Python 2.</td>
+</tr>
 </table>
 
 ```python
@@ -131,6 +161,16 @@ print(np.mean(cross_val_score(clf, features, labels)))
 <td>n_features_to_select</td>
 <td>Any positive integer</td>
 <td>The number of best features to retain after the feature selection process. The "best" features are the highest-scored features according to the MultiSURF scoring process.</td>
+</tr>
+<tr>
+<td>discrete_limit</td>
+<td>Any positive integer</td>
+<td>Value used to determine if a feature is discrete or continuous. If the number of unique levels in a feature is > discrete_threshold, then it is considered continuous, or discrete otherwise.</td>
+</tr>
+<tr>
+<td>n_jobs</td>
+<td>Any positive integer or -1</td>
+<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores. Currently not supported in Python 2.</td>
 </tr>
 </table>
 
