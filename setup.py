@@ -17,7 +17,6 @@ setup(
     packages=find_packages(),
     url='https://github.com/EpistasisLab/scikit-rebate',
     license='License :: OSI Approved :: MIT License',
-    #entry_points={'console_scripts': ['skrebate=skrebate:main', ]},
     description=('A sklearn-compatible Python implementation of ReBATE, a suite of Relief-based feature selection algorithms.'),
     long_description='''
 A sklearn-compatible Python implementation of ReBATE, a suite of Relief-based feature selection algorithms.
@@ -29,7 +28,7 @@ If you have any questions or comments about skrebate, please feel free to contac
 This project is hosted at https://github.com/EpistasisLab/scikit-rebate
 ''',
     zip_safe=True,
-    install_requires=['numpy', 'scipy', 'scikit-learn'],
+    install_requires=['numpy', 'scipy', 'scikit-learn', 'joblib'],
     classifiers=[
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',

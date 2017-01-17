@@ -14,10 +14,10 @@ python -c "import numpy; print('numpy %s' % numpy.__version__)"
 python -c "import scipy; print('scipy %s' % scipy.__version__)"
 python -c "import sklearn; print('sklearn %s' % sklearn.__version__)"
 python -c "import pandas; print('pandas %s' % pandas.__version__)"
+python -c "import joblib; print('joblib %s' % joblib.__version__)"
 
 if [[ "$COVERAGE" == "true" ]]; then
     nosetests -s -v --with-coverage
 else
     nosetests -s -v
 fi
-#make test-doc test-sphinxext
