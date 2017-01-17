@@ -24,6 +24,7 @@ import numpy as np
 import sys
 import math
 import time as tm
+import warnings
 from numpy import isnan, where, append, unique, delete, empty, double, array
 from numpy import std, subtract, logical_not, max, min, sum, absolute
 from sklearn.base import BaseEstimator
@@ -87,7 +88,12 @@ class ReliefF(BaseEstimator):
         """
         self._X = X
         self._y = y
-        
+
+        # Disallow parallelization in Python 2
+        if self.n_jobs != 1 and sys.version_info[0] < 3:
+            warnings.warn('Parallelization is currently not supported in Python 2. Settings n_jobs to 1.', RuntimeWarning)
+            self.n_jobs = 1
+
         # Set up the properties for ReliefF
         self._datalen = len(self._X)
         self._label_list = list(set(self._y))
@@ -339,7 +345,12 @@ class ReliefF(BaseEstimator):
     def _run_algorithm(self):
         attr = self._get_attribute_info()
         nan_entries = isnan(self._X)
-        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self._compute_scores)(instance_num, attr, nan_entries) for instance_num in range(self._datalen)), axis=0)
+        
+        if self.n_jobs != 1:
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self._compute_scores)(instance_num, attr, nan_entries) for instance_num in range(self._datalen)), axis=0)
+        else:
+            scores = np.sum([self._compute_scores(instance_num, attr, nan_entries) for instance_num in range(self._datalen)], axis=0)
+
         return np.array(scores)
 
     ###############################################################################

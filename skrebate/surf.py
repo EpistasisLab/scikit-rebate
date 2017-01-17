@@ -94,5 +94,10 @@ class SURF(ReliefF):
 
         attr = self._get_attribute_info()
         nan_entries = np.isnan(self._X)
-        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self._compute_scores)(instance_num, attr, nan_entries, avg_dist) for instance_num in range(self._datalen)), axis=0)
+
+        if self.n_jobs != 1:
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(self._compute_scores)(instance_num, attr, nan_entries, avg_dist) for instance_num in range(self._datalen)), axis=0)
+        else:
+            scores = np.sum([self._compute_scores(instance_num, attr, nan_entries, avg_dist) for instance_num in range(self._datalen)], axis=0)
+
         return np.array(scores)

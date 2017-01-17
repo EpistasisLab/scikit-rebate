@@ -4,6 +4,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 import pandas as pd
 import numpy as np
+import warnings
 
 np.random.seed(3249083)
 
@@ -19,7 +20,7 @@ def test_relieff_init():
                   discrete_threshold=20,
                   verbose=True,
                   n_jobs=3)
-    
+
     assert clf.n_features_to_select == 7
     assert clf.n_neighbors == 500
     assert clf.discrete_threshold == 20
@@ -32,7 +33,7 @@ def test_surf_init():
                discrete_threshold=20,
                verbose=True,
                n_jobs=3)
-    
+
     assert clf.n_features_to_select == 7
     assert clf.discrete_threshold == 20
     assert clf.verbose == True
@@ -45,7 +46,9 @@ def test_relieff_pipeline():
     clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100, n_jobs=-1),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
-    assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
 
 def test_surf_pipeline():
     """Ensure that SURF works in a sklearn pipeline"""
@@ -54,7 +57,9 @@ def test_surf_pipeline():
     clf = make_pipeline(SURF(n_features_to_select=2, n_jobs=-1),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
-    assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
 
 def test_surfstar_pipeline():
     """Ensure that SURF* works in a sklearn pipeline"""
@@ -63,7 +68,9 @@ def test_surfstar_pipeline():
     clf = make_pipeline(SURFstar(n_features_to_select=2, n_jobs=-1),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
-    assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
 
 def test_multisurf_pipeline():
     """Ensure that MultiSURF works in a sklearn pipeline"""
@@ -72,4 +79,6 @@ def test_multisurf_pipeline():
     clf = make_pipeline(MultiSURF(n_features_to_select=2, n_jobs=-1),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
-    assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
