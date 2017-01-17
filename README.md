@@ -44,12 +44,14 @@ scikit-rebate is built on top of the following existing Python packages:
 
 * scikit-learn
 
+* joblib
+
 All of the necessary Python packages can be installed via the [Anaconda Python distribution](https://www.continuum.io/downloads), which we strongly recommend that you use. We also strongly recommend that you use Python 3 over Python 2 if you're given the choice.
 
 NumPy, SciPy, and scikit-learn can be installed in Anaconda via the command:
 
 ```
-conda install numpy scipy scikit-learn
+conda install numpy scipy scikit-learn joblib
 ```
 
 Once the prerequisites are installed, you should be able to install scikit-rebate with a pip command:
@@ -100,4 +102,3 @@ If you use scikit-rebate in a scientific publication, please consider citing at 
 Igor Kononenko et al. Overcoming the myopia of inductive learning algorithms with RELIEFF (1997), Applied Intelligence, 7(1), pp. 39-55.
 
 Casey S Greene, Nadia M Penrod, Jeff Kiralis, and Jason H Moore. Spatially Uniform ReliefF (SURF) for computationally-efficient filtering of gene-gene interactions (2009), BioData Mining 2(5).
-
