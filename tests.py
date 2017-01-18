@@ -54,8 +54,8 @@ def test_relieff_pipeline_parallel():
     """Ensure that ReliefF works in a sklearn pipeline where cross_val_score is parallelized"""
     np.random.seed(49082)
 
-    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100),
-                        RandomForestClassifier(n_estimators=100))
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100, n_jobs=-1),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features, labels, cv=3, n_jobs=-1)) > 0.7
 
@@ -73,7 +73,7 @@ def test_surf_pipeline_parallel():
     np.random.seed(240932)
 
     clf = make_pipeline(SURF(n_features_to_select=2),
-                        RandomForestClassifier(n_estimators=100))
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features, labels, cv=3, n_jobs=-1)) > 0.7
 
@@ -91,7 +91,7 @@ def test_surfstar_pipeline_parallel():
     np.random.seed(9238745)
 
     clf = make_pipeline(SURFstar(n_features_to_select=2),
-                        RandomForestClassifier(n_estimators=100))
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features, labels, cv=3, n_jobs=-1)) > 0.7
 
