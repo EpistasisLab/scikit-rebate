@@ -327,10 +327,29 @@ class ReliefF(BaseEstimator):
                     locator.reverse()
                 dist_vect.append(self._distance_array[locator[0]][locator[1]])
             else:
-                dist_vect.append(0.)
+                dist_vect.append(sys.maxsize)
 
         dist_vect = np.array(dist_vect)
-        return np.argsort(dist_vect)[1:self.n_neighbors + 1]
+
+        nn_list = []
+        match_count = 0
+        miss_count = 0
+        for nn_index in np.argsort(dist_vect):
+            if self._y[inst] == self._y[nn_index]: # match
+                if match_count >= self.n_neighbors:
+                    continue
+                nn_list.append(nn_index)
+                match_count += 1
+            else: # miss
+                if miss_count >= self.n_neighbors:
+                    continue
+                nn_list.append(nn_index)
+                miss_count += 1
+
+            if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
+                break
+
+        return np.array(nn_list)
 
     def _compute_scores(self, inst, attr, nan_entries):
         scores = np.zeros(self._num_attributes)
