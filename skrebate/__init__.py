@@ -24,3 +24,4 @@ from .relieff import ReliefF
 from .surf import SURF
 from .multisurf import MultiSURF
 from .surfstar import SURFstar
+from .multisurfnofar import MultiSURFNoFar
