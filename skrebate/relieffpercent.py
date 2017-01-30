@@ -94,7 +94,8 @@ class ReliefFPercent(BaseEstimator):
 
         # Set up the properties for ReliefF
         self._datalen = len(self._X)
-        self.n_neighbors = int(self.percent_neighbors * self._datalen)
+        # Halve the number of neighbors because ReliefF looks at n_neighbors matches and n_neighbors misses
+        self.n_neighbors = int(self.percent_neighbors * self._datalen * 0.5)
         self._label_list = list(set(self._y))
         discrete_label = (len(self._label_list) <= self.discrete_threshold)
 
