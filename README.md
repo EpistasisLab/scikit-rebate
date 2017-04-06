@@ -20,9 +20,7 @@ The main benefit of Relief algorithms is that they identify feature interactions
 
 Relief algorithms are commonly applied to genetic analyses, where epistasis (i.e., feature interactions) is common. However, the algorithms implemented in this package can be applied to almost any supervised classification data set and supports:
 
-* Categorical features
-
-* Continuous features
+* Categorical or continuous features
 
 * Discrete endpoints (i.e., classification)
 
