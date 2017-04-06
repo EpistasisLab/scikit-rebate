@@ -240,8 +240,8 @@ class ReliefFPercent(BaseEstimator):
             for i in attr:
                 cmin = attr[i][2]
                 diff = attr[i][3]
-                x[idx] -= cmin
-                x[idx] /= diff
+                x[:, idx] -= cmin
+                x[:, idx] /= diff
                 idx += 1
             return x
         #------------------------------------------#
