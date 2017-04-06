@@ -236,6 +236,8 @@ class ReliefF(BaseEstimator):
             """Normalizes continuous features so they are in the same range"""
             idx = 0
             for i in attr:
+                if attr[i][0] == 'discrete':
+                    continue
                 cmin = attr[i][2]
                 diff = attr[i][3]
                 x[:, idx] -= cmin
