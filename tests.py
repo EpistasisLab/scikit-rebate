@@ -158,7 +158,6 @@ def test_surfstar_pipeline_cont_endpoint():
     clf = make_pipeline(SURFstar(n_features_to_select=2, n_jobs=-1),
                         RandomForestRegressor(n_estimators=100, n_jobs=-1))
 
-    print(abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint, cv=3))))
     assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint, cv=3))) < 0.5
 
 def test_multisurf_pipeline_cont_endpoint():
@@ -168,7 +167,6 @@ def test_multisurf_pipeline_cont_endpoint():
     clf = make_pipeline(MultiSURF(n_features_to_select=2, n_jobs=-1),
                         RandomForestRegressor(n_estimators=100, n_jobs=-1))
 
-    print(abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint, cv=3))))
     assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint, cv=3))) < 0.5
 
 ### Test algorithms with data that has mixed attributes
