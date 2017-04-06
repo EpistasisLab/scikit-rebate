@@ -237,7 +237,9 @@ class ReliefFPercent(BaseEstimator):
         def pre_normalize(x):
             """Normalizes continuous features so they are in the same range"""
             idx = 0
-            for i in attr:
+            for i in sorted(attr.keys()):
+                if attr[i][0] == 'discrete':
+                    continue
                 cmin = attr[i][2]
                 diff = attr[i][3]
                 x[:, idx] -= cmin
@@ -283,7 +285,10 @@ class ReliefFPercent(BaseEstimator):
             cindices.append(np.where(np.isnan(xc[i]))[0])
             dindices.append(np.where(np.isnan(xd[i]))[0])
     
-        dist_array = Parallel(n_jobs=self.n_jobs)(delayed(self._get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
+        if self.n_jobs != 1:
+            dist_array = Parallel(n_jobs=self.n_jobs)(delayed(self._get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
+        else:
+            dist_array = [self._get_row_missing(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen)]
         return np.array(dist_array)
     #==================================================================#
     def _get_row_missing(self, xc, xd, cdiffs, index, cindices, dindices):
