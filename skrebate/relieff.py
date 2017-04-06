@@ -111,6 +111,8 @@ class ReliefF(BaseEstimator):
         self._missing_data_count = np.isnan(self._X).sum()
 
         # Assign internal headers for the features
+        # The pre_normalize() function relies on the headers being ordered, e.g., X01, X02, etc.
+        # If this is changed, then the sort in the pre_normalize() function needs to be adapted as well.
         xlen = len(self._X[0])
         mxlen = len(str(xlen + 1))
         self._headers = ['X{}'.format(str(i).zfill(mxlen)) for i in range(1, xlen + 1)]
@@ -235,7 +237,7 @@ class ReliefF(BaseEstimator):
         def pre_normalize(x):
             """Normalizes continuous features so they are in the same range"""
             idx = 0
-            for i in attr:
+            for i in sorted(attr.keys()):
                 if attr[i][0] == 'discrete':
                     continue
                 cmin = attr[i][2]
