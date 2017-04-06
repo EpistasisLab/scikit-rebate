@@ -10,8 +10,17 @@ warnings.filterwarnings('ignore')
 
 np.random.seed(3249083)
 
-genetic_data = pd.read_csv('https://github.com/EpistasisLab/penn-ml-benchmarks/raw/master/datasets/GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1/GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz', sep='\t', compression='gzip')
+genetic_data = pd.read_csv('data/GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz', sep='\t', compression='gzip')
 genetic_data = genetic_data.sample(frac=0.25)
+
+genetic_data_cont_endpoint = pd.read_csv('data/GAMETES_Epistasis_2-Way_continuous_endpoint_a_20s_1600her_0.4__maf_0.2_EDM-2_01.tsv.gz', sep='\t', compression='gzip')
+genetic_data_cont_endpoint = genetic_data_cont_endpoint.sample(frac=0.25)
+
+genetic_data_mixed_attributes = pd.read_csv('data/GAMETES_Epistasis_2-Way_mixed_attribute_a_20s_1600her_0.4__maf_0.2_EDM-2_01.tsv.gz', sep='\t', compression='gzip')
+genetic_data_mixed_attributes = genetic_data_mixed_attributes.sample(frac=0.25)
+
+genetic_data_missing_values = pd.read_csv('data/GAMETES_Epistasis_2-Way_missing_values_0.1_a_20s_1600her_0.4__maf_0.2_EDM-2_01.tsv.gz', sep='\t', compression='gzip')
+genetic_data_missing_values = genetic_data_missing_values.sample(frac=0.25)
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
 
