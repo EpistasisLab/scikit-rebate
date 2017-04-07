@@ -21,7 +21,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from __future__ import print_function
 import numpy as np
-from joblib import Parallel, delayed
+from sklearn.externals.joblib import Parallel, delayed
 from .relieff import ReliefF
 
 class SURF(ReliefF):
@@ -41,7 +41,7 @@ class SURF(ReliefF):
         Parameters
         ----------
         n_features_to_select: int (default: 10)
-            the number of top features (according to the relieff score) to 
+            the number of top features (according to the relieff score) to
             retain after feature selection is applied.
         discrete_threshold: int (default: 10)
             Value used to determine if a feature is discrete or continuous.

@@ -22,7 +22,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
 import numpy as np
 from .surfstar import SURFstar
-from joblib import Parallel, delayed
+from sklearn.externals.joblib import Parallel, delayed
 
 class MultiSURF(SURFstar):
 
@@ -80,11 +80,11 @@ class MultiSURF(SURFstar):
     def _run_algorithm(self):
         attr = self._get_attribute_info()
         nan_entries = np.isnan(self._X)
-        
+
         if self.n_jobs != 1:
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
                 self._compute_scores)(instance_num, attr, nan_entries) for instance_num in range(self._datalen)), axis=0)
         else:
             scores = np.sum([self._compute_scores(instance_num, attr, nan_entries) for instance_num in range(self._datalen)], axis=0)
-        
+
         return np.array(scores)
