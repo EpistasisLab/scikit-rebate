@@ -27,6 +27,39 @@ import sys
 from sklearn.base import BaseEstimator
 from sklearn.externals.joblib import Parallel, delayed
 
+def _get_row_missing(self, xc, xd, cdiffs, index, cindices, dindices):
+    row = np.empty(0, dtype=np.double)
+    cinst1 = xc[index]
+    dinst1 = xd[index]
+    can = cindices[index]
+    dan = dindices[index]
+    for j in range(index):
+        dist = 0
+        dinst2 = xd[j]
+        cinst2 = xc[j]
+
+        # continuous
+        cbn = cindices[j]
+        idx = np.unique(np.append(can, cbn))   # create unique list
+        c1 = np.delete(cinst1, idx)       # remove elements by idx
+        c2 = np.delete(cinst2, idx)
+        cdf = np.delete(cdiffs, idx)
+
+        # discrete
+        dbn = dindices[j]
+        idx = np.unique(np.append(dan, dbn))
+        d1 = np.delete(dinst1, idx)
+        d2 = np.delete(dinst2, idx)
+
+        # discrete first
+        dist += len(d1[d1 != d2])
+
+        # now continuous
+        dist += np.sum(np.absolute(np.subtract(c1, c2)) / cdf)
+
+        row = np.append(row, dist)
+    return row
+
 class ReliefF(BaseEstimator):
 
     """Feature selection using data-mined expert knowledge.
@@ -286,14 +319,21 @@ class ReliefF(BaseEstimator):
             cindices.append(np.where(np.isnan(xc[i]))[0])
             dindices.append(np.where(np.isnan(xd[i]))[0])
 
-        if self.n_jobs != 1:
+        """if self.n_jobs != 1:
             dist_array = Parallel(n_jobs=self.n_jobs)(delayed(
             self._get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
         else:
-            dist_array = [self._get_row_missing(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen)]
+            dist_array = [self._get_row_missing(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen)]"""
+
+        if self.n_jobs != 1:
+            dist_array = Parallel(n_jobs=self.n_jobs)(delayed(
+            get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
+        else:
+            dist_array = [get_row_missing(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen)]
 
         return np.array(dist_array)
     #==================================================================#
+    """
     def _get_row_missing(self, xc, xd, cdiffs, index, cindices, dindices):
         row = np.empty(0, dtype=np.double)
         cinst1 = xc[index]
@@ -326,6 +366,7 @@ class ReliefF(BaseEstimator):
 
             row = np.append(row, dist)
         return row
+    """
 
 ############################# ReliefF ############################################
     def _find_neighbors(self, inst):
@@ -360,12 +401,20 @@ class ReliefF(BaseEstimator):
                 break
 
         return np.array(nn_list)
-
+    """
     def _compute_scores(self, inst, attr, nan_entries):
         scores = np.zeros(self._num_attributes)
         NN = self._find_neighbors(inst)
         for feature_num in range(self._num_attributes):
             scores[feature_num] += self._compute_score(attr, NN, feature_num, inst, nan_entries)
+        return scores
+    """
+    @classmethod
+    def _compute_scores(cls, inst, attr, nan_entries):
+        scores = np.zeros(cls._num_attributes)
+        NN = cls._find_neighbors(inst)
+        for feature_num in range(cls._num_attributes):
+            scores[feature_num] += cls._compute_score(attr, NN, feature_num, inst, nan_entries)
         return scores
 
     def _run_algorithm(self):
