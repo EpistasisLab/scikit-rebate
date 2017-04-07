@@ -26,6 +26,8 @@ print('ReliefF',np.mean(cross_val_score(clf, features, labels)))
 clf = make_pipeline(SURF(n_features_to_select=2, n_jobs=-1),
                     RandomForestClassifier(n_estimators=100))
 
+"""
+
 print('SURF',np.mean(cross_val_score(clf, features, labels)))
 
 # SURF*
@@ -48,3 +50,4 @@ clf = make_pipeline(RFE(ReliefF(n_jobs=-1), n_features_to_select=2),
                     RandomForestClassifier(n_estimators=100))
 
 print('TURF',np.mean(cross_val_score(clf, features, labels)))
+"""

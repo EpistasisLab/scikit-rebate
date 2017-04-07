@@ -60,6 +60,93 @@ def _get_row_missing(self, xc, xd, cdiffs, index, cindices, dindices):
         row = np.append(row, dist)
     return row
 
+
+
+def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, y, labels_std):
+    """Evaluates feature scores according to the ReliefF algorithm"""
+
+    fname = headers[feature]
+    ftype = attr[fname][0]  # feature type
+    ctype = class_type # class type
+    diff_hit = diff_miss = 0.0
+    count_hit = count_miss = 0.0
+    mmdiff = 1
+    diff = 0
+
+    if nan_entries[inst][feature]:
+        return 0.
+
+    xinstfeature = X[inst][feature]
+
+    #--------------------------------------------------------------------------
+    if ctype == 'discrete':
+        for i in range(len(NN)):
+            if nan_entries[NN[i]][feature]:
+                continue
+
+            xNNifeature = X[NN[i]][feature]
+            absvalue = abs(xinstfeature - xNNifeature) / mmdiff
+
+            if y[inst] == y[NN[i]]:   # HIT
+                count_hit += 1
+                if xinstfeature != xNNifeature:
+                    if ftype == 'continuous':
+                        diff_hit -= absvalue
+                    else: # discrete
+                        diff_hit -= 1
+            else: # MISS
+                count_miss += 1
+                if xinstfeature != xNNifeature:
+                    if ftype == 'continuous':
+                        diff_miss += absvalue
+                    else: # discrete
+                        diff_miss += 1
+
+        hit_proportion = count_hit / float(len(NN))
+        miss_proportion = count_miss / float(len(NN))
+        diff = diff_hit * miss_proportion + diff_miss * hit_proportion
+    #--------------------------------------------------------------------------
+    else: # CONTINUOUS endpoint
+        mmdiff = attr[fname][3]
+        same_class_bound = labels_std
+
+        for i in range(len(NN)):
+            if nan_entries[NN[i]][feature]:
+                continue
+
+            xNNifeature = X[NN[i]][feature]
+            absvalue = abs(xinstfeature - xNNifeature) / mmdiff
+
+            if abs(y[inst] - y[NN[i]]) < same_class_bound: # HIT
+                count_hit += 1
+                if xinstfeature != xNNifeature:
+                    if ftype == 'continuous':
+                        diff_hit -= absvalue
+                    else: # discrete
+                        diff_hit -= 1
+            else: # MISS
+                count_miss += 1
+                if xinstfeature != xNNifeature:
+                    if ftype == 'continuous':
+                        diff_miss += absvalue
+                    else: # discrete
+                        diff_miss += 1
+
+        hit_proportion = count_hit / float(len(NN))
+        miss_proportion = count_miss / float(len(NN))
+        diff = diff_hit * miss_proportion + diff_miss * hit_proportion
+
+    return diff
+
+def compute_scores(inst, attr, nan_entries, num_attributes, NN, headers, class_type, X, y, labels_std):
+    scores = np.zeros(num_attributes)
+    #NN = self._find_neighbors(inst)
+    for feature_num in range(num_attributes):
+        scores[feature_num] += compute_score(attr, NN, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std)
+    return scores
+
+
+
 class ReliefF(BaseEstimator):
 
     """Feature selection using data-mined expert knowledge.
@@ -401,6 +488,7 @@ class ReliefF(BaseEstimator):
                 break
 
         return np.array(nn_list)
+
     """
     def _compute_scores(self, inst, attr, nan_entries):
         scores = np.zeros(self._num_attributes)
@@ -409,29 +497,30 @@ class ReliefF(BaseEstimator):
             scores[feature_num] += self._compute_score(attr, NN, feature_num, inst, nan_entries)
         return scores
     """
-    @classmethod
-    def _compute_scores(cls, inst, attr, nan_entries):
-        scores = np.zeros(cls._num_attributes)
-        NN = cls._find_neighbors(inst)
-        for feature_num in range(cls._num_attributes):
-            scores[feature_num] += cls._compute_score(attr, NN, feature_num, inst, nan_entries)
-        return scores
+
 
     def _run_algorithm(self):
         attr = self._get_attribute_info()
         nan_entries = np.isnan(self._X)
-
+        """
         if self.n_jobs != 1:
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
                 self._compute_scores)(instance_num, attr, nan_entries) for instance_num in range(self._datalen)), axis=0)
         else:
             scores = np.sum([self._compute_scores(instance_num, attr, nan_entries) for instance_num in range(self._datalen)], axis=0)
+        """
+        NNlist = map(self._find_neighbors, range(self._datalen))
+        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+            compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
+            NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
+             for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 
         return np.array(scores)
 
+    """
     ###############################################################################
     def _compute_score(self, attr, NN, feature, inst, nan_entries):
-        """Evaluates feature scores according to the ReliefF algorithm"""
+        #Evaluates feature scores according to the ReliefF algorithm#
 
         fname = self._headers[feature]
         ftype = attr[fname][0]  # feature type
@@ -505,3 +594,4 @@ class ReliefF(BaseEstimator):
             diff = diff_hit * miss_proportion + diff_miss * hit_proportion
 
         return diff
+        """
