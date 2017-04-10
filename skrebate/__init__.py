@@ -18,9 +18,9 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMA
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-
-from ._version import __version__
-from .relieff import ReliefF
-from .surf import SURF
-from .multisurf import MultiSURF
-from .surfstar import SURFstar
+if __name__ == '__main__':
+    from ._version import __version__
+    from .relieff import ReliefF
+    from .surf import SURF
+    from .multisurf import MultiSURF
+    from .surfstar import SURFstar
