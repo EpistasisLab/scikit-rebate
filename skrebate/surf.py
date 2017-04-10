@@ -23,6 +23,7 @@ from __future__ import print_function
 import numpy as np
 from sklearn.externals.joblib import Parallel, delayed
 from .relieff import ReliefF
+from .scoring_utils import SURF_compute_scores
 
 class SURF(ReliefF):
 
@@ -77,14 +78,6 @@ class SURF(ReliefF):
             NN.append(min_indicies[i])
         return np.array(NN, dtype=np.int32)
 
-    def _compute_scores(self, inst, attr, nan_entries, avg_dist):
-        scores = np.zeros(self._num_attributes)
-        NN = self._find_neighbors(inst, avg_dist)
-        if len(NN) <= 0:
-            return scores
-        for feature_num in range(self._num_attributes):
-            scores[feature_num] += self._compute_score(attr, NN, feature_num, inst, nan_entries)
-        return scores
 
     def _run_algorithm(self):
         sm = cnt = 0
@@ -96,10 +89,10 @@ class SURF(ReliefF):
         attr = self._get_attribute_info()
         nan_entries = np.isnan(self._X)
 
-        if self.n_jobs != 1:
-            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-                self._compute_scores)(instance_num, attr, nan_entries, avg_dist) for instance_num in range(self._datalen)), axis=0)
-        else:
-            scores = np.sum([self._compute_scores(instance_num, attr, nan_entries, avg_dist) for instance_num in range(self._datalen)], axis=0)
+        NNlist = [self._find_neighbors(datalen, avg_dist) for datalen in range(self._datalen)]
+        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+            SURF_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
+            NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
+             for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 
         return np.array(scores)

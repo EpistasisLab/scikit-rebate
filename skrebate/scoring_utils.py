@@ -110,9 +110,31 @@ def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, 
 
     return diff
 
-def compute_scores(inst, attr, nan_entries, num_attributes, NN, headers, class_type, X, y, labels_std):
+
+def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, NN, headers, class_type, X, y, labels_std):
     scores = np.zeros(num_attributes)
-    #NN = self._find_neighbors(inst)
     for feature_num in range(num_attributes):
-        scores[feature_num] += compute_score(attr, NN, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std)
+        scores[feature_num] += compute_score(attr, NN, feature_num, inst,
+                        nan_entries, headers, class_type, X, y, labels_std)
+    return scores
+
+
+def SURF_compute_scores(inst, attr, nan_entries, num_attributes, NN, headers, class_type, X, y, labels_std):
+    scores = np.zeros(num_attributes)
+    if len(NN) <= 0:
+        return scores
+    for feature_num in range(num_attributes):
+        scores[feature_num] += compute_score(attr, NN, feature_num, inst,
+                        nan_entries, headers, class_type, X, y, labels_std)
+    return scores
+
+def SURFstar_compute_scores(inst, attr, nan_entries, num_attributes, NN_near, NN_far, headers, class_type, X, y, labels_std):
+    scores = np.zeros(num_attributes)
+    for feature_num in range(num_attributes):
+        if len(NN_near) > 0:
+            scores[feature_num] += compute_score(attr, NN_near, feature_num, inst,
+                            nan_entries, headers, class_type, X, y, labels_std)
+        if len(NN_far) > 0:
+            scores[feature_num] -= compute_score(attr, NN_far, feature_num, inst,
+                            nan_entries, headers, class_type, X, y, labels_std)
     return scores

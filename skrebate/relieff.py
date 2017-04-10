@@ -26,8 +26,7 @@ import warnings
 import sys
 from sklearn.base import BaseEstimator
 from sklearn.externals.joblib import Parallel, delayed
-from .scoring_utils import get_row_missing, compute_score, compute_scores
-
+from .scoring_utils import get_row_missing, ReliefF_compute_scores
 
 
 class ReliefF(BaseEstimator):
@@ -89,12 +88,6 @@ class ReliefF(BaseEstimator):
         """
         self._X = X
         self._y = y
-
-        # Disallow parallelization in Python 2
-        """
-        if self.n_jobs != 1 and sys.version_info[0] < 3:
-            warnings.warn('Parallelization is currently not supported in Python 2. Settings n_jobs to 1.', RuntimeWarning)
-            self.n_jobs = 1"""
 
         # Set up the properties for ReliefF
         self._datalen = len(self._X)
@@ -289,55 +282,11 @@ class ReliefF(BaseEstimator):
             cindices.append(np.where(np.isnan(xc[i]))[0])
             dindices.append(np.where(np.isnan(xd[i]))[0])
 
-        """if self.n_jobs != 1:
-            dist_array = Parallel(n_jobs=self.n_jobs)(delayed(
-            self._get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
-        else:
-            dist_array = [self._get_row_missing(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen)]"""
-
-        if self.n_jobs != 1:
-            dist_array = Parallel(n_jobs=self.n_jobs)(delayed(
+        dist_array = Parallel(n_jobs=self.n_jobs)(delayed(
             get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
-        else:
-            dist_array = [get_row_missing(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen)]
 
         return np.array(dist_array)
     #==================================================================#
-    """
-    def _get_row_missing(self, xc, xd, cdiffs, index, cindices, dindices):
-        row = np.empty(0, dtype=np.double)
-        cinst1 = xc[index]
-        dinst1 = xd[index]
-        can = cindices[index]
-        dan = dindices[index]
-        for j in range(index):
-            dist = 0
-            dinst2 = xd[j]
-            cinst2 = xc[j]
-
-            # continuous
-            cbn = cindices[j]
-            idx = np.unique(np.append(can, cbn))   # create unique list
-            c1 = np.delete(cinst1, idx)       # remove elements by idx
-            c2 = np.delete(cinst2, idx)
-            cdf = np.delete(cdiffs, idx)
-
-            # discrete
-            dbn = dindices[j]
-            idx = np.unique(np.append(dan, dbn))
-            d1 = np.delete(dinst1, idx)
-            d2 = np.delete(dinst2, idx)
-
-            # discrete first
-            dist += len(d1[d1 != d2])
-
-            # now continuous
-            dist += np.sum(np.absolute(np.subtract(c1, c2)) / cdf)
-
-            row = np.append(row, dist)
-        return row
-    """
-
 ############################# ReliefF ############################################
     def _find_neighbors(self, inst):
         dist_vect = []
@@ -372,109 +321,14 @@ class ReliefF(BaseEstimator):
 
         return np.array(nn_list)
 
-    """
-    def _compute_scores(self, inst, attr, nan_entries):
-        scores = np.zeros(self._num_attributes)
-        NN = self._find_neighbors(inst)
-        for feature_num in range(self._num_attributes):
-            scores[feature_num] += self._compute_score(attr, NN, feature_num, inst, nan_entries)
-        return scores
-    """
-
-
     def _run_algorithm(self):
         attr = self._get_attribute_info()
         nan_entries = np.isnan(self._X)
-        """
-        if self.n_jobs != 1:
-            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-                self._compute_scores)(instance_num, attr, nan_entries) for instance_num in range(self._datalen)), axis=0)
-        else:
-            scores = np.sum([self._compute_scores(instance_num, attr, nan_entries) for instance_num in range(self._datalen)], axis=0)
-        """
+
         NNlist = map(self._find_neighbors, range(self._datalen))
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-            compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
+            ReliefF_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
             NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
              for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 
         return np.array(scores)
-
-    """
-    ###############################################################################
-    def _compute_score(self, attr, NN, feature, inst, nan_entries):
-        #Evaluates feature scores according to the ReliefF algorithm#
-
-        fname = self._headers[feature]
-        ftype = attr[fname][0]  # feature type
-        ctype = self._class_type # class type
-        diff_hit = diff_miss = 0.0
-        count_hit = count_miss = 0.0
-        mmdiff = 1
-        diff = 0
-
-        if nan_entries[inst][feature]:
-            return 0.
-
-        xinstfeature = self._X[inst][feature]
-
-        #--------------------------------------------------------------------------
-        if ctype == 'discrete':
-            for i in range(len(NN)):
-                if nan_entries[NN[i]][feature]:
-                    continue
-
-                xNNifeature = self._X[NN[i]][feature]
-                absvalue = abs(xinstfeature - xNNifeature) / mmdiff
-
-                if self._y[inst] == self._y[NN[i]]:   # HIT
-                    count_hit += 1
-                    if xinstfeature != xNNifeature:
-                        if ftype == 'continuous':
-                            diff_hit -= absvalue
-                        else: # discrete
-                            diff_hit -= 1
-                else: # MISS
-                    count_miss += 1
-                    if xinstfeature != xNNifeature:
-                        if ftype == 'continuous':
-                            diff_miss += absvalue
-                        else: # discrete
-                            diff_miss += 1
-
-            hit_proportion = count_hit / float(len(NN))
-            miss_proportion = count_miss / float(len(NN))
-            diff = diff_hit * miss_proportion + diff_miss * hit_proportion
-        #--------------------------------------------------------------------------
-        else: # CONTINUOUS endpoint
-            mmdiff = attr[fname][3]
-            same_class_bound = self._labels_std
-
-            for i in range(len(NN)):
-                if nan_entries[NN[i]][feature]:
-                    continue
-
-                xNNifeature = self._X[NN[i]][feature]
-                absvalue = abs(xinstfeature - xNNifeature) / mmdiff
-
-                if abs(self._y[inst] - self._y[NN[i]]) < same_class_bound: # HIT
-                    count_hit += 1
-                    if xinstfeature != xNNifeature:
-                        if ftype == 'continuous':
-                            diff_hit -= absvalue
-                        else: # discrete
-                            diff_hit -= 1
-                else: # MISS
-                    count_miss += 1
-                    if xinstfeature != xNNifeature:
-                        if ftype == 'continuous':
-                            diff_miss += absvalue
-                        else: # discrete
-                            diff_miss += 1
-
-            hit_proportion = count_hit / float(len(NN))
-            miss_proportion = count_miss / float(len(NN))
-            diff = diff_hit * miss_proportion + diff_miss * hit_proportion
-
-        return diff
-        """
