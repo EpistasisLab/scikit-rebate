@@ -82,12 +82,12 @@
         },
         {
             "location": "/releases/",
-            "text": "scikit-rebate 0.3\n\n\n\n\n\n\nAdded a parallelization parameter, \nn_jobs\n, to ReliefF, SURF, SURF*, and MultiSURF via joblib. This feature is currently only supported in Python 3+.\n\n\n\n\n\n\nRenamed the \ndlimit\n parameter to \ndiscrete_limit\n to better reflect the purpose of the parameter.\n\n\n\n\n\n\nMinor code optimizations.\n\n\n\n\n\n\nscikit-rebate 0.2\n\n\n\n\n\n\nAdded documentation.\n\n\n\n\n\n\nMinor code optimizations.\n\n\n\n\n\n\nscikit-rebate 0.1\n\n\n\n\nInitial release of Relief algorithms, including ReliefF, SURF, SURF*, and MultiSURF.",
+            "text": "scikit-rebate 0.3\n\n\n\n\n\n\nAdded a parallelization parameter, \nn_jobs\n, to ReliefF, SURF, SURF*, and MultiSURF via joblib.\n\n\n\n\n\n\nRenamed the \ndlimit\n parameter to \ndiscrete_limit\n to better reflect the purpose of the parameter.\n\n\n\n\n\n\nMinor code optimizations.\n\n\n\n\n\n\nscikit-rebate 0.2\n\n\n\n\n\n\nAdded documentation.\n\n\n\n\n\n\nMinor code optimizations.\n\n\n\n\n\n\nscikit-rebate 0.1\n\n\n\n\nInitial release of Relief algorithms, including ReliefF, SURF, SURF*, and MultiSURF.",
             "title": "Release Notes"
         },
         {
             "location": "/releases/#scikit-rebate-03",
-            "text": "Added a parallelization parameter,  n_jobs , to ReliefF, SURF, SURF*, and MultiSURF via joblib. This feature is currently only supported in Python 3+.    Renamed the  dlimit  parameter to  discrete_limit  to better reflect the purpose of the parameter.    Minor code optimizations.",
+            "text": "Added a parallelization parameter,  n_jobs , to ReliefF, SURF, SURF*, and MultiSURF via joblib.    Renamed the  dlimit  parameter to  discrete_limit  to better reflect the purpose of the parameter.    Minor code optimizations.",
             "title": "scikit-rebate 0.3"
         },
         {
