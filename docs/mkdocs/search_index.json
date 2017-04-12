@@ -7,7 +7,7 @@
         },
         {
             "location": "/installing/",
-            "text": "scikit-rebate is built on top of the following existing Python packages:\n\n\n\n\n\n\nNumPy\n\n\n\n\n\n\nSciPy\n\n\n\n\n\n\nscikit-learn\n\n\n\n\n\n\njoblib\n\n\n\n\n\n\nAll of the necessary Python packages can be installed via the \nAnaconda Python distribution\n, which we strongly recommend that you use. We also strongly recommend that you use Python 3 over Python 2 if you're given the choice.\n\n\nNumPy, SciPy, and scikit-learn can be installed in Anaconda via the command:\n\n\nconda install numpy scipy scikit-learn joblib\n\n\n\n\nOnce the prerequisites are installed, you should be able to install scikit-rebate with a pip command:\n\n\npip install skrebate\n\n\n\n\nPlease \nfile a new issue\n if you run into installation problems.",
+            "text": "scikit-rebate is built on top of the following existing Python packages:\n\n\n\n\n\n\nNumPy\n\n\n\n\n\n\nSciPy\n\n\n\n\n\n\nscikit-learn\n\n\n\n\n\n\nAll of the necessary Python packages can be installed via the \nAnaconda Python distribution\n, which we strongly recommend that you use. We also strongly recommend that you use Python 3 over Python 2 if you're given the choice.\n\n\nNumPy, SciPy, and scikit-learn can be installed in Anaconda via the command:\n\n\nconda install numpy scipy scikit-learn\n\n\n\n\nOnce the prerequisites are installed, you should be able to install scikit-rebate with a pip command:\n\n\npip install skrebate\n\n\n\n\nPlease \nfile a new issue\n if you run into installation problems.",
             "title": "Installation"
         },
         {
