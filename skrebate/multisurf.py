@@ -22,7 +22,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
 import numpy as np
 from .surfstar import SURFstar
-from joblib import Parallel, delayed
+from sklearn.externals.joblib import Parallel, delayed
+from .scoring_utils import SURFstar_compute_scores
 
 class MultiSURF(SURFstar):
 
@@ -65,26 +66,17 @@ class MultiSURF(SURFstar):
 
         return np.array(NN_near), np.array(NN_far)
 
-    def _compute_scores(self, inst, attr, nan_entries):
-        scores = np.zeros(self._num_attributes)
-        NN_near, NN_far = self._find_neighbors(inst)
-
-        for feature_num in range(self._num_attributes):
-            if len(NN_near) > 0:
-                scores[feature_num] += self._compute_score(attr, NN_near, feature_num, inst, nan_entries)
-            if len(NN_far) > 0:
-                scores[feature_num] -= self._compute_score(attr, NN_far, feature_num, inst, nan_entries)
-
-        return scores
-
     def _run_algorithm(self):
         attr = self._get_attribute_info()
         nan_entries = np.isnan(self._X)
-        
-        if self.n_jobs != 1:
-            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-                self._compute_scores)(instance_num, attr, nan_entries) for instance_num in range(self._datalen)), axis=0)
-        else:
-            scores = np.sum([self._compute_scores(instance_num, attr, nan_entries) for instance_num in range(self._datalen)], axis=0)
-        
+
+        NNlist = [self._find_neighbors(datalen) for datalen in range(self._datalen)]
+        NN_near_list = [i[0] for i in NNlist]
+        NN_far_list = [i[1] for i in NNlist]
+
+        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+            SURFstar_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
+            NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std)
+             for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
+
         return np.array(scores)

@@ -22,6 +22,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
 import numpy as np
 from .surf import SURF
+from .scoring_utils import SURFstar_compute_scores
+from sklearn.externals.joblib import Parallel, delayed
 
 class SURFstar(SURF):
 
@@ -59,12 +61,23 @@ class SURFstar(SURF):
 
         return np.array(NN_near, dtype=np.int32), np.array(NN_far, dtype=np.int32)
 
-    def _compute_scores(self, inst, attr, nan_entries, avg_dist):
-        scores = np.zeros(self._num_attributes)
-        NN_near, NN_far = self._find_neighbors(inst, avg_dist)
-        for feature_num in range(self._num_attributes):
-            if len(NN_near) > 0:
-                scores[feature_num] += self._compute_score(attr, NN_near, feature_num, inst, nan_entries)
-            if len(NN_far) > 0:
-                scores[feature_num] -= self._compute_score(attr, NN_far, feature_num, inst, nan_entries)
-        return scores
+    def _run_algorithm(self):
+        sm = cnt = 0
+        for i in range(self._datalen):
+            sm += sum(self._distance_array[i])
+            cnt += len(self._distance_array[i])
+        avg_dist = sm / float(cnt)
+
+        attr = self._get_attribute_info()
+        nan_entries = np.isnan(self._X)
+
+        NNlist = [self._find_neighbors(datalen, avg_dist) for datalen in range(self._datalen)]
+        NN_near_list = [i[0] for i in NNlist]
+        NN_far_list = [i[1] for i in NNlist]
+
+        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+            SURFstar_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
+            NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std)
+             for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
+
+        return np.array(scores)
