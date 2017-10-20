@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (c) 2016-Present Randal S. Olson, Pete Schmitt, and Ryan J. Urbanowicz
+Copyright (c) 2016 Randal S. Olson, Pete Schmitt, and Ryan J. Urbanowicz
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -25,11 +25,9 @@ import time
 import warnings
 import sys
 from sklearn.base import BaseEstimator
-from sklearn.externals.joblib import Parallel, delayed
-from .scoring_utils import get_row_missing, ReliefF_compute_scores
+from joblib import Parallel, delayed
 
-
-class ReliefF(BaseEstimator):
+class ReliefFPercent(BaseEstimator):
 
     """Feature selection using data-mined expert knowledge.
 
@@ -40,16 +38,16 @@ class ReliefF(BaseEstimator):
 
     """
 
-    def __init__(self, n_features_to_select=10, n_neighbors=100, discrete_threshold=10, verbose=False, n_jobs=1):
+    def __init__(self, n_features_to_select=10, percent_neighbors=0.25, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up ReliefF to perform feature selection.
 
         Parameters
         ----------
         n_features_to_select: int (default: 10)
-            the number of top features (according to the relieff score) to
+            the number of top features (according to the relieff score) to 
             retain after feature selection is applied.
-        n_neighbors: int (default: 100)
-            The number of neighbors to consider when assigning feature
+        percent_neighbors: float (default: 0.25)
+            The percentage of total neighbors to consider when assigning feature
             importance scores. More neighbors results in more accurate scores,
             but takes longer.
         discrete_threshold: int (default: 10)
@@ -65,7 +63,7 @@ class ReliefF(BaseEstimator):
 
         """
         self.n_features_to_select = n_features_to_select
-        self.n_neighbors = n_neighbors
+        self.percent_neighbors = percent_neighbors
         self.discrete_threshold = discrete_threshold
         self.verbose = verbose
         self.n_jobs = n_jobs
@@ -80,7 +78,7 @@ class ReliefF(BaseEstimator):
             Training instances to compute the feature importance scores from
         y: array-like {n_samples}
             Training labels
-
+        
         Returns
         -------
         Copy of the ReliefF instance
@@ -89,8 +87,15 @@ class ReliefF(BaseEstimator):
         self._X = X
         self._y = y
 
+        # Disallow parallelization in Python 2
+        if self.n_jobs != 1 and sys.version_info[0] < 3:
+            warnings.warn('Parallelization is currently not supported in Python 2. Settings n_jobs to 1.', RuntimeWarning)
+            self.n_jobs = 1
+
         # Set up the properties for ReliefF
         self._datalen = len(self._X)
+        # Halve the number of neighbors because ReliefF looks at n_neighbors matches and n_neighbors misses
+        self.n_neighbors = int(self.percent_neighbors * self._datalen * 0.5)
         self._label_list = list(set(self._y))
         discrete_label = (len(self._label_list) <= self.discrete_threshold)
 
@@ -108,12 +113,10 @@ class ReliefF(BaseEstimator):
         self._missing_data_count = np.isnan(self._X).sum()
 
         # Assign internal headers for the features
-        # The pre_normalize() function relies on the headers being ordered, e.g., X01, X02, etc.
-        # If this is changed, then the sort in the pre_normalize() function needs to be adapted as well.
         xlen = len(self._X[0])
         mxlen = len(str(xlen + 1))
         self._headers = ['X{}'.format(str(i).zfill(mxlen)) for i in range(1, xlen + 1)]
-
+        
         # Determine the data type
         C = D = False
         attr = self._get_attribute_info()
@@ -123,7 +126,7 @@ class ReliefF(BaseEstimator):
             if attr[key][0] == 'continuous':
                 C = True
 
-        if C and D:
+        if C and D: 
             self.data_type = 'mixed'
         elif D and not C:
             self.data_type = 'discrete'
@@ -209,13 +212,13 @@ class ReliefF(BaseEstimator):
         d = 0
         limit = self.discrete_threshold
         w = self._X.transpose()
-
+        
         for idx in range(len(w)):
             h = self._headers[idx]
             z = w[idx]
             if self._missing_data_count > 0:
                 z = z[np.logical_not(np.isnan(z))]
-            zlen = len(np.unique(z))
+            zlen = len(np.unique(z)) 
             if zlen <= limit:
                 attr[h] = ('discrete', 0, 0, 0)
                 d += 1
@@ -223,9 +226,9 @@ class ReliefF(BaseEstimator):
                 mx = np.max(z)
                 mn = np.min(z)
                 attr[h] = ('continuous', mx, mn, mx - mn)
-
+        
         return attr
-    #==================================================================#
+    #==================================================================#    
     def _distarray_no_missing(self, xc, xd):
         """Distance array for data with no missing values"""
         from scipy.spatial.distance import pdist, squareform
@@ -259,18 +262,18 @@ class ReliefF(BaseEstimator):
         """Return mask for discrete(0)/continuous(1) attributes and their indices. Return array of max/min diffs of attributes."""
         attrtype = []
         attrdiff = []
-
+        
         for key in self._headers:
             if attr[key][0] == 'continuous':
                 attrtype.append(1)
             else:
                 attrtype.append(0)
             attrdiff.append(attr[key][3])
-
+            
         attrtype = np.array(attrtype)
         cidx = np.where(attrtype == 1)[0]
         didx = np.where(attrtype == 0)[0]
-
+        
         attrdiff = np.array(attrdiff)
         return attrdiff, cidx, didx
     #==================================================================#
@@ -281,14 +284,46 @@ class ReliefF(BaseEstimator):
         for i in range(self._datalen):
             cindices.append(np.where(np.isnan(xc[i]))[0])
             dindices.append(np.where(np.isnan(xd[i]))[0])
-
+    
         if self.n_jobs != 1:
             dist_array = Parallel(n_jobs=self.n_jobs)(delayed(self._get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
         else:
             dist_array = [self._get_row_missing(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen)]
-
         return np.array(dist_array)
     #==================================================================#
+    def _get_row_missing(self, xc, xd, cdiffs, index, cindices, dindices):
+        row = np.empty(0, dtype=np.double)
+        cinst1 = xc[index]
+        dinst1 = xd[index]
+        can = cindices[index]
+        dan = dindices[index]
+        for j in range(index):
+            dist = 0
+            dinst2 = xd[j]
+            cinst2 = xc[j]
+
+            # continuous
+            cbn = cindices[j]
+            idx = np.unique(np.append(can, cbn))   # create unique list
+            c1 = np.delete(cinst1, idx)       # remove elements by idx
+            c2 = np.delete(cinst2, idx)
+            cdf = np.delete(cdiffs, idx)
+
+            # discrete
+            dbn = dindices[j]
+            idx = np.unique(np.append(dan, dbn))
+            d1 = np.delete(dinst1, idx)
+            d2 = np.delete(dinst2, idx)
+            
+            # discrete first
+            dist += len(d1[d1 != d2])
+
+            # now continuous
+            dist += np.sum(np.absolute(np.subtract(c1, c2)) / cdf)
+
+            row = np.append(row, dist)
+        return row
+    
 ############################# ReliefF ############################################
     def _find_neighbors(self, inst):
         dist_vect = []
@@ -323,14 +358,98 @@ class ReliefF(BaseEstimator):
 
         return np.array(nn_list)
 
+    def _compute_scores(self, inst, attr, nan_entries):
+        scores = np.zeros(self._num_attributes)
+        NN = self._find_neighbors(inst)
+        for feature_num in range(self._num_attributes):
+            scores[feature_num] += self._compute_score(attr, NN, feature_num, inst, nan_entries)
+        return scores
+
     def _run_algorithm(self):
         attr = self._get_attribute_info()
         nan_entries = np.isnan(self._X)
-
-        NNlist = map(self._find_neighbors, range(self._datalen))
-        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-            ReliefF_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
-            NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
-             for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
+        
+        if self.n_jobs != 1:
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+                self._compute_scores)(instance_num, attr, nan_entries) for instance_num in range(self._datalen)), axis=0)
+        else:
+            scores = np.sum([self._compute_scores(instance_num, attr, nan_entries) for instance_num in range(self._datalen)], axis=0)
 
         return np.array(scores)
+
+    ###############################################################################
+    def _compute_score(self, attr, NN, feature, inst, nan_entries):
+        """Evaluates feature scores according to the ReliefF algorithm"""
+
+        fname = self._headers[feature]
+        ftype = attr[fname][0]  # feature type
+        ctype = self._class_type # class type
+        diff_hit = diff_miss = 0.0 
+        count_hit = count_miss = 0.0
+        mmdiff = 1
+        diff = 0
+
+        if nan_entries[inst][feature]:
+            return 0.
+
+        xinstfeature = self._X[inst][feature]
+
+        #--------------------------------------------------------------------------
+        if ctype == 'discrete':
+            for i in range(len(NN)):
+                if nan_entries[NN[i]][feature]:
+                    continue
+
+                xNNifeature = self._X[NN[i]][feature]
+                absvalue = abs(xinstfeature - xNNifeature) / mmdiff
+    
+                if self._y[inst] == self._y[NN[i]]:   # HIT
+                    count_hit += 1
+                    if xinstfeature != xNNifeature:
+                        if ftype == 'continuous':
+                            diff_hit -= absvalue
+                        else: # discrete
+                            diff_hit -= 1
+                else: # MISS
+                    count_miss += 1
+                    if xinstfeature != xNNifeature:
+                        if ftype == 'continuous':
+                            diff_miss += absvalue
+                        else: # discrete
+                            diff_miss += 1
+
+            hit_proportion = count_hit / float(len(NN))
+            miss_proportion = count_miss / float(len(NN))
+            diff = diff_hit * miss_proportion + diff_miss * hit_proportion
+        #--------------------------------------------------------------------------
+        else: # CONTINUOUS endpoint
+            mmdiff = attr[fname][3]
+            same_class_bound = self._labels_std
+
+            for i in range(len(NN)):
+                if nan_entries[NN[i]][feature]:
+                    continue
+
+                xNNifeature = self._X[NN[i]][feature]
+                absvalue = abs(xinstfeature - xNNifeature) / mmdiff
+
+                if abs(self._y[inst] - self._y[NN[i]]) < same_class_bound: # HIT
+                    count_hit += 1
+                    if xinstfeature != xNNifeature:
+                        if ftype == 'continuous':
+                            diff_hit -= absvalue
+                        else: # discrete
+                            diff_hit -= 1
+                else: # MISS
+                    count_miss += 1
+                    if xinstfeature != xNNifeature:
+                        if ftype == 'continuous':
+                            diff_miss += absvalue
+                        else: # discrete
+                            diff_miss += 1
+
+            hit_proportion = count_hit / float(len(NN))
+            miss_proportion = count_miss / float(len(NN))
+            diff = diff_hit * miss_proportion + diff_miss * hit_proportion
+
+        return diff
