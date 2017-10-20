@@ -283,9 +283,9 @@ class ReliefF(BaseEstimator):
             dindices.append(np.where(np.isnan(xd[i]))[0])
 
         if self.n_jobs != 1:
-            dist_array = Parallel(n_jobs=self.n_jobs)(delayed(self._get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
+            dist_array = Parallel(n_jobs=self.n_jobs)(delayed(get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
         else:
-            dist_array = [self._get_row_missing(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen)]
+            dist_array = [get_row_missing(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen)]
 
         return np.array(dist_array)
     #==================================================================#

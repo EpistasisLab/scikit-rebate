@@ -159,3 +159,12 @@ def SURFstar_compute_scores(inst, attr, nan_entries, num_attributes, NN_near, NN
             scores[feature_num] -= compute_score(attr, NN_far, feature_num, inst,
                             nan_entries, headers, class_type, X, y, labels_std)
     return scores
+
+def MultiSURF_compute_scores(inst, attr, nan_entries, num_attributes, NN_near, headers, class_type, X, y, labels_std):
+        scores = np.zeros(num_attributes)
+        for feature_num in range(num_attributes):
+            if len(NN_near) > 0:
+                scores[feature_num] += compute_score(attr, NN_near, feature_num, inst,
+                        nan_entries, headers, class_type, X, y, labels_std)
+
+        return scores
