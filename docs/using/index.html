@@ -164,13 +164,13 @@
 </tr>
 <tr>
 <td>n_features_to_select</td>
-<td>Any positive integer</td>
+<td>Any positive integer or float</td>
 <td>The number of best features to retain after the feature selection process. The "best" features are the highest-scored features according to the ReliefF scoring process.</td>
 </tr>
 <tr>
 <td>n_neighbors</td>
 <td>Any positive integer</td>
-<td>The number of nearest neighbors to consider in the ReliefF feature scoring process. Generally the more neighbors the algorithm considers, the better the scores are. However, considering more neighbors makes the algorithm run slower.</td>
+<td>The number of neighbors to consider when assigning feature importance scores. If a float number is provided, that percentage of training samples is used as the number of neighbors. More neighbors results in more accurate scores, but takes longer.</td>
 </tr>
 <tr>
 <td>discrete_limit</td>

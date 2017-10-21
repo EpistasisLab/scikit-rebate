@@ -1,4 +1,4 @@
-from skrebate import ReliefF, ReliefFPercent, SURF, SURFstar, MultiSURF, MultiSURFstar
+from skrebate import ReliefF, SURF, SURFstar, MultiSURF, MultiSURFstar
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.preprocessing import Imputer
@@ -78,19 +78,19 @@ def test_relieff_pipeline_parallel():
     assert np.mean(cross_val_score(clf, features, labels, cv=3, n_jobs=-1)) > 0.7
 
 def test_relieffpercent_pipeline():
-    """Ensure that ReliefFPercent works in a sklearn pipeline when it is parallelized"""
+    """Ensure that ReliefF with % neighbors works in a sklearn pipeline when it is parallelized"""
     np.random.seed(49082)
 
-    clf = make_pipeline(ReliefFPercent(n_features_to_select=2, percent_neighbors=0.05, n_jobs=-1),
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=0.1, n_jobs=-1),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
 
 def test_relieffpercent_pipeline_parallel():
-    """Ensure that ReliefFPercent works in a sklearn pipeline where cross_val_score is parallelized"""
+    """Ensure that ReliefF with % neighbors works in a sklearn pipeline where cross_val_score is parallelized"""
     np.random.seed(49082)
 
-    clf = make_pipeline(ReliefFPercent(n_features_to_select=2, percent_neighbors=0.05),
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=0.1),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features, labels, cv=3, n_jobs=-1)) > 0.7
@@ -179,10 +179,10 @@ def test_relieff_pipeline_cont_endpoint():
     assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint, cv=3))) < 0.5
 
 def test_relieff_pipeline_cont_endpoint():
-    """Ensure that ReliefFPercent works in a sklearn pipeline with continuous endpoint data"""
+    """Ensure that ReliefF with % neighbors works in a sklearn pipeline with continuous endpoint data"""
     np.random.seed(49082)
 
-    clf = make_pipeline(ReliefFPercent(n_features_to_select=2, percent_neighbors=0.05, n_jobs=-1),
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=0.1, n_jobs=-1),
                         RandomForestRegressor(n_estimators=100, n_jobs=-1))
 
     assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint, cv=3))) < 0.5
@@ -235,10 +235,10 @@ def test_relieff_pipeline_mixed_attributes():
     assert np.mean(cross_val_score(clf, features_mixed_attributes, labels_mixed_attributes, cv=3)) > 0.7
 
 def test_relieffpercent_pipeline_mixed_attributes():
-    """Ensure that ReliefFPercent works in a sklearn pipeline with mixed attributes"""
+    """Ensure that ReliefF with % neighbors works in a sklearn pipeline with mixed attributes"""
     np.random.seed(49082)
 
-    clf = make_pipeline(ReliefFPercent(n_features_to_select=2, percent_neighbors=0.05, n_jobs=-1),
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=0.1, n_jobs=-1),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features_mixed_attributes, labels_mixed_attributes, cv=3)) > 0.7
@@ -292,10 +292,10 @@ def test_relieff_pipeline_missing_values():
     assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values, cv=3)) > 0.7
 
 def test_relieffpercent_pipeline_missing_values():
-    """Ensure that ReliefFPercent works in a sklearn pipeline with missing values"""
+    """Ensure that ReliefF with % neighbors works in a sklearn pipeline with missing values"""
     np.random.seed(49082)
 
-    clf = make_pipeline(ReliefFPercent(n_features_to_select=2, percent_neighbors=0.05, n_jobs=-1),
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=0.1, n_jobs=-1),
                         Imputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 

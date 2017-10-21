@@ -48,10 +48,11 @@ class ReliefF(BaseEstimator):
         n_features_to_select: int (default: 10)
             the number of top features (according to the relieff score) to
             retain after feature selection is applied.
-        n_neighbors: int (default: 100)
+        n_neighbors: int or float (default: 100)
             The number of neighbors to consider when assigning feature
-            importance scores. More neighbors results in more accurate scores,
-            but takes longer.
+            importance scores. If a float number is provided, that percentage of
+            training samples is used as the number of neighbors.
+            More neighbors results in more accurate scores, but takes longer.
         discrete_threshold: int (default: 10)
             Value used to determine if a feature is discrete or continuous.
             If the number of unique levels in a feature is > discrete_threshold, then it is
@@ -91,6 +92,10 @@ class ReliefF(BaseEstimator):
 
         # Set up the properties for ReliefF
         self._datalen = len(self._X)
+        if hasattr(self, 'n_neighbors') and type(self.n_neighbors) is float:
+            # Halve the number of neighbors because ReliefF uses n_neighbors matches 
+            # and n_neighbors misses
+            self.n_neighbors = int(self.n_neighbors * self._datalen * 0.5)
         self._label_list = list(set(self._y))
         discrete_label = (len(self._label_list) <= self.discrete_threshold)
 

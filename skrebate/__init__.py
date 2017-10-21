@@ -21,7 +21,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from ._version import __version__
 from .relieff import ReliefF
-from .relieffpercent import ReliefFPercent
 from .surf import SURF
 from .surfstar import SURFstar
 from .multisurf import MultiSURF
