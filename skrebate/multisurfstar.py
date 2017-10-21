@@ -22,10 +22,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
 import numpy as np
 from .surfstar import SURFstar
+from .scoring_utils import MultiSURFstar_compute_scores
 from sklearn.externals.joblib import Parallel, delayed
-from .scoring_utils import MultiSURF_compute_scores
 
-class MultiSURF(SURFstar):
+class MultiSURFstar(SURFstar):
 
     """Feature selection using data-mined expert knowledge.
 
@@ -36,7 +36,7 @@ class MultiSURF(SURFstar):
 
     """
 
-############################# MultiSURF ########################################
+############################# MultiSURF* ########################################
     def _find_neighbors(self, inst):
         dist_vect = []
         for j in range(self._datalen):
@@ -50,8 +50,10 @@ class MultiSURF(SURFstar):
         inst_avg_dist = np.average(dist_vect)
         inst_std = np.std(dist_vect) / 2.
         near_threshold = inst_avg_dist - inst_std
+        far_threshold = inst_avg_dist + inst_std
 
         NN_near = []
+        NN_far = []
         for j in range(self._datalen):
             if inst != j:
                 locator = [inst, j]
@@ -59,18 +61,29 @@ class MultiSURF(SURFstar):
                     locator.reverse()
                 if self._distance_array[locator[0]][locator[1]] < near_threshold:
                     NN_near.append(j)
+                elif self._distance_array[locator[0]][locator[1]] > far_threshold:
+                    NN_far.append(j)
 
-        return np.array(NN_near)
+        return np.array(NN_near), np.array(NN_far)
+
 
     def _run_algorithm(self):
         attr = self._get_attribute_info()
         nan_entries = np.isnan(self._X)
 
         NNlist = [self._find_neighbors(datalen) for datalen in range(self._datalen)]
+        NN_near_list = [i[0] for i in NNlist]
+        NN_far_list = [i[1] for i in NNlist]
 
-        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-            MultiSURF_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
-            NN_near, self._headers, self._class_type, self._X, self._y, self._labels_std)
-            for instance_num, NN_near in zip(range(self._datalen), NNlist)), axis=0)
+        if self.n_jobs != 1:
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+                MultiSURFstar_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
+                NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std)
+                 for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
+
+        else:
+            scores = np.sum([MultiSURFstar_compute_scores(instance_num, attr, nan_entries, self._num_attributes,
+                NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std)
+                 for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)], axis=0)
 
         return np.array(scores)

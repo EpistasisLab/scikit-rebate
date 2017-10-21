@@ -55,7 +55,7 @@ def get_row_missing(xc, xd, cdiffs, index, cindices, dindices):
     return row
 
 
-def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, y, labels_std):
+def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, y, labels_std, near=True):
     """Evaluates feature scores according to the ReliefF algorithm"""
 
     fname = headers[feature]
@@ -80,20 +80,36 @@ def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, 
             xNNifeature = X[NN[i]][feature]
             absvalue = abs(xinstfeature - xNNifeature) / mmdiff
 
-            if y[inst] == y[NN[i]]:   # HIT
-                count_hit += 1
-                if xinstfeature != xNNifeature:
-                    if ftype == 'continuous':
-                        diff_hit -= absvalue
-                    else: # discrete
-                        diff_hit -= 1
-            else: # MISS
-                count_miss += 1
-                if xinstfeature != xNNifeature:
-                    if ftype == 'continuous':
-                        diff_miss += absvalue
-                    else: # discrete
-                        diff_miss += 1
+            if near:
+                if y[inst] == y[NN[i]]:   # HIT
+                    count_hit += 1
+                    if xinstfeature != xNNifeature:
+                        if ftype == 'continuous':
+                            diff_hit -= absvalue
+                        else: # discrete
+                            diff_hit -= 1
+                else: # MISS
+                    count_miss += 1
+                    if xinstfeature != xNNifeature:
+                        if ftype == 'continuous':
+                            diff_miss += absvalue
+                        else: # discrete
+                            diff_miss += 1
+            else: # far
+                if y[inst] == y[NN[i]]:   # HIT
+                    count_hit += 1
+                    if xinstfeature == xNNifeature:
+                        if ftype == 'continuous':
+                            diff_hit -= absvalue
+                        else: # discrete
+                            diff_hit -= 1
+                else: # MISS
+                    count_miss += 1
+                    if xinstfeature == xNNifeature:
+                        if ftype == 'continuous':
+                            diff_miss += absvalue
+                        else: # discrete
+                            diff_miss += 1
 
         hit_proportion = count_hit / float(len(NN))
         miss_proportion = count_miss / float(len(NN))
@@ -110,20 +126,36 @@ def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, 
             xNNifeature = X[NN[i]][feature]
             absvalue = abs(xinstfeature - xNNifeature) / mmdiff
 
-            if abs(y[inst] - y[NN[i]]) < same_class_bound: # HIT
-                count_hit += 1
-                if xinstfeature != xNNifeature:
-                    if ftype == 'continuous':
-                        diff_hit -= absvalue
-                    else: # discrete
-                        diff_hit -= 1
-            else: # MISS
-                count_miss += 1
-                if xinstfeature != xNNifeature:
-                    if ftype == 'continuous':
-                        diff_miss += absvalue
-                    else: # discrete
-                        diff_miss += 1
+            if near:
+                if abs(y[inst] - y[NN[i]]) < same_class_bound: # HIT
+                    count_hit += 1
+                    if xinstfeature != xNNifeature:
+                        if ftype == 'continuous':
+                            diff_hit -= absvalue
+                        else: # discrete
+                            diff_hit -= 1
+                else: # MISS
+                    count_miss += 1
+                    if xinstfeature != xNNifeature:
+                        if ftype == 'continuous':
+                            diff_miss += absvalue
+                        else: # discrete
+                            diff_miss += 1
+            else: # far
+                if abs(y[inst] - y[NN[i]]) < same_class_bound: # HIT
+                    count_hit += 1
+                    if xinstfeature == xNNifeature:
+                        if ftype == 'continuous':
+                            diff_hit -= absvalue
+                        else: # discrete
+                            diff_hit -= 1
+                else: # MISS
+                    count_miss += 1
+                    if xinstfeature == xNNifeature:
+                        if ftype == 'continuous':
+                            diff_miss += absvalue
+                        else: # discrete
+                            diff_miss += 1
 
         hit_proportion = count_hit / float(len(NN))
         miss_proportion = count_miss / float(len(NN))
@@ -158,4 +190,26 @@ def SURFstar_compute_scores(inst, attr, nan_entries, num_attributes, NN_near, NN
         if len(NN_far) > 0:
             scores[feature_num] -= compute_score(attr, NN_far, feature_num, inst,
                             nan_entries, headers, class_type, X, y, labels_std)
+    return scores
+
+def MultiSURF_compute_scores(inst, attr, nan_entries, num_attributes, NN_near, headers, class_type, X, y, labels_std):
+        scores = np.zeros(num_attributes)
+        for feature_num in range(num_attributes):
+            if len(NN_near) > 0:
+                scores[feature_num] += compute_score(attr, NN_near, feature_num, inst,
+                        nan_entries, headers, class_type, X, y, labels_std)
+
+        return scores
+
+def MultiSURFstar_compute_scores(inst, attr, nan_entries, num_attributes, NN_near, NN_far, headers, class_type, X, y, labels_std):
+    scores = np.zeros(num_attributes)
+
+    for feature_num in range(num_attributes):
+        if len(NN_near) > 0:
+            scores[feature_num] += compute_score(attr, NN_near, feature_num, inst,
+                            nan_entries, headers, class_type, X, y, labels_std)
+        if len(NN_far) > 0:
+            scores[feature_num] += compute_score(attr, NN_far, feature_num, inst,
+                            nan_entries, headers, class_type, X, y, labels_std, near=False)
+
     return scores

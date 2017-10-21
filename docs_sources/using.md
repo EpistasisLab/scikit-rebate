@@ -14,13 +14,13 @@ ReliefF is the most basic of the Relief-based feature selection algorithms, and 
 </tr>
 <tr>
 <td>n_features_to_select</td>
-<td>Any positive integer</td>
+<td>Any positive integer or float</td>
 <td>The number of best features to retain after the feature selection process. The "best" features are the highest-scored features according to the ReliefF scoring process.</td>
 </tr>
 <tr>
 <td>n_neighbors</td>
 <td>Any positive integer</td>
-<td>The number of nearest neighbors to consider in the ReliefF feature scoring process. Generally the more neighbors the algorithm considers, the better the scores are. However, considering more neighbors makes the algorithm run slower.</td>
+<td>The number of neighbors to consider when assigning feature importance scores. If a float number is provided, that percentage of training samples is used as the number of neighbors. More neighbors results in more accurate scores, but takes longer.</td>
 </tr>
 <tr>
 <td>discrete_limit</td>
@@ -30,7 +30,7 @@ ReliefF is the most basic of the Relief-based feature selection algorithms, and 
 <tr>
 <td>n_jobs</td>
 <td>Any positive integer or -1</td>
-<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores. Currently not supported in Python 2.</td>
+<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores.</td>
 </tr>
 </table>
 
@@ -78,7 +78,7 @@ SURF, SURF*, and MultiSURF are all extensions to the ReliefF algorithm that auto
 <tr>
 <td>n_jobs</td>
 <td>Any positive integer or -1</td>
-<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores. Currently not supported in Python 2.</td>
+<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores.</td>
 </tr>
 </table>
 
@@ -124,7 +124,7 @@ print(np.mean(cross_val_score(clf, features, labels)))
 <tr>
 <td>n_jobs</td>
 <td>Any positive integer or -1</td>
-<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores. Currently not supported in Python 2.</td>
+<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores.</td>
 </tr>
 </table>
 
@@ -170,7 +170,7 @@ print(np.mean(cross_val_score(clf, features, labels)))
 <tr>
 <td>n_jobs</td>
 <td>Any positive integer or -1</td>
-<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores. Currently not supported in Python 2.</td>
+<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores.</td>
 </tr>
 </table>
 
@@ -189,6 +189,52 @@ genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/ma
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
 
 clf = make_pipeline(MultiSURF(n_features_to_select=2),
+                    RandomForestClassifier(n_estimators=100))
+
+print(np.mean(cross_val_score(clf, features, labels)))
+>>> 0.795
+```
+
+## MultiSURF*
+
+<table>
+<tr>
+<th>Parameter</th>
+<th width="15%">Valid values</th>
+<th>Effect</th>
+</tr>
+<tr>
+<td>n_features_to_select</td>
+<td>Any positive integer</td>
+<td>The number of best features to retain after the feature selection process. The "best" features are the highest-scored features according to the MultiSURF* scoring process.</td>
+</tr>
+<tr>
+<td>discrete_limit</td>
+<td>Any positive integer</td>
+<td>Value used to determine if a feature is discrete or continuous. If the number of unique levels in a feature is > discrete_threshold, then it is considered continuous, or discrete otherwise.</td>
+</tr>
+<tr>
+<td>n_jobs</td>
+<td>Any positive integer or -1</td>
+<td>The number cores to dedicate to running the algorithm in parallel with joblib. Set to -1 to use all available cores.</td>
+</tr>
+</table>
+
+```python
+import pandas as pd
+import numpy as np
+from sklearn.pipeline import make_pipeline
+from skrebate import MultiSURFstar
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score
+
+genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           sep='\t', compression='gzip')
+
+features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
+
+clf = make_pipeline(MultiSURFstar(n_features_to_select=2),
                     RandomForestClassifier(n_estimators=100))
 
 print(np.mean(cross_val_score(clf, features, labels)))
