@@ -22,7 +22,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
 import numpy as np
 from .surfstar import SURFstar
-from joblib import Parallel, delayed
+from .scoring_utils import MultiSURFstar_compute_scores
+from sklearn.externals.joblib import Parallel, delayed
 
 class MultiSURFstar(SURFstar):
 
@@ -65,179 +66,24 @@ class MultiSURFstar(SURFstar):
 
         return np.array(NN_near), np.array(NN_far)
 
-    def _compute_scores(self, inst, attr, nan_entries):
-        scores = np.zeros(self._num_attributes)
-        NN_near, NN_far = self._find_neighbors(inst)
-
-        for feature_num in range(self._num_attributes):
-            if len(NN_near) > 0:
-                scores[feature_num] += self._compute_score_near(attr, NN_near, feature_num, inst, nan_entries)
-            if len(NN_far) > 0:
-                scores[feature_num] += self._compute_score_far(attr, NN_far, feature_num, inst, nan_entries)
-
-        return scores
 
     def _run_algorithm(self):
         attr = self._get_attribute_info()
         nan_entries = np.isnan(self._X)
 
+        NNlist = [self._find_neighbors(datalen) for datalen in range(self._datalen)]
+        NN_near_list = [i[0] for i in NNlist]
+        NN_far_list = [i[1] for i in NNlist]
+
         if self.n_jobs != 1:
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-                self._compute_scores)(instance_num, attr, nan_entries) for instance_num in range(self._datalen)), axis=0)
+                MultiSURFstar_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
+                NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std)
+                 for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
+
         else:
-            scores = np.sum([self._compute_scores(instance_num, attr, nan_entries) for instance_num in range(self._datalen)], axis=0)
+            scores = np.sum([MultiSURFstar_compute_scores(instance_num, attr, nan_entries, self._num_attributes,
+                NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std)
+                 for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)], axis=0)
 
         return np.array(scores)
-
-    ###############################################################################
-    def _compute_score_near(self, attr, NN, feature, inst, nan_entries):
-        """Evaluates feature scores according to the ReliefF algorithm"""
-
-        fname = self._headers[feature]
-        ftype = attr[fname][0]  # feature type
-        ctype = self._class_type # class type
-        diff_hit = diff_miss = 0.0 
-        count_hit = count_miss = 0.0
-        mmdiff = 1
-        diff = 0
-
-        if nan_entries[inst][feature]:
-            return 0.
-
-        xinstfeature = self._X[inst][feature]
-
-        #--------------------------------------------------------------------------
-        if ctype == 'discrete':
-            for i in range(len(NN)):
-                if nan_entries[NN[i]][feature]:
-                    continue
-
-                xNNifeature = self._X[NN[i]][feature]
-                absvalue = abs(xinstfeature - xNNifeature) / mmdiff
-    
-                if self._y[inst] == self._y[NN[i]]:   # HIT
-                    count_hit += 1
-                    if xinstfeature != xNNifeature:
-                        if ftype == 'continuous':
-                            diff_hit -= absvalue
-                        else: # discrete
-                            diff_hit -= 1
-                else: # MISS
-                    count_miss += 1
-                    if xinstfeature != xNNifeature:
-                        if ftype == 'continuous':
-                            diff_miss += absvalue
-                        else: # discrete
-                            diff_miss += 1
-
-            hit_proportion = count_hit / float(len(NN))
-            miss_proportion = count_miss / float(len(NN))
-            diff = diff_hit * miss_proportion + diff_miss * hit_proportion
-        #--------------------------------------------------------------------------
-        else: # CONTINUOUS endpoint
-            mmdiff = attr[fname][3]
-            same_class_bound = self._labels_std
-
-            for i in range(len(NN)):
-                if nan_entries[NN[i]][feature]:
-                    continue
-
-                xNNifeature = self._X[NN[i]][feature]
-                absvalue = abs(xinstfeature - xNNifeature) / mmdiff
-
-                if abs(self._y[inst] - self._y[NN[i]]) < same_class_bound: # HIT
-                    count_hit += 1
-                    if xinstfeature != xNNifeature:
-                        if ftype == 'continuous':
-                            diff_hit -= absvalue
-                        else: # discrete
-                            diff_hit -= 1
-                else: # MISS
-                    count_miss += 1
-                    if xinstfeature != xNNifeature:
-                        if ftype == 'continuous':
-                            diff_miss += absvalue
-                        else: # discrete
-                            diff_miss += 1
-
-            hit_proportion = count_hit / float(len(NN))
-            miss_proportion = count_miss / float(len(NN))
-            diff = diff_hit * miss_proportion + diff_miss * hit_proportion
-
-        return diff
-
-    def _compute_score_far(self, attr, NN, feature, inst, nan_entries):
-        """Evaluates feature scores according to the ReliefF algorithm"""
-
-        fname = self._headers[feature]
-        ftype = attr[fname][0]  # feature type
-        ctype = self._class_type # class type
-        diff_hit = diff_miss = 0.0 
-        count_hit = count_miss = 0.0
-        mmdiff = 1
-        diff = 0
-
-        if nan_entries[inst][feature]:
-            return 0.
-
-        xinstfeature = self._X[inst][feature]
-
-        #--------------------------------------------------------------------------
-        if ctype == 'discrete':
-            for i in range(len(NN)):
-                if nan_entries[NN[i]][feature]:
-                    continue
-
-                xNNifeature = self._X[NN[i]][feature]
-                absvalue = abs(xinstfeature - xNNifeature) / mmdiff
-    
-                if self._y[inst] == self._y[NN[i]]:   # HIT
-                    count_hit += 1
-                    if xinstfeature == xNNifeature:
-                        if ftype == 'continuous':
-                            diff_hit -= absvalue
-                        else: # discrete
-                            diff_hit -= 1
-                else: # MISS
-                    count_miss += 1
-                    if xinstfeature == xNNifeature:
-                        if ftype == 'continuous':
-                            diff_miss += absvalue
-                        else: # discrete
-                            diff_miss += 1
-
-            hit_proportion = count_hit / float(len(NN))
-            miss_proportion = count_miss / float(len(NN))
-            diff = diff_hit * miss_proportion + diff_miss * hit_proportion
-        #--------------------------------------------------------------------------
-        else: # CONTINUOUS endpoint
-            mmdiff = attr[fname][3]
-            same_class_bound = self._labels_std
-
-            for i in range(len(NN)):
-                if nan_entries[NN[i]][feature]:
-                    continue
-
-                xNNifeature = self._X[NN[i]][feature]
-                absvalue = abs(xinstfeature - xNNifeature) / mmdiff
-
-                if abs(self._y[inst] - self._y[NN[i]]) < same_class_bound: # HIT
-                    count_hit += 1
-                    if xinstfeature == xNNifeature:
-                        if ftype == 'continuous':
-                            diff_hit -= absvalue
-                        else: # discrete
-                            diff_hit -= 1
-                else: # MISS
-                    count_miss += 1
-                    if xinstfeature == xNNifeature:
-                        if ftype == 'continuous':
-                            diff_miss += absvalue
-                        else: # discrete
-                            diff_miss += 1
-
-            hit_proportion = count_hit / float(len(NN))
-            miss_proportion = count_miss / float(len(NN))
-            diff = diff_hit * miss_proportion + diff_miss * hit_proportion
-
-        return diff
