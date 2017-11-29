@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright (c) 2016-Present Randal S. Olson, Pete Schmitt, and Ryan J. Urbanowicz
+scikit-rebate was primarily developed at the University of Pennsylvania by:
+    - Randal S. Olson (rso@randalolson.com)
+    - Pete Schmitt (pschmitt@upenn.edu)
+    - Ryan J. Urbanowicz (ryanurb@upenn.edu)
+    - Weixuan Fu (weixuanf@upenn.edu)
+    - and many more generous open source contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without restriction,
