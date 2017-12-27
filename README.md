@@ -100,8 +100,17 @@ Please refer to our [contribution guidelines](https://EpistasisLab.github.io/sci
 
 ## Citing scikit-rebate
 
-If you use scikit-rebate in a scientific publication, please consider citing at least one of the following papers:
+If you use scikit-rebate in a scientific publication, please consider citing the following paper:
 
-Igor Kononenko et al. Overcoming the myopia of inductive learning algorithms with RELIEFF (1997), Applied Intelligence, 7(1), pp. 39-55.
+Ryan J. Urbanowicz, Randal S. Olson, Peter Schmitt, Melissa Meeker, Jason H. Moore (2017). [Benchmarking Relief-Based Feature Selection Methods](https://arxiv.org/abs/1711.08477). *arXiv preprint*, under review.
 
-Casey S Greene, Nadia M Penrod, Jeff Kiralis, and Jason H Moore. Spatially Uniform ReliefF (SURF) for computationally-efficient filtering of gene-gene interactions (2009), BioData Mining 2(5).
+BibTeX entry:
+
+```bibtex
+@misc{Urbanowicz2017Benchmarking,
+    author = {Urbanowicz, Ryan J. and Olson, Randal S. and Schmitt, Peter and Meeker, Melissa and Moore, Jason H.},
+    title = {Benchmarking Relief-Based Feature Selection Methods},
+    year = {2017},
+    howpublished = {arXiv e-print. https://arxiv.org/abs/1711.08477},
+}
+```
