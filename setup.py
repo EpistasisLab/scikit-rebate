@@ -43,4 +43,5 @@ This project is hosted at https://github.com/EpistasisLab/scikit-rebate
         'Topic :: Utilities'
     ],
     keywords=['data mining', 'feature selection', 'feature importance', 'machine learning', 'data analysis', 'data engineering', 'data science'],
+    include_package_data=True,
 )
