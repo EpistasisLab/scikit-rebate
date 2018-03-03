@@ -31,7 +31,7 @@ import warnings
 import sys
 from sklearn.base import BaseEstimator
 from sklearn.externals.joblib import Parallel, delayed
-from .scoring_utils import get_row_missing, ReliefF_compute_scores
+from scoring_utils import get_row_missing, ReliefF_compute_scores
 
 
 class ReliefF(BaseEstimator):
@@ -94,11 +94,10 @@ class ReliefF(BaseEstimator):
         """
         self._X = X
         self._y = y
-
         # Set up the properties for ReliefF
         self._datalen = len(self._X)
         if hasattr(self, 'n_neighbors') and type(self.n_neighbors) is float:
-            # Halve the number of neighbors because ReliefF uses n_neighbors matches 
+            # Halve the number of neighbors because ReliefF uses n_neighbors matches
             # and n_neighbors misses
             self.n_neighbors = int(self.n_neighbors * self._datalen * 0.5)
         self._label_list = list(set(self._y))
@@ -148,8 +147,8 @@ class ReliefF(BaseEstimator):
         attr = self._get_attribute_info()
         diffs, cidx, didx = self._dtype_array(attr)
         cdiffs = diffs[cidx]
-        xc = self._X[:,cidx]
-        xd = self._X[:,didx]
+        xc = self._X[:, cidx]
+        xd = self._X[:, didx]
 
         if self._missing_data_count > 0:
             self._distance_array = self._distarray_missing(xc, xd, cdiffs)
@@ -211,6 +210,7 @@ class ReliefF(BaseEstimator):
 
         """
         self.fit(X, y)
+
         return self.transform(X)
 
 ######################### SUPPORTING FUNCTIONS ###########################
@@ -236,11 +236,13 @@ class ReliefF(BaseEstimator):
 
         return attr
     #==================================================================#
+
     def _distarray_no_missing(self, xc, xd):
         """Distance array for data with no missing values"""
         from scipy.spatial.distance import pdist, squareform
         attr = self._get_attribute_info()
         #------------------------------------------#
+
         def pre_normalize(x):
             """Normalizes continuous features so they are in the same range"""
             idx = 0
@@ -284,6 +286,7 @@ class ReliefF(BaseEstimator):
         attrdiff = np.array(attrdiff)
         return attrdiff, cidx, didx
     #==================================================================#
+
     def _distarray_missing(self, xc, xd, cdiffs):
         """Distance array for data with missing values"""
         cindices = []
@@ -293,13 +296,16 @@ class ReliefF(BaseEstimator):
             dindices.append(np.where(np.isnan(xd[i]))[0])
 
         if self.n_jobs != 1:
-            dist_array = Parallel(n_jobs=self.n_jobs)(delayed(get_row_missing)(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
+            dist_array = Parallel(n_jobs=self.n_jobs)(delayed(get_row_missing)(
+                xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
         else:
-            dist_array = [get_row_missing(xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen)]
+            dist_array = [get_row_missing(xc, xd, cdiffs, index, cindices, dindices)
+                          for index in range(self._datalen)]
 
         return np.array(dist_array)
     #==================================================================#
 ############################# ReliefF ############################################
+
     def _find_neighbors(self, inst):
         dist_vect = []
         for j in range(self._datalen):
@@ -317,12 +323,12 @@ class ReliefF(BaseEstimator):
         match_count = 0
         miss_count = 0
         for nn_index in np.argsort(dist_vect):
-            if self._y[inst] == self._y[nn_index]: # match
+            if self._y[inst] == self._y[nn_index]:  # match
                 if match_count >= self.n_neighbors:
                     continue
                 nn_list.append(nn_index)
                 match_count += 1
-            else: # miss
+            else:  # miss
                 if miss_count >= self.n_neighbors:
                     continue
                 nn_list.append(nn_index)
@@ -340,7 +346,7 @@ class ReliefF(BaseEstimator):
         NNlist = map(self._find_neighbors, range(self._datalen))
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
             ReliefF_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
-            NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
-             for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
+                                    NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
+            for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 
         return np.array(scores)

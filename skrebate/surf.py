@@ -27,8 +27,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
 import numpy as np
 from sklearn.externals.joblib import Parallel, delayed
-from .relieff import ReliefF
-from .scoring_utils import SURF_compute_scores
+from relieff import ReliefF
+from scoring_utils import SURF_compute_scores
+
 
 class SURF(ReliefF):
 
@@ -73,7 +74,7 @@ class SURF(ReliefF):
 
         for i in range(self._datalen):
             if inst != i:
-                locator = [inst,i]
+                locator = [inst, i]
                 if i > inst:
                     locator.reverse()
                 d = self._distance_array[locator[0]][locator[1]]
@@ -82,7 +83,6 @@ class SURF(ReliefF):
         for i in range(len(min_indicies)):
             NN.append(min_indicies[i])
         return np.array(NN, dtype=np.int32)
-
 
     def _run_algorithm(self):
         sm = cnt = 0
@@ -97,7 +97,7 @@ class SURF(ReliefF):
         NNlist = [self._find_neighbors(datalen, avg_dist) for datalen in range(self._datalen)]
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
             SURF_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
-            NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
-             for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
+                                 NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
+            for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 
         return np.array(scores)
