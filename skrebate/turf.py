@@ -51,75 +51,88 @@ class TuRF(BaseEstimator, TransformerMixin):
 
     #=========================================================================#
     # headers = list(genetic_data.drop("class",axis=1))
-    def fit(self,X,y,headers):
-    #def fit(self, X, y):
+    def fit(self, X, y, headers):
 
         self.X_mat = X
         self._y = y
         self.headers = headers
-        print(self.X_mat)
-        if self.core_algorithm == "MultiSURF":
 
-            num_features = X.shape[1]
-            print(num_features)
-            iter_count = 0
-            features_iter = []
-            headers_iter = []
-            while(num_features > self.n_features_to_select):
-                # core = MultiSURF()
-                core = ReliefF()
-                #core_fit = core.fit(self.X_mat,self._y, self.headers)
-                core_fit = core.fit(self.X_mat, self._y)
+        if self.core_algorithm.lower() == "multisurf":
+            core = MultiSURF()
 
-                features_iter.append(core_fit.feature_importances_)
-                headers_iter.append(self.headers)
-                print(features_iter)
+        elif self.core_algorithm.lower() == "multisurfstar":
+            core = MultiSURFstar()
 
-                if type(self.step) is float:
-                    feature_rem = int(np.round(num_features*self.step))
-                    # For the edge case when data has 5 or less features
-                    if feature_rem == 0:
-                        feature_rem = 1
-                    num_features -= feature_rem
-                    print(num_features)
-                    print(num_features, features_iter[iter_count].argsort()[-num_features:])
-                    select = np.array(features_iter[iter_count].argsort()[-num_features:])
-                    print(select)
-                    self.X_mat = self.X_mat[:, features_iter[iter_count].argsort()[-num_features:]]
-                    print(self.X_mat)
-                    print(self.X_mat.shape)
-                    #self.headers = self.headers[select]
-                    self.headers = [self.headers[i] for i in select]
-                elif type(self.step) is int:
-                    num_features -= self.step
-                    self.X_mat = self.X_mat[:, features_iter[iter_count].argsort()[-num_features:]]
-                    self.headers = self.headers[features_iter[iter_count].argsort()[-num_features:]]
+        elif self.core_algorithm.lower() == "surf":
+            core = SURF()
 
-                iter_count += 1
+        elif self.core_algorithm.lower() == "surfstar":
+            core = SURFstar()
 
-            # For the last iteration
-            # core = MultiSURF()
+        elif self.core_algorithm.lower() == "relieff":
             core = ReliefF()
-            core_fit = core.fit(self.X_mat,self._y)
-            #core_fit = core.fit(self.X_mat, self._y)
+
+        num_features = X.shape[1]
+        iter_count = 0
+        features_iter = []
+        headers_iter = []
+        feature_retain_check = 0
+        while(num_features > self.n_features_to_select):
+
+            core_fit = core.fit(self.X_mat, self._y)
+
             features_iter.append(core_fit.feature_importances_)
             headers_iter.append(self.headers)
 
-            self.num_iter = iter_count+1
-            self.feature_history = list(zip(headers_iter,features_iter))
-            #self.feature_history = features_iter
-            print(self.feature_history)
-            self.feature_importances_ = core_fit.feature_importances_
-            #self.top_features_ = np.argsort(self.feature_importances_)[::-1]
-            self.top_features_ = [headers.index(i) for i in s]
-            return self
+            if type(self.step) is float:
 
-        elif self.core_algorithm == "SURF":
-            self.surf = SURF()
-            return self.surf.fit(X, y)
-        elif self.core_algorithm == "SURFstar":
-            self.surfstar = SURFstar()
-            return self.surfstar.fit(X, y)
+                perc_retain = 1 - self.step
+                feature_retain = int(np.round(num_features*perc_retain))
+                #Edge case
+                if feature_retain == feature_retain_check:
+                    feature_retain -=1
+                    
+                if feature_retain < self.n_features_to_select:
+                    num_features = self.n_features_to_select
+
+                else:
+                    num_features = feature_retain
+
+                select = np.array(features_iter[iter_count].argsort()[-num_features:])
+                
+                feature_retain_check = feature_retain
+                
+                self.X_mat = self.X_mat[:, select]
+                self.headers = [self.headers[i] for i in select]
+                
+            elif type(self.step) is int:
+                feature_retain = num_features - self.step
+                if feature_retain < self.n_features_to_select:
+                    num_features = self.n_features_to_select
+
+                else:
+                    num_features = feature_retain
+
+                select = np.array(features_iter[iter_count].argsort()[-num_features:])
+
+                self.X_mat = self.X_mat[:, select]
+                self.headers = [self.headers[i] for i in select]
+
+            iter_count += 1
+
+        # For the last iteration
+
+        core_fit = core.fit(self.X_mat, self._y)
+        features_iter.append(core_fit.feature_importances_)
+        headers_iter.append(self.headers)
+        iter_count += 1
+
+        self.num_iter = iter_count
+        self.feature_history = list(zip(headers_iter, features_iter))
+
+        self.feature_importances_ = core_fit.feature_importances_
+        self.top_features_ = [headers.index(i) for i in s]
+        return self
 
     #=========================================================================#
 
@@ -137,13 +150,12 @@ class TuRF(BaseEstimator, TransformerMixin):
             Reduced feature matrix
 
         """
-        #return X[:, self.top_features_[:self.n_features_to_select]]
         return X[:, self.top_features_]
 
     #=========================================================================#
 
     def fit_transform(self, X, y, headers):
-    #def fit_transform(self, X, y):
+        # def fit_transform(self, X, y):
         """Computes the feature importance scores from the training data, then reduces the feature set down to the top `n_features_to_select` features.
 
         Parameters
@@ -160,5 +172,4 @@ class TuRF(BaseEstimator, TransformerMixin):
 
         """
         self.fit(X, y, headers)
-        #self.fit(X, y)
         return self.transform(X)
