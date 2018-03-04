@@ -29,16 +29,23 @@ class TuRF(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
+        core_algorithm: Core Relief Algorithm to perform TuRF iterations on
         n_features_to_select: int (default: 10)
             the number of top features (according to the relieff score) to
             retain after feature selection is applied.
+        step: float/int (default: 0.1)
+            If of type float, describes the fraction of features to be removed in each iteration.
+            If of type int, describes the number of features to be removed in each iteration.
+        discrete_threshold: int (default: 10)
+            Value used to determine if a feature is discrete or continuous.
+            If the number of unique levels in a feature is > discrete_threshold, then it is
+            considered continuous, or discrete otherwise.
         verbose: bool (default: False)
             If True, output timing of distance array and scoring
         n_jobs: int (default: 1)
             The number of cores to dedicate to computing the scores with joblib.
             Assigning this parameter to -1 will dedicate as many cores as are available on your system.
             We recommend setting this parameter to -1 to speed up the algorithm as much as possible.
-        core_algorithm: Core Relief Algorithm to perform TuRF iterations on
 
         """
         self.core_algorithm = core_algorithm
@@ -52,6 +59,23 @@ class TuRF(BaseEstimator, TransformerMixin):
     #=========================================================================#
     # headers = list(genetic_data.drop("class",axis=1))
     def fit(self, X, y, headers):
+        """
+        Uses the input `core_algorithm` to determine feature importance scores at each iteration.
+        At every iteration, a certain number(determined by input parameter `step`) of least important
+        features are removed, until the feature set is reduced down to the top `n_features_to_select` features.
+
+        Parameters
+        ----------
+        X: array-like {n_samples, n_features}
+            Training instances to compute the feature importance scores from
+        y: array-like {n_samples}
+            Training labels
+        headers: array-like {n_features}
+            Feature names
+        Returns
+        -------
+        Copy of the TuRF instance
+        """
 
         self.X_mat = X
         self._y = y
