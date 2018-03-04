@@ -7,10 +7,10 @@ from sklearn.base import TransformerMixin
 # from sklearn.feature_selection.base import SelectorMixin
 from sklearn.externals.joblib import Parallel, delayed
 # from .scoring_utils import get_row_missing, ReliefF_compute_scores
-from multisurf import *
-from surf import *
-from surfstar import *
-from relieff import *
+from .multisurf import *
+from .surf import *
+from .surfstar import *
+from .relieff import *
 
 
 class TuRF(BaseEstimator, TransformerMixin):
@@ -88,10 +88,10 @@ class TuRF(BaseEstimator, TransformerMixin):
 
                 perc_retain = 1 - self.step
                 feature_retain = int(np.round(num_features*perc_retain))
-                #Edge case
+                # Edge case
                 if feature_retain == feature_retain_check:
-                    feature_retain -=1
-                    
+                    feature_retain -= 1
+
                 if feature_retain < self.n_features_to_select:
                     num_features = self.n_features_to_select
 
@@ -99,12 +99,12 @@ class TuRF(BaseEstimator, TransformerMixin):
                     num_features = feature_retain
 
                 select = np.array(features_iter[iter_count].argsort()[-num_features:])
-                
+
                 feature_retain_check = feature_retain
-                
+
                 self.X_mat = self.X_mat[:, select]
                 self.headers = [self.headers[i] for i in select]
-                
+
             elif type(self.step) is int:
                 feature_retain = num_features - self.step
                 if feature_retain < self.n_features_to_select:
@@ -131,7 +131,7 @@ class TuRF(BaseEstimator, TransformerMixin):
         self.feature_history = list(zip(headers_iter, features_iter))
 
         self.feature_importances_ = core_fit.feature_importances_
-        self.top_features_ = [headers.index(i) for i in s]
+        self.top_features_ = [headers.index(i) for i in self.headers]
         return self
 
     #=========================================================================#

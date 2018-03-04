@@ -27,8 +27,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
 import numpy as np
 from sklearn.externals.joblib import Parallel, delayed
-from relieff import ReliefF
-from scoring_utils import SURF_compute_scores
+from .relieff import ReliefF
+from .scoring_utils import SURF_compute_scores
 
 
 class SURF(ReliefF):
