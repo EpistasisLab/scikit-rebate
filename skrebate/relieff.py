@@ -31,7 +31,7 @@ import warnings
 import sys
 from sklearn.base import BaseEstimator
 from sklearn.externals.joblib import Parallel, delayed
-from .scoring_utils import get_row_missing, ReliefF_compute_scores
+from scoring_utils import get_row_missing, ReliefF_compute_scores
 
 
 class ReliefF(BaseEstimator):
@@ -104,9 +104,18 @@ class ReliefF(BaseEstimator):
         discrete_label = (len(self._label_list) <= self.discrete_threshold)
 
         if discrete_label:
-            self._class_type = 'discrete'
+            if len(self._label_list) == 2:
+                self._class_type = 'binary'
+                self.mcmap = 0
+            elif len(self._label_list) > 2:
+                self._class_type = 'multiclass'
+                self.mcmap = self._getMultiClassMap()
+            else:
+                raise ValueError('All labels are of the same class.')
+
         else:
             self._class_type = 'continuous'
+            self.mcmap = 0
 
         # Training labels standard deviation -- only used if the training labels are continuous
         self._labels_std = 0.
@@ -214,6 +223,21 @@ class ReliefF(BaseEstimator):
         return self.transform(X)
 
 ######################### SUPPORTING FUNCTIONS ###########################
+    def _getMultiClassMap(self):
+
+        mcmap = dict()
+
+        for i in range(self._datalen):
+            if(self._y[i] not in mcmap):
+                mcmap[self._y[i]] = 0
+            else:
+                mcmap[self._y[i]] += 1
+
+        for each in self._label_list:
+            mcmap[each] = mcmap[each]/float(self._datalen)
+
+        return mcmap
+
     def _get_attribute_info(self):
         attr = dict()
         d = 0
@@ -345,7 +369,7 @@ class ReliefF(BaseEstimator):
 
         NNlist = map(self._find_neighbors, range(self._datalen))
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-            ReliefF_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
+            ReliefF_compute_scores)(instance_num, attr, nan_entries, self._num_attributes, self.mcmap,
                                     NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
             for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 

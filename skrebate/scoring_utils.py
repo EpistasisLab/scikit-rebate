@@ -61,7 +61,7 @@ def get_row_missing(xc, xd, cdiffs, index, cindices, dindices):
     return row
 
 
-def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, y, labels_std, near=True):
+def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, y, labels_std, mcmap, near=True):
     """Evaluates feature scores according to the ReliefF algorithm"""
 
     fname = headers[feature]
@@ -78,7 +78,7 @@ def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, 
     xinstfeature = X[inst][feature]
 
     #--------------------------------------------------------------------------
-    if ctype == 'discrete':
+    if ctype == 'binary':
         for i in range(len(NN)):
             if nan_entries[NN[i]][feature]:
                 continue
@@ -120,6 +120,74 @@ def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, 
         hit_proportion = count_hit / float(len(NN))
         miss_proportion = count_miss / float(len(NN))
         diff = diff_hit * miss_proportion + diff_miss * hit_proportion
+
+    #--------------------------------------------------------------------------
+    elif ctype == 'multiclass':
+        class_store = dict()
+        missClassPSum = 0
+
+        for each in mcmap:
+            if(each != y[inst]):
+                class_store[each] = [0, 0]
+                missClassPSum += mcmap[each]
+
+        for i in range(len(NN)):
+            if nan_entries[NN[i]][feature]:
+                continue
+
+            xNNifeature = X[NN[i]][feature]
+            absvalue = abs(xinstfeature - xNNifeature) / mmdiff
+            if near:
+                if(y[inst] == y[NN[i]]):  # HIT
+                    count_hit += 1
+                    if xinstfeature != xNNifeature:
+                        if ftype == 'continuous':
+                            diff_hit -= absvalue
+                        else:
+                            diff_hit -= 1
+                else:  # MISS
+                    for missClass in class_store:
+                        if(y[NN[i]] == missClass):
+                            class_store[missClass][0] += 1
+                            if xinstfeature != xNNifeature:
+                                if ftype == 'continuous':
+                                    class_store[missClass][1] += absvalue
+                                else:
+                                    class_store[missClass][1] += 1
+            else:  # far
+                if(y[inst] == y[NN[i]]):  # HIT
+                    count_hit += 1
+                    if xinstfeature != xNNifeature:
+                        if ftype == 'continuous':
+                            diff_hit -= absvalue
+                        else:
+                            diff_hit -= 1
+                else:  # MISS
+                    for missClass in class_store:
+                        if(y[NN[i]] == missClass):
+                            class_store[missClass][0] += 1
+                            if xinstfeature != xNNifeature:
+                                if ftype == 'continuous':
+                                    class_store[missClass][1] += absvalue
+                                else:
+                                    class_store[missClass][1] += 1
+
+        # Corrects for both multiple classes, as well as missing data.
+        missSum = 0
+        for each in class_store:
+            missSum += class_store[each][0]
+        missAvg = missSum/float(len(class_store))
+
+        hit_proportion = count_hit/float(len(NN))  # correct for missing data
+        for each in class_store:
+            diff += (mcmap[each]/float(missClassPSum)) * class_store[each][1]
+
+        diff = diff * hit_proportion
+        miss_proportion = missAvg/float(len(NN))
+        diff += diff_hit * miss_proportion
+
+        return diff
+
     #--------------------------------------------------------------------------
     else:  # CONTINUOUS endpoint
         mmdiff = attr[fname][3]
@@ -170,11 +238,11 @@ def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, 
     return diff
 
 
-def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, NN, headers, class_type, X, y, labels_std):
+def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, NN, headers, class_type, X, y, labels_std, mcmap):
     scores = np.zeros(num_attributes)
     for feature_num in range(num_attributes):
         scores[feature_num] += compute_score(attr, NN, feature_num, inst,
-                                             nan_entries, headers, class_type, X, y, labels_std)
+                                             nan_entries, headers, class_type, X, y, labels_std, mcmap)
     return scores
 
 
