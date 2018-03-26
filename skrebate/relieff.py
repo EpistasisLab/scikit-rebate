@@ -191,15 +191,15 @@ class ReliefF(BaseEstimator):
        # Run remainder of algorithm (i.e. identification of 'neighbors' for each instance, and feature scoring).------------
         self.feature_importances_ = self._run_algorithm() #Stores feature importance scores for ReliefF or respective Relief-based algorithm. 
 
+        # Delete the internal distance array because it is no longer needed
+        del self._distance_array
+        
         if self.verbose:
             elapsed = time.time() - start
             print('Completed scoring in {} seconds.'.format(elapsed))
 
         # Compute indices of top features
         self.top_features_ = np.argsort(self.feature_importances_)[::-1]
-
-        # Delete the internal distance array because it is no longer needed
-        del self._distance_array
 
         return self
 
