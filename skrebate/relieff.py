@@ -37,17 +37,22 @@ from scoring_utils import get_row_missing, ReliefF_compute_scores
 class ReliefF(BaseEstimator):
 
     """Feature selection using data-mined expert knowledge.
-
     Based on the ReliefF algorithm as introduced in:
-
-    Kononenko, Igor et al. Overcoming the myopia of inductive learning
-    algorithms with RELIEFF (1997), Applied Intelligence, 7(1), p39-55
-
-    """
+    Igor et al. Overcoming the myopia of inductive learning
+    algorithms with RELIEFF (1997), Applied Intelligence, 7(1), p39-55"""
+    
+    """Note that ReliefF class establishes core functionality that is inherited by all other Relief-based algorithms.
+    Assumes: There are no missing values in the label/outcome/dependent variable."""
 
     def __init__(self, n_features_to_select=10, n_neighbors=100, discrete_threshold=10, verbose=False, n_jobs=1):
-        """Sets up ReliefF to perform feature selection.
-
+        """Sets up ReliefF to perform feature selection. Note that an approximation of the original 'Relief' 
+        algorithm may be run by setting 'n_features_to_select' to 1. Also note that the original Relief parameter 'm'
+        is not included in this software. 'm' specifies the number of random training instances out of 'n' (total 
+        training instances) used to update feature scores. Since scores are most representative when m=n, all 
+        available training instances are utilized in all Relief-based algorithm score updates here. If the user 
+        wishes to utilize a smaller 'm' in Relief-based scoring, simply pass any of these algorithms a subset of the
+        original training dataset samples. 
+        
         Parameters
         ----------
         n_features_to_select: int (default: 10)
@@ -92,17 +97,25 @@ class ReliefF(BaseEstimator):
         Copy of the ReliefF instance
 
         """
-        self._X = X
-        self._y = y
-        # Set up the properties for ReliefF
-        self._datalen = len(self._X)
+        self._X = X #matrix of predictive variables ('independent variables')
+        self._y = y #vector of values for outcome variable ('dependent variable')
+        
+        # Set up the properties for ReliefF -------------------------------------------------------------------------------------
+        self._datalen = len(self._X) #Number of training instances ('n')
+        
+        """"Below: Handles special case where user requests that a proportion of training instances be neighbors for 
+        ReliefF rather than a specified 'k' number of neighbors.  Note that if k is specified, then k 'hits' and k 
+        'misses' will be used to update feature scores.  Thus total number of neighbors is 2k. If instead a proportion 
+        is specified (say 0.1 out of 1000 instances) this represents the total number of neighbors (e.g. 100). In this 
+        case, k would be set to 50 (i.e. 50 hits and 50 misses). """
         if hasattr(self, 'n_neighbors') and type(self.n_neighbors) is float:
-            # Halve the number of neighbors because ReliefF uses n_neighbors matches
-            # and n_neighbors misses
+            # Halve the number of neighbors because ReliefF uses n_neighbors matches and n_neighbors misses
             self.n_neighbors = int(self.n_neighbors * self._datalen * 0.5)
-        self._label_list = list(set(self._y))
-        discrete_label = (len(self._label_list) <= self.discrete_threshold)
+            
+        self._label_list = list(set(self._y)) #Number of unique outcome (label) values (used to determine outcome variable type)
+        discrete_label = (len(self._label_list) <= self.discrete_threshold) #Determine if label is discrete
 
+        #Identify label type (binary, multiclass, or continuous)
         if discrete_label:
             if len(self._label_list) == 2:
                 self._class_type = 'binary'
@@ -122,26 +135,28 @@ class ReliefF(BaseEstimator):
         if len(self._label_list) > self.discrete_threshold:
             self._labels_std = np.std(self._y, ddof=1)
 
-        self._num_attributes = len(self._X[0])
-        self._missing_data_count = np.isnan(self._X).sum()
+        self._num_attributes = len(self._X[0]) #Number of features in training data
+        self._missing_data_count = np.isnan(self._X).sum()  #Number of missing data values in predictor variable matrix.
 
-        # Assign internal headers for the features
-        # The pre_normalize() function relies on the headers being ordered, e.g., X01, X02, etc.
-        # If this is changed, then the sort in the pre_normalize() function needs to be adapted as well.
+        """Assign internal headers for the features (scikit-learn does not accept external headers from dataset):
+        The pre_normalize() function relies on the headers being ordered, e.g., X01, X02, etc.
+        If this is changed, then the sort in the pre_normalize() function needs to be adapted as well. """
         xlen = len(self._X[0])
         mxlen = len(str(xlen + 1))
         self._headers = ['X{}'.format(str(i).zfill(mxlen)) for i in range(1, xlen + 1)]
 
-        start = time.time()
-        # Determine the data type
+        start = time.time() #Runtime tracking
+        
+        # Determine data types for all features/attributes in training data (i.e. discrete or continuous) 
         C = D = False
-        self.attr = self._get_attribute_info()
+        self.attr = self._get_attribute_info() #Examines each feature and applies discrete_threshold to determine variable type.
         for key in self.attr.keys():
             if self.attr[key][0] == 'discrete':
                 D = True
             if self.attr[key][0] == 'continuous':
                 C = True
-
+                
+        # For downstream computational efficiency, determine if dataset is comprised of all discrete, all continuous, or a mix of discrete/continuous features.
         if C and D:
             self.data_type = 'mixed'
         elif D and not C:
@@ -150,14 +165,16 @@ class ReliefF(BaseEstimator):
             self.data_type = 'continuous'
         else:
             raise ValueError('Invalid data type in data set.')
-
-        # Compute the distance array between all data points
-
+        #--------------------------------------------------------------------------------------------------------------------
+        
+        # Compute the distance array between all data points ----------------------------------------------------------------
+        # For downstream efficiency, separate features in dataset by type (i.e. discrete/continuous)
         diffs, cidx, didx = self._dtype_array()
-        cdiffs = diffs[cidx]
-        xc = self._X[:, cidx]
-        xd = self._X[:, didx]
+        cdiffs = diffs[cidx] #0 for discrete features, and max/min continuous value difference for continuous features.
+        xc = self._X[:, cidx] #Subset of continuous-valued feature data
+        xd = self._X[:, didx] #Subset of discrete-valued feature data
 
+        # For efficiency, the distance array is computed more efficiently for data with no missing values. 
         if self._missing_data_count > 0:
             self._distance_array = self._distarray_missing(xc, xd, cdiffs)
         else:
@@ -169,7 +186,10 @@ class ReliefF(BaseEstimator):
             print('Feature scoring under way ...')
 
         start = time.time()
-        self.feature_importances_ = self._run_algorithm()
+       #--------------------------------------------------------------------------------------------------------------------
+       
+       # Run remainder of algorithm (i.e. identification of 'neighbors' for each instance, and feature scoring).------------
+        self.feature_importances_ = self._run_algorithm() #Stores feature importance scores for ReliefF or respective Relief-based algorithm. 
 
         if self.verbose:
             elapsed = time.time() - start
@@ -267,7 +287,7 @@ class ReliefF(BaseEstimator):
         #------------------------------------------#
 
         def pre_normalize(x):
-            """Normalizes continuous features so they are in the same range"""
+            """Normalizes continuous features so they are in the same range (0 to 1)"""
             idx = 0
             for i in sorted(self.attr.keys()):
                 if self.attr[i][0] == 'discrete':
@@ -283,7 +303,7 @@ class ReliefF(BaseEstimator):
             return squareform(pdist(self._X, metric='hamming'))
         elif self.data_type == 'mixed':
             d_dist = squareform(pdist(xd, metric='hamming'))
-            c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock'))
+            c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock')) #Cityblock is also known as Manhattan distance
             return np.add(d_dist, c_dist) / self._num_attributes
         else:
             self._X = pre_normalize(self._X)
