@@ -132,13 +132,14 @@ class ReliefF(BaseEstimator):
         mxlen = len(str(xlen + 1))
         self._headers = ['X{}'.format(str(i).zfill(mxlen)) for i in range(1, xlen + 1)]
 
+        start = time.time()
         # Determine the data type
         C = D = False
-        attr = self._get_attribute_info()
-        for key in attr.keys():
-            if attr[key][0] == 'discrete':
+        self.attr = self._get_attribute_info()
+        for key in self.attr.keys():
+            if self.attr[key][0] == 'discrete':
                 D = True
-            if attr[key][0] == 'continuous':
+            if self.attr[key][0] == 'continuous':
                 C = True
 
         if C and D:
@@ -151,10 +152,8 @@ class ReliefF(BaseEstimator):
             raise ValueError('Invalid data type in data set.')
 
         # Compute the distance array between all data points
-        start = time.time()
 
-        attr = self._get_attribute_info()
-        diffs, cidx, didx = self._dtype_array(attr)
+        diffs, cidx, didx = self._dtype_array()
         cdiffs = diffs[cidx]
         xc = self._X[:, cidx]
         xd = self._X[:, didx]
@@ -264,17 +263,17 @@ class ReliefF(BaseEstimator):
     def _distarray_no_missing(self, xc, xd):
         """Distance array for data with no missing values"""
         from scipy.spatial.distance import pdist, squareform
-        attr = self._get_attribute_info()
+
         #------------------------------------------#
 
         def pre_normalize(x):
             """Normalizes continuous features so they are in the same range"""
             idx = 0
-            for i in sorted(attr.keys()):
-                if attr[i][0] == 'discrete':
+            for i in sorted(self.attr.keys()):
+                if self.attr[i][0] == 'discrete':
                     continue
-                cmin = attr[i][2]
-                diff = attr[i][3]
+                cmin = self.attr[i][2]
+                diff = self.attr[i][3]
                 x[:, idx] -= cmin
                 x[:, idx] /= diff
                 idx += 1
@@ -291,17 +290,17 @@ class ReliefF(BaseEstimator):
             return squareform(pdist(self._X, metric='cityblock'))
 
     #==================================================================#
-    def _dtype_array(self, attr):
+    def _dtype_array(self):
         """Return mask for discrete(0)/continuous(1) attributes and their indices. Return array of max/min diffs of attributes."""
         attrtype = []
         attrdiff = []
 
         for key in self._headers:
-            if attr[key][0] == 'continuous':
+            if self.attr[key][0] == 'continuous':
                 attrtype.append(1)
             else:
                 attrtype.append(0)
-            attrdiff.append(attr[key][3])
+            attrdiff.append(self.attr[key][3])
 
         attrtype = np.array(attrtype)
         cidx = np.where(attrtype == 1)[0]
@@ -364,12 +363,12 @@ class ReliefF(BaseEstimator):
         return np.array(nn_list)
 
     def _run_algorithm(self):
-        attr = self._get_attribute_info()
+
         nan_entries = np.isnan(self._X)
 
         NNlist = map(self._find_neighbors, range(self._datalen))
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-            ReliefF_compute_scores)(instance_num, attr, nan_entries, self._num_attributes, self.mcmap,
+            ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
                                     NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
             for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 

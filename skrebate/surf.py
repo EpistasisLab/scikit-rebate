@@ -27,8 +27,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
 import numpy as np
 from sklearn.externals.joblib import Parallel, delayed
-from .relieff import ReliefF
-from .scoring_utils import SURF_compute_scores
+from relieff import ReliefF
+from scoring_utils import SURF_compute_scores
 
 
 class SURF(ReliefF):
@@ -91,12 +91,11 @@ class SURF(ReliefF):
             cnt += len(self._distance_array[i])
         avg_dist = sm / float(cnt)
 
-        attr = self._get_attribute_info()
         nan_entries = np.isnan(self._X)
 
         NNlist = [self._find_neighbors(datalen, avg_dist) for datalen in range(self._datalen)]
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-            SURF_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
+            SURF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
                                  NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
             for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 
