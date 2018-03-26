@@ -157,7 +157,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
             else:  # far
                 if(y[inst] == y[NN[i]]):  # HIT
                     count_hit += 1
-                    if xinstfeature != xNNifeature:
+                    if xinstfeature == xNNifeature:
                         if ftype == 'continuous':
                             diff_hit -= absvalue
                         else:
@@ -166,7 +166,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                     for missClass in class_store:
                         if(y[NN[i]] == missClass):
                             class_store[missClass][0] += 1
-                            if xinstfeature != xNNifeature:
+                            if xinstfeature == xNNifeature:
                                 if ftype == 'continuous':
                                     class_store[missClass][1] += absvalue
                                 else:
