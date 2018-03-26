@@ -61,7 +61,7 @@ def get_row_missing(xc, xd, cdiffs, index, cindices, dindices):
     return row
 
 
-def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, y, labels_std, mcmap, near=True):
+def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_type, X, y, labels_std, near=True):
     """Evaluates feature scores according to the ReliefF algorithm"""
 
     fname = headers[feature]
@@ -238,11 +238,11 @@ def compute_score(attr, NN, feature, inst, nan_entries, headers, class_type, X, 
     return diff
 
 
-def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, NN, headers, class_type, X, y, labels_std, mcmap):
+def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std):
     scores = np.zeros(num_attributes)
     for feature_num in range(num_attributes):
-        scores[feature_num] += compute_score(attr, NN, feature_num, inst,
-                                             nan_entries, headers, class_type, X, y, labels_std, mcmap)
+        scores[feature_num] += compute_score(attr, mcmap, NN, feature_num, inst,
+                                             nan_entries, headers, class_type, X, y, labels_std)
     return scores
 
 
