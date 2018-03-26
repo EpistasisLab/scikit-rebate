@@ -169,15 +169,16 @@ class ReliefF(BaseEstimator):
         
         # Compute the distance array between all data points ----------------------------------------------------------------
         # For downstream efficiency, separate features in dataset by type (i.e. discrete/continuous)
-        diffs, cidx, didx = self._dtype_array()
+        diffs, mins, cidx, didx = self._dtype_array()
         cdiffs = diffs[cidx] #0 for discrete features, and max/min continuous value difference for continuous features.
+        cmins = mins[cidx]
         xc = self._X[:, cidx] #Subset of continuous-valued feature data
         xd = self._X[:, didx] #Subset of discrete-valued feature data
 
         """ For efficiency, the distance array is computed more efficiently for data with no missing values. 
         This distance array will only be used to identify nearest neighbors. """
         if self._missing_data_count > 0:
-            self._distance_array = self._distarray_missing(xc, xd, cdiffs)
+            self._distance_array = self._distarray_missing(xc, xd, cdiffs, cmins)
         else:
             self._distance_array = self._distarray_no_missing(xc, xd)
 
@@ -322,6 +323,7 @@ class ReliefF(BaseEstimator):
         """Return mask for discrete(0)/continuous(1) attributes and their indices. Return array of max/min diffs of attributes."""
         attrtype = []
         attrdiff = []
+        attrmin = []
 
         for key in self._headers:
             if self.attr[key][0] == 'continuous':
@@ -329,16 +331,18 @@ class ReliefF(BaseEstimator):
             else:
                 attrtype.append(0)
             attrdiff.append(self.attr[key][3])
+            attrmin.append(self.attr[key][2])
 
         attrtype = np.array(attrtype)
         cidx = np.where(attrtype == 1)[0]
         didx = np.where(attrtype == 0)[0]
 
         attrdiff = np.array(attrdiff)
-        return attrdiff, cidx, didx
+        attrmin = np.array(attrmin)
+        return attrdiff, attrmin, cidx, didx
     #==================================================================#
 
-    def _distarray_missing(self, xc, xd, cdiffs):
+    def _distarray_missing(self, xc, xd, cdiffs, cmins):
         """Distance array calculation for data with missing values"""
         cindices = []
         dindices = []
@@ -348,10 +352,10 @@ class ReliefF(BaseEstimator):
 
         if self.n_jobs != 1:
             dist_array = Parallel(n_jobs=self.n_jobs)(delayed(get_row_missing)(
-                xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
+                xc, xd, cdiffs, cmins, index, cindices, dindices) for index in range(self._datalen))
         else:
             #For each instance calculate distance from all other instances (in non-redundant manner) (i.e. computes triangle, and puts zeros in for rest to form square). 
-            dist_array = [get_row_missing(xc, xd, cdiffs, index, cindices, dindices)
+            dist_array = [get_row_missing(xc, xd, cdiffs, cmins, index, cindices, dindices)
                           for index in range(self._datalen)]
 
         return np.array(dist_array)
