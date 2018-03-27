@@ -27,7 +27,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import numpy as np
 
 
-def get_row_missing(xc, xd, cdiffs, cmins, index, cindices, dindices): #(Subset of continuous-valued feature data, Subset of discrete-valued feature data, max/min difference, instance index, boolean mask for continuous, boolean mask for discrete)
+def get_row_missing(xc, xd, cdiffs, index, cindices, dindices): #(Subset of continuous-valued feature data, Subset of discrete-valued feature data, max/min difference, instance index, boolean mask for continuous, boolean mask for discrete)
     """ Calculate distance between index instance and all other instances. """
     row = np.empty(0, dtype=np.double) #initialize empty row
     cinst1 = xc[index] #continuous-valued features for index instance
@@ -56,13 +56,12 @@ def get_row_missing(xc, xd, cdiffs, cmins, index, cindices, dindices): #(Subset 
         c1 = np.delete(cinst1, idx) #delete unique missing features from index instance
         c2 = np.delete(cinst2, idx) #delete unique missing features from compared instance
         cdf = np.delete(cdiffs, idx) #delete unique missing features from continuous value difference scores
-        cmf = np.deleete(cmins,idx) #delete unique missing features from continuous value minimums
 
         # Add discrete feature distance contributions (missing values excluded) - Hamming distance
         dist += len(d1[d1 != d2])
 
         # Add continuous feature distance contributions (missing values excluded) - Manhattan distance
-        dist += np.sum(np.absolute(np.subtract(c1, c2)) / cdf)  #possible normalization problem here. CAN I JUST DO SAME CORRECTION?  was meant for a single value before, not a difference....
+        dist += np.sum(np.absolute(np.subtract(c1, c2)) / cdf)
         
         #Normalize distance calculation based on total number of missing values bypassed in either discrete or continuous features.
         tnmc = tf - dmc - cmc #Total number of unique missing counted
