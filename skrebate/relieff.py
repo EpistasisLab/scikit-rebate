@@ -403,12 +403,12 @@ class ReliefF(BaseEstimator):
 
     def _run_algorithm(self):
         """ Runs nearest neighbor (NN) identification and feature scoring to yield ReliefF scores. """
-        nan_entries = np.isnan(self._X) #boolean mask for missing data values
-        
+
         # Find nearest neighbors
         NNlist = map(self._find_neighbors, range(self._datalen))
         
         # Feature scoring - using identified nearest neighbors
+        nan_entries = np.isnan(self._X) #boolean mask for missing data values
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
             ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
                                     NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
