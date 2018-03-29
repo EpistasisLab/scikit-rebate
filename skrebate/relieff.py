@@ -40,19 +40,19 @@ class ReliefF(BaseEstimator):
     Based on the ReliefF algorithm as introduced in:
     Igor et al. Overcoming the myopia of inductive learning
     algorithms with RELIEFF (1997), Applied Intelligence, 7(1), p39-55"""
-    
+
     """Note that ReliefF class establishes core functionality that is inherited by all other Relief-based algorithms.
     Assumes: There are no missing values in the label/outcome/dependent variable."""
 
     def __init__(self, n_features_to_select=10, n_neighbors=100, discrete_threshold=10, verbose=False, n_jobs=1):
-        """Sets up ReliefF to perform feature selection. Note that an approximation of the original 'Relief' 
+        """Sets up ReliefF to perform feature selection. Note that an approximation of the original 'Relief'
         algorithm may be run by setting 'n_features_to_select' to 1. Also note that the original Relief parameter 'm'
-        is not included in this software. 'm' specifies the number of random training instances out of 'n' (total 
-        training instances) used to update feature scores. Since scores are most representative when m=n, all 
-        available training instances are utilized in all Relief-based algorithm score updates here. If the user 
+        is not included in this software. 'm' specifies the number of random training instances out of 'n' (total
+        training instances) used to update feature scores. Since scores are most representative when m=n, all
+        available training instances are utilized in all Relief-based algorithm score updates here. If the user
         wishes to utilize a smaller 'm' in Relief-based scoring, simply pass any of these algorithms a subset of the
-        original training dataset samples. 
-        
+        original training dataset samples.
+
         Parameters
         ----------
         n_features_to_select: int (default: 10)
@@ -97,25 +97,27 @@ class ReliefF(BaseEstimator):
         Copy of the ReliefF instance
 
         """
-        self._X = X #matrix of predictive variables ('independent variables')
-        self._y = y #vector of values for outcome variable ('dependent variable')
-        
+        self._X = X  # matrix of predictive variables ('independent variables')
+        self._y = y  # vector of values for outcome variable ('dependent variable')
+
         # Set up the properties for ReliefF -------------------------------------------------------------------------------------
-        self._datalen = len(self._X) #Number of training instances ('n')
-        
-        """"Below: Handles special case where user requests that a proportion of training instances be neighbors for 
-        ReliefF rather than a specified 'k' number of neighbors.  Note that if k is specified, then k 'hits' and k 
-        'misses' will be used to update feature scores.  Thus total number of neighbors is 2k. If instead a proportion 
-        is specified (say 0.1 out of 1000 instances) this represents the total number of neighbors (e.g. 100). In this 
+        self._datalen = len(self._X)  # Number of training instances ('n')
+
+        """"Below: Handles special case where user requests that a proportion of training instances be neighbors for
+        ReliefF rather than a specified 'k' number of neighbors.  Note that if k is specified, then k 'hits' and k
+        'misses' will be used to update feature scores.  Thus total number of neighbors is 2k. If instead a proportion
+        is specified (say 0.1 out of 1000 instances) this represents the total number of neighbors (e.g. 100). In this
         case, k would be set to 50 (i.e. 50 hits and 50 misses). """
         if hasattr(self, 'n_neighbors') and type(self.n_neighbors) is float:
             # Halve the number of neighbors because ReliefF uses n_neighbors matches and n_neighbors misses
             self.n_neighbors = int(self.n_neighbors * self._datalen * 0.5)
-            
-        self._label_list = list(set(self._y)) #Number of unique outcome (label) values (used to determine outcome variable type)
-        discrete_label = (len(self._label_list) <= self.discrete_threshold) #Determine if label is discrete
 
-        #Identify label type (binary, multiclass, or continuous)
+        # Number of unique outcome (label) values (used to determine outcome variable type)
+        self._label_list = list(set(self._y))
+        # Determine if label is discrete
+        discrete_label = (len(self._label_list) <= self.discrete_threshold)
+
+        # Identify label type (binary, multiclass, or continuous)
         if discrete_label:
             if len(self._label_list) == 2:
                 self._class_type = 'binary'
@@ -135,8 +137,9 @@ class ReliefF(BaseEstimator):
         if len(self._label_list) > self.discrete_threshold:
             self._labels_std = np.std(self._y, ddof=1)
 
-        self._num_attributes = len(self._X[0]) #Number of features in training data
-        self._missing_data_count = np.isnan(self._X).sum()  #Number of missing data values in predictor variable matrix.
+        self._num_attributes = len(self._X[0])  # Number of features in training data
+        # Number of missing data values in predictor variable matrix.
+        self._missing_data_count = np.isnan(self._X).sum()
 
         """Assign internal headers for the features (scikit-learn does not accept external headers from dataset):
         The pre_normalize() function relies on the headers being ordered, e.g., X01, X02, etc.
@@ -145,17 +148,18 @@ class ReliefF(BaseEstimator):
         mxlen = len(str(xlen + 1))
         self._headers = ['X{}'.format(str(i).zfill(mxlen)) for i in range(1, xlen + 1)]
 
-        start = time.time() #Runtime tracking
-        
-        # Determine data types for all features/attributes in training data (i.e. discrete or continuous) 
+        start = time.time()  # Runtime tracking
+
+        # Determine data types for all features/attributes in training data (i.e. discrete or continuous)
         C = D = False
-        self.attr = self._get_attribute_info() #Examines each feature and applies discrete_threshold to determine variable type.
+        # Examines each feature and applies discrete_threshold to determine variable type.
+        self.attr = self._get_attribute_info()
         for key in self.attr.keys():
             if self.attr[key][0] == 'discrete':
                 D = True
             if self.attr[key][0] == 'continuous':
                 C = True
-                
+
         # For downstream computational efficiency, determine if dataset is comprised of all discrete, all continuous, or a mix of discrete/continuous features.
         if C and D:
             self.data_type = 'mixed'
@@ -166,16 +170,17 @@ class ReliefF(BaseEstimator):
         else:
             raise ValueError('Invalid data type in data set.')
         #--------------------------------------------------------------------------------------------------------------------
-        
+
         # Compute the distance array between all data points ----------------------------------------------------------------
         # For downstream efficiency, separate features in dataset by type (i.e. discrete/continuous)
         diffs, cidx, didx = self._dtype_array()
-        cdiffs = diffs[cidx] #0 for discrete features, and max/min continuous value difference for continuous features.
+        # 0 for discrete features, and max/min continuous value difference for continuous features.
+        cdiffs = diffs[cidx]
 
-        xc = self._X[:, cidx] #Subset of continuous-valued feature data
-        xd = self._X[:, didx] #Subset of discrete-valued feature data
+        xc = self._X[:, cidx]  # Subset of continuous-valued feature data
+        xd = self._X[:, didx]  # Subset of discrete-valued feature data
 
-        """ For efficiency, the distance array is computed more efficiently for data with no missing values. 
+        """ For efficiency, the distance array is computed more efficiently for data with no missing values.
         This distance array will only be used to identify nearest neighbors. """
         if self._missing_data_count > 0:
             self._distance_array = self._distarray_missing(xc, xd, cdiffs)
@@ -189,13 +194,14 @@ class ReliefF(BaseEstimator):
 
         start = time.time()
        #--------------------------------------------------------------------------------------------------------------------
-       
+
        # Run remainder of algorithm (i.e. identification of 'neighbors' for each instance, and feature scoring).------------
-        self.feature_importances_ = self._run_algorithm() #Stores feature importance scores for ReliefF or respective Relief-based algorithm. 
+        # Stores feature importance scores for ReliefF or respective Relief-based algorithm.
+        self.feature_importances_ = self._run_algorithm()
 
         # Delete the internal distance array because it is no longer needed
         del self._distance_array
-        
+
         if self.verbose:
             elapsed = time.time() - start
             print('Completed scoring in {} seconds.'.format(elapsed))
@@ -246,7 +252,7 @@ class ReliefF(BaseEstimator):
 ######################### SUPPORTING FUNCTIONS ###########################
     def _getMultiClassMap(self):
         """ Relief algorithms handle the scoring updates a little differently for data with multiclass outcomes. In ReBATE we implement multiclass scoring in line with
-        the strategy described by Kononenko 1994 within the RELIEF-F variant which was suggested to outperform the RELIEF-E multiclass variant. This strategy weights 
+        the strategy described by Kononenko 1994 within the RELIEF-F variant which was suggested to outperform the RELIEF-E multiclass variant. This strategy weights
         score updates derived from misses of different classes by the class frequency observed in the training data. 'The idea is that the algorithm should estimate the
         ability of attributes to separate each pair of classes regardless of which two classes are closest to each other'.  In this method we prepare for this normalization
         by creating a class dictionary, and storing respective class frequencies. This is needed for ReliefF multiclass score update normalizations. """
@@ -274,7 +280,7 @@ class ReliefF(BaseEstimator):
             h = self._headers[idx]
             z = w[idx]
             if self._missing_data_count > 0:
-                z = z[np.logical_not(np.isnan(z))] #Exclude any missing values from consideration
+                z = z[np.logical_not(np.isnan(z))]  # Exclude any missing values from consideration
             zlen = len(np.unique(z))
             if zlen <= limit:
                 attr[h] = ('discrete', 0, 0, 0)
@@ -283,13 +289,13 @@ class ReliefF(BaseEstimator):
                 mx = np.max(z)
                 mn = np.min(z)
                 attr[h] = ('continuous', mx, mn, mx - mn)
-        #For each feature/attribute we store (type, max value, min value, max min difference) - the latter three values are set to zero if feature is discrete.
+        # For each feature/attribute we store (type, max value, min value, max min difference) - the latter three values are set to zero if feature is discrete.
         return attr
     #==================================================================#
 
     def _distarray_no_missing(self, xc, xd):
-        """Distance array calculation for data with no missing values. The 'pdist() function outputs a condense distance array, and squareform() converts this vector-form 
-        distance vector to a square-form, redundant distance matrix.  
+        """Distance array calculation for data with no missing values. The 'pdist() function outputs a condense distance array, and squareform() converts this vector-form
+        distance vector to a square-form, redundant distance matrix.
         *This could be a target for saving memory in the future, by not needing to expand to the redundant square-form matrix. """
         from scipy.spatial.distance import pdist, squareform
 
@@ -307,12 +313,13 @@ class ReliefF(BaseEstimator):
                 idx += 1
             return x
         #------------------------------------------#
-        
+
         if self.data_type == 'discrete':
             return squareform(pdist(self._X, metric='hamming'))
         elif self.data_type == 'mixed':
             d_dist = squareform(pdist(xd, metric='hamming'))
-            c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock')) #Cityblock is also known as Manhattan distance
+            # Cityblock is also known as Manhattan distance
+            c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock'))
             return np.add(d_dist, c_dist) / self._num_attributes
         else:
             self._X = pre_normalize(self._X)
@@ -336,7 +343,7 @@ class ReliefF(BaseEstimator):
         didx = np.where(attrtype == 0)[0]
 
         attrdiff = np.array(attrdiff)
-        
+
         return attrdiff, cidx, didx
     #==================================================================#
 
@@ -344,7 +351,8 @@ class ReliefF(BaseEstimator):
         """Distance array calculation for data with missing values"""
         cindices = []
         dindices = []
-        for i in range(self._datalen): #Get Boolean mask locating missing values for continuous and discrete features separately. These correspond to xc and xd respectively. 
+        # Get Boolean mask locating missing values for continuous and discrete features separately. These correspond to xc and xd respectively.
+        for i in range(self._datalen):
             cindices.append(np.where(np.isnan(xc[i]))[0])
             dindices.append(np.where(np.isnan(xd[i]))[0])
 
@@ -352,18 +360,18 @@ class ReliefF(BaseEstimator):
             dist_array = Parallel(n_jobs=self.n_jobs)(delayed(get_row_missing)(
                 xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
         else:
-            #For each instance calculate distance from all other instances (in non-redundant manner) (i.e. computes triangle, and puts zeros in for rest to form square). 
+            # For each instance calculate distance from all other instances (in non-redundant manner) (i.e. computes triangle, and puts zeros in for rest to form square).
             dist_array = [get_row_missing(xc, xd, cdiffs, index, cindices, dindices)
                           for index in range(self._datalen)]
 
         return np.array(dist_array)
     #==================================================================#
-    
+
 ############################# ReliefF ############################################
 
     def _find_neighbors(self, inst):
         """ Identify k nearest hits and k nearest misses for given instance. """
-        #Make a vector of distances between target instance (inst) and all others
+        # Make a vector of distances between target instance (inst) and all others
         dist_vect = []
         for j in range(self._datalen):
             if inst != j:
@@ -372,43 +380,80 @@ class ReliefF(BaseEstimator):
                     locator.reverse()
                 dist_vect.append(self._distance_array[locator[0]][locator[1]])
             else:
-                dist_vect.append(sys.maxsize) #Ensures that target instance is never selected as neighbor.
+                # Ensures that target instance is never selected as neighbor.
+                dist_vect.append(sys.maxsize)
 
         dist_vect = np.array(dist_vect)
 
-        #Identify neighbors
-        #ERROR: only seems set up to find binary neighbors
-        #if self._class_type == 'binary':
-        
-        nn_list = []
-        match_count = 0
-        miss_count = 0
-        for nn_index in np.argsort(dist_vect):
-            if self._y[inst] == self._y[nn_index]:  # Hit neighbor identified
-                if match_count >= self.n_neighbors:
-                    continue
-                nn_list.append(nn_index)
-                match_count += 1
-            else:  # Miss neighbor identified
-                if miss_count >= self.n_neighbors:
-                    continue
-                nn_list.append(nn_index)
-                miss_count += 1
+        # Identify neighbors
+        # ERROR: only seems set up to find binary neighbors
+        # if self._class_type == 'binary':
+        if self._class_type == 'binary':
+            nn_list = []
+            match_count = 0
+            miss_count = 0
+            for nn_index in np.argsort(dist_vect):
+                if self._y[inst] == self._y[nn_index]:  # Hit neighbor identified
+                    if match_count >= self.n_neighbors:
+                        continue
+                    nn_list.append(nn_index)
+                    match_count += 1
+                else:  # Miss neighbor identified
+                    if miss_count >= self.n_neighbors:
+                        continue
+                    nn_list.append(nn_index)
+                    miss_count += 1
 
-            if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
-                break
+                if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
+                    break
+        elif self._class_type == 'multiclass':
+            nn_list = []
+            match_count = 0
+            miss_count = dict.fromkeys(self._label_list, 0)
+            for nn_index in np.argsort(dist_vect):
+                if self._y[inst] == self._y[nn_index]:  # Hit neighbor identified
+                    if match_count >= self.n_neighbors:
+                        continue
+                    nn_list.append(nn_index)
+                    match_count += 1
+                else:
+                    for label in self._label_list:
+                        if self._y[nn_index] == label:
+                            if miss_count[label] >= self.n_neighbors:
+                                continue
+                            nn_list.append(nn_index)
+                            miss_count[label] += 1
 
+                if match_count >= self.n_neighbors and all(v >= self.n_neighbors for v in miss_count.values()):
+                    break
+        else:
+            nn_list = []
+            match_count = 0
+            miss_count = 0
+            for nn_index in np.argsort(dist_vect):
+                if (self._y[inst]-self._y[nn_index]) < self._labels_std:  # Hit neighbor identified
+                    if match_count >= self.n_neighbors:
+                        continue
+                    nn_list.append(nn_index)
+                    match_count += 1
+                else:  # Miss neighbor identified
+                    if miss_count >= self.n_neighbors:
+                        continue
+                    nn_list.append(nn_index)
+                    miss_count += 1
+
+                if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
+                    break
         return np.array(nn_list)
-
 
     def _run_algorithm(self):
         """ Runs nearest neighbor (NN) identification and feature scoring to yield ReliefF scores. """
 
         # Find nearest neighbors
         NNlist = map(self._find_neighbors, range(self._datalen))
-        
+
         # Feature scoring - using identified nearest neighbors
-        nan_entries = np.isnan(self._X) #boolean mask for missing data values
+        nan_entries = np.isnan(self._X)  # boolean mask for missing data values
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
             ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
                                     NN, self._headers, self._class_type, self._X, self._y, self._labels_std)

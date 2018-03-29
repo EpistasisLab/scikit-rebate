@@ -27,45 +27,56 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import numpy as np
 
 
-def get_row_missing(xc, xd, cdiffs, index, cindices, dindices): #(Subset of continuous-valued feature data, Subset of discrete-valued feature data, max/min difference, instance index, boolean mask for continuous, boolean mask for discrete)
+# (Subset of continuous-valued feature data, Subset of discrete-valued feature data, max/min difference, instance index, boolean mask for continuous, boolean mask for discrete)
+def get_row_missing(xc, xd, cdiffs, index, cindices, dindices):
     """ Calculate distance between index instance and all other instances. """
-    row = np.empty(0, dtype=np.double) #initialize empty row
-    cinst1 = xc[index] #continuous-valued features for index instance
-    dinst1 = xd[index] #discrete-valued features for index instance
-    can = cindices[index] #Boolean mask locating missing values for continuous features for index instance
-    dan = dindices[index] #Boolean mask locating missing values for discrete features for index instance
-    tf = len(cinst1) + len(dinst1) #total number of features. 
-    
-    #Progressively compare current instance to all others. Excludes comparison with self indexed instance. (Building the distance matrix triangle).
+    row = np.empty(0, dtype=np.double)  # initialize empty row
+    cinst1 = xc[index]  # continuous-valued features for index instance
+    dinst1 = xd[index]  # discrete-valued features for index instance
+    # Boolean mask locating missing values for continuous features for index instance
+    can = cindices[index]
+    # Boolean mask locating missing values for discrete features for index instance
+    dan = dindices[index]
+    tf = len(cinst1) + len(dinst1)  # total number of features.
+
+    # Progressively compare current instance to all others. Excludes comparison with self indexed instance. (Building the distance matrix triangle).
     for j in range(index):
         dist = 0
-        dinst2 = xd[j] #discrete-valued features for compared instance
-        cinst2 = xc[j] #continuous-valued features for compared instance
+        dinst2 = xd[j]  # discrete-valued features for compared instance
+        cinst2 = xc[j]  # continuous-valued features for compared instance
 
         # Manage missing values in discrete features
-        dbn = dindices[j] #Boolean mask locating missing values for discrete features for compared instance
-        idx = np.unique(np.append(dan, dbn)) #indexes where there is at least one missing value in the feature between an instance pair. 
-        dmc = len(idx) # Number of features excluded from distance calculation due to one or two missing values within instance pair. Used to normalize distance values for comparison.
-        d1 = np.delete(dinst1, idx) #delete unique missing features from index instance
-        d2 = np.delete(dinst2, idx) #delete unique missing features from compared instance
-        
+        # Boolean mask locating missing values for discrete features for compared instance
+        dbn = dindices[j]
+        # indexes where there is at least one missing value in the feature between an instance pair.
+        idx = np.unique(np.append(dan, dbn))
+        # Number of features excluded from distance calculation due to one or two missing values within instance pair. Used to normalize distance values for comparison.
+        dmc = len(idx)
+        d1 = np.delete(dinst1, idx)  # delete unique missing features from index instance
+        d2 = np.delete(dinst2, idx)  # delete unique missing features from compared instance
+
         # Manage missing values in continuous features
-        cbn = cindices[j] #Boolean mask locating missing values for continuous features for compared instance
-        idx = np.unique(np.append(can, cbn)) #indexes where there is at least one missing value in the feature between an instance pair. 
-        cmc = len(idx) # Number of features excluded from distance calculation due to one or two missing values within instance pair. Used to normalize distance values for comparison.
-        c1 = np.delete(cinst1, idx) #delete unique missing features from index instance
-        c2 = np.delete(cinst2, idx) #delete unique missing features from compared instance
-        cdf = np.delete(cdiffs, idx) #delete unique missing features from continuous value difference scores
+        # Boolean mask locating missing values for continuous features for compared instance
+        cbn = cindices[j]
+        # indexes where there is at least one missing value in the feature between an instance pair.
+        idx = np.unique(np.append(can, cbn))
+        # Number of features excluded from distance calculation due to one or two missing values within instance pair. Used to normalize distance values for comparison.
+        cmc = len(idx)
+        c1 = np.delete(cinst1, idx)  # delete unique missing features from index instance
+        c2 = np.delete(cinst2, idx)  # delete unique missing features from compared instance
+        # delete unique missing features from continuous value difference scores
+        cdf = np.delete(cdiffs, idx)
 
         # Add discrete feature distance contributions (missing values excluded) - Hamming distance
         dist += len(d1[d1 != d2])
 
         # Add continuous feature distance contributions (missing values excluded) - Manhattan distance
         dist += np.sum(np.absolute(np.subtract(c1, c2)) / cdf)
-        
-        #Normalize distance calculation based on total number of missing values bypassed in either discrete or continuous features.
-        tnmc = tf - dmc - cmc #Total number of unique missing counted
-        dist = dist/float(tnmc) #Distance normalized by number of features included in distance sum (this seeks to handle missing values neutrally in distance calculation) 
+
+        # Normalize distance calculation based on total number of missing values bypassed in either discrete or continuous features.
+        tnmc = tf - dmc - cmc  # Total number of unique missing counted
+        # Distance normalized by number of features included in distance sum (this seeks to handle missing values neutrally in distance calculation)
+        dist = dist/float(tnmc)
 
         row = np.append(row, dist)
     return row
