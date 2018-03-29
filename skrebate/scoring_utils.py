@@ -60,7 +60,7 @@ def get_row_missing(xc, xd, cdiffs, index, cindices, dindices): #(Subset of cont
         # Add discrete feature distance contributions (missing values excluded) - Hamming distance
         dist += len(d1[d1 != d2])
 
-        # Add continuous feature distance contributions (missing values excluded) - Manhattan distance
+        # Add continuous feature distance contributions (missing values excluded) - Manhattan distance (Note that 0-1 continuous value normalization is included ~ subtraction of minimums cancel out)
         dist += np.sum(np.absolute(np.subtract(c1, c2)) / cdf)
         
         #Normalize distance calculation based on total number of missing values bypassed in either discrete or continuous features.
@@ -68,16 +68,18 @@ def get_row_missing(xc, xd, cdiffs, index, cindices, dindices): #(Subset of cont
         dist = dist/float(tnmc) #Distance normalized by number of features included in distance sum (this seeks to handle missing values neutrally in distance calculation) 
 
         row = np.append(row, dist)
+        
     return row
 
 
 def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_type, X, y, labels_std, near=True):
-    """Evaluates feature scores according to the ReliefF algorithm"""
+    """Flexible feature scoring method that can be used with any core Relief-based method. Scoring proceeds differently
+    based on whether endpoint is binary, multiclass, or continuous. """
 
-    fname = headers[feature]
+    fname = headers[feature] #FIX? Couldn't we just pass fname instead of these two elements (is this constent for all algorithms?
     ftype = attr[fname][0]  # feature type
-    ctype = class_type  # class type
-    diff_hit = diff_miss = 0.0
+    ctype = class_type  # class type (binary, multiclass, continuous)
+    diff_hit = diff_miss = 0.0  # Tracks the score contribution
     count_hit = count_miss = 0.0
     mmdiff = 1
     diff = 0
@@ -249,6 +251,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
 
 
 def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std):
+    """ Unique scoring procedure for ReliefF algorithm. Scoring based on k nearest hits and misses. """
     scores = np.zeros(num_attributes)
     for feature_num in range(num_attributes):
         scores[feature_num] += compute_score(attr, mcmap, NN, feature_num, inst,
@@ -257,6 +260,7 @@ def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, h
 
 
 def SURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std):
+    """ Unique scoring procedure for SURF algorithm. Scoring based on nearest neighbors within defined radius. """
     scores = np.zeros(num_attributes)
     if len(NN) <= 0:
         return scores
@@ -267,6 +271,8 @@ def SURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, head
 
 
 def SURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, NN_far, headers, class_type, X, y, labels_std):
+    """ Unique scoring procedure for SURFstar algorithm. Scoring based on nearest neighbors within defined radius, as well as 
+    'anti-scoring' of far instances outside of radius"""
     scores = np.zeros(num_attributes)
     for feature_num in range(num_attributes):
         if len(NN_near) > 0:
@@ -279,6 +285,7 @@ def SURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_n
 
 
 def MultiSURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, headers, class_type, X, y, labels_std):
+    """ Unique scoring procedure for MultiSURF algorithm. Scoring based on 'extreme' nearest neighbors within defined radius. """
     scores = np.zeros(num_attributes)
     for feature_num in range(num_attributes):
         if len(NN_near) > 0:
@@ -289,6 +296,8 @@ def MultiSURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_
 
 
 def MultiSURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, NN_far, headers, class_type, X, y, labels_std):
+    """ Unique scoring procedure for MultiSURFstar algorithm. Scoring based on 'extreme' nearest neighbors within defined radius, as
+    well as 'anti-scoring' of extreme far instances defined by outer radius. """
     scores = np.zeros(num_attributes)
 
     for feature_num in range(num_attributes):

@@ -378,6 +378,7 @@ class ReliefF(BaseEstimator):
 
         #Identify neighbors
         #ERROR: only seems set up to find binary neighbors
+        #Also is there a faster way to do this k NN identification (see other Relief algorithm
         #if self._class_type == 'binary':
         
         nn_list = []
@@ -409,6 +410,8 @@ class ReliefF(BaseEstimator):
         
         # Feature scoring - using identified nearest neighbors
         nan_entries = np.isnan(self._X) #boolean mask for missing data values
+        
+        #Call the scoring method for the ReliefF algorithm
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
             ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
                                     NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
