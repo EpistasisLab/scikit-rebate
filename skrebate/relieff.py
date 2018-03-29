@@ -363,7 +363,7 @@ class ReliefF(BaseEstimator):
 
     def _find_neighbors(self, inst):
         """ Identify k nearest hits and k nearest misses for given instance. """
-        #Make a vector of distances between target instance (inst) and all others
+        # Make a vector of distances between target instance (inst) and all others
         dist_vect = []
         for j in range(self._datalen):
             if inst != j:
@@ -372,35 +372,72 @@ class ReliefF(BaseEstimator):
                     locator.reverse()
                 dist_vect.append(self._distance_array[locator[0]][locator[1]])
             else:
-                dist_vect.append(sys.maxsize) #Ensures that target instance is never selected as neighbor.
+                # Ensures that target instance is never selected as neighbor.
+                dist_vect.append(sys.maxsize)
 
         dist_vect = np.array(dist_vect)
 
-        #Identify neighbors
-        #ERROR: only seems set up to find binary neighbors
-        #Also is there a faster way to do this k NN identification (see other Relief algorithm
-        #if self._class_type == 'binary':
-        
-        nn_list = []
-        match_count = 0
-        miss_count = 0
-        for nn_index in np.argsort(dist_vect):
-            if self._y[inst] == self._y[nn_index]:  # Hit neighbor identified
-                if match_count >= self.n_neighbors:
-                    continue
-                nn_list.append(nn_index)
-                match_count += 1
-            else:  # Miss neighbor identified
-                if miss_count >= self.n_neighbors:
-                    continue
-                nn_list.append(nn_index)
-                miss_count += 1
+        # Identify neighbors
+        # ERROR: only seems set up to find binary neighbors
+        # if self._class_type == 'binary':
+        if self._class_type == 'binary':
+            nn_list = []
+            match_count = 0
+            miss_count = 0
+            for nn_index in np.argsort(dist_vect):
+                if self._y[inst] == self._y[nn_index]:  # Hit neighbor identified
+                    if match_count >= self.n_neighbors:
+                        continue
+                    nn_list.append(nn_index)
+                    match_count += 1
+                else:  # Miss neighbor identified
+                    if miss_count >= self.n_neighbors:
+                        continue
+                    nn_list.append(nn_index)
+                    miss_count += 1
 
-            if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
-                break
+                if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
+                    break
+        elif self._class_type == 'multiclass':
+            nn_list = []
+            match_count = 0
+            miss_count = dict.fromkeys(self._label_list, 0)
+            for nn_index in np.argsort(dist_vect):
+                if self._y[inst] == self._y[nn_index]:  # Hit neighbor identified
+                    if match_count >= self.n_neighbors:
+                        continue
+                    nn_list.append(nn_index)
+                    match_count += 1
+                else:
+                    for label in self._label_list:
+                        if self._y[nn_index] == label:
+                            if miss_count[label] >= self.n_neighbors:
+                                continue
+                            nn_list.append(nn_index)
+                            miss_count[label] += 1
 
+                if match_count >= self.n_neighbors and all(v >= self.n_neighbors for v in miss_count.values()):
+                    break
+        else:
+            nn_list = []
+            match_count = 0
+            miss_count = 0
+            for nn_index in np.argsort(dist_vect):
+                if (self._y[inst]-self._y[nn_index]) < self._labels_std:  # Hit neighbor identified
+                    if match_count >= self.n_neighbors:
+                        continue
+                    nn_list.append(nn_index)
+                    match_count += 1
+                else:  # Miss neighbor identified
+                    if miss_count >= self.n_neighbors:
+                        continue
+                    nn_list.append(nn_index)
+                    miss_count += 1
+
+                if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
+                    break
         return np.array(nn_list)
-
+    
 
     def _run_algorithm(self):
         """ Runs nearest neighbor (NN) identification and feature scoring to yield ReliefF scores. """
