@@ -69,6 +69,8 @@ class SURF(ReliefF):
 
 ############################# SURF ############################################
     def _find_neighbors(self, inst, avg_dist):
+        """ Identify nearest hits and misses within radius defined by average distance over whole distance array.
+        This works the same regardless of endpoint type. """
         NN = []
         min_indicies = []
 
@@ -78,13 +80,15 @@ class SURF(ReliefF):
                 if i > inst:
                     locator.reverse()
                 d = self._distance_array[locator[0]][locator[1]]
-                if d < avg_dist:
+                if d < avg_dist: #Defining the neighborhood with an average distance radius.
                     min_indicies.append(i)
         for i in range(len(min_indicies)):
             NN.append(min_indicies[i])
         return np.array(NN, dtype=np.int32)
 
+
     def _run_algorithm(self):
+        """ Runs nearest neighbor (NN) identification and feature scoring to yield SURF scores. """
         sm = cnt = 0
         for i in range(self._datalen):
             sm += sum(self._distance_array[i])

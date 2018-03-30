@@ -116,7 +116,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                         if xinstfeature != xNNifeature: # A difference in feature value is observed
                             diff_miss += 1 # Feature score is increase when we observe feature difference between 'near' instances with different class values.
                             
-            else:  #SCORING FOR FAR INSTANCES
+            else:  #SCORING FOR FAR INSTANCES (ONLY USED BY MULTISURF* BASED ON HOW CODED)
                 if y[inst] == y[NN[i]]:   # HIT
                     count_hit += 1
                     if ftype == 'continuous':
@@ -172,7 +172,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                                 if xinstfeature != xNNifeature:
                                     class_store[missClass][1] += 1 # Feature score is increase when we observe feature difference between 'near' instances with different class values.
 
-            else:  #SCORING FOR FAR INSTANCES
+            else:  #SCORING FOR FAR INSTANCES (ONLY USED BY MULTISURF* BASED ON HOW CODED)
                 if(y[inst] == y[NN[i]]):  # HIT
                     count_hit += 1
                     if ftype == 'continuous':
@@ -238,7 +238,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                         if xinstfeature != xNNifeature:
                             diff_miss += 1 # Feature score is increase when we observe feature difference between 'near' instances with different class value.
                             
-            else:  #SCORING FOR FAR INSTANCES
+            else:  #SCORING FOR FAR INSTANCES (ONLY USED BY MULTISURF* BASED ON HOW CODED)
                 if abs(y[inst] - y[NN[i]]) < same_class_bound:  # HIT approximation
                     count_hit += 1
                     if ftype == 'continuous':
@@ -290,7 +290,7 @@ def SURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_n
         if len(NN_near) > 0:
             scores[feature_num] += compute_score(attr, mcmap, NN_near, feature_num, inst,
                                                  nan_entries, headers, class_type, X, y, labels_std)
-        if len(NN_far) > 0:
+        if len(NN_far) > 0: #Note that we are using the near scoring loop in 'compute_score' and then just subtracting it here, in line with original SURF* paper. 
             scores[feature_num] -= compute_score(attr, mcmap, NN_far, feature_num, inst,
                                                  nan_entries, headers, class_type, X, y, labels_std)
     return scores
@@ -316,7 +316,7 @@ def MultiSURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap,
         if len(NN_near) > 0:
             scores[feature_num] += compute_score(attr, mcmap, NN_near, feature_num, inst,
                                                  nan_entries, headers, class_type, X, y, labels_std)
-        if len(NN_far) > 0:
+        if len(NN_far) > 0: # Note that we add this term because we used the far scoring above by setting 'near' to False.  This is in line with original MultiSURF* paper.
             scores[feature_num] += compute_score(attr, mcmap, NN_far, feature_num, inst,
                                                  nan_entries, headers, class_type, X, y, labels_std, near=False)
 
