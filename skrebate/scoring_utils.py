@@ -137,7 +137,9 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
         *'n' normalization dividing by the number of training instances (this helps ensure that all final scores end up in the -1 to 1 range
         *'k','h','m' normalization dividing by the respective number of hits and misses in NN (after ignoring missing values), also helps account for class imbalance within nearest neighbor radius)"""
         if count_hit == 0.0 or count_miss == 0.0: #Special case, avoid division error
-            if count_hit == 0.0:
+            if count_hit == 0.0 and count_miss == 0.0:
+                return 0.0
+            elif count_hit == 0.0:
                 diff =  (diff_miss / count_miss) / datalen
             else: #count_miss == 0.0
                 diff =  (diff_hit / count_hit) / datalen
@@ -205,19 +207,22 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
         for each in class_store:
             count_miss += class_store[each][0]
             miss_sum += class_store[each][1]
-        
-        if count_miss == 0:
-            pass
-        else: #Normal diff normalization
-            for each in class_store: #multiclass normalization
-                diff += class_store[each][1] * (class_store[each][0] / count_miss) # Contribution of given miss class weighted by it's observed frequency within NN set.
-            diff = diff / count_miss #'m' normalization
-        
-        #Hit component: with 'h' normalization
-        if count_hit == 0:
-            pass
+            
+        if count_hit == 0.0 and count_miss == 0.0:
+            return 0.0
         else:
-            diff += (diff_hit / count_hit)
+            if count_miss == 0:
+                pass
+            else: #Normal diff normalization
+                for each in class_store: #multiclass normalization
+                    diff += class_store[each][1] * (class_store[each][0] / count_miss) # Contribution of given miss class weighted by it's observed frequency within NN set.
+                diff = diff / count_miss #'m' normalization
+            
+            #Hit component: with 'h' normalization
+            if count_hit == 0:
+                pass
+            else:
+                diff += (diff_hit / count_hit)
         
         diff = diff / datalen # 'n' normalization
 
@@ -268,7 +273,9 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
         *'k','h','m' normalization dividing by the respective number of hits and misses in NN (after ignoring missing values), also helps account for class imbalance within nearest neighbor radius)"""
 
         if count_hit == 0.0 or count_miss == 0.0: #Special case, avoid division error
-            if count_hit == 0.0:
+            if count_hit == 0.0 and count_miss == 0.0:
+                return 0.0
+            elif count_hit == 0.0:
                 diff =  (diff_miss / count_miss) / datalen
             else: #count_miss == 0.0
                 diff =  (diff_hit / count_hit) / datalen
