@@ -172,7 +172,7 @@ class ReliefF(BaseEstimator):
         # Compute the distance array between all data points ----------------------------------------------------------------
         # For downstream efficiency, separate features in dataset by type (i.e. discrete/continuous)
         diffs, cidx, didx = self._dtype_array()
-        cdiffs = diffs[cidx] #0 for discrete features, and max/min continuous value difference for continuous features.
+        cdiffs = diffs[cidx] #max/min continuous value difference for continuous features.
 
         xc = self._X[:, cidx] #Subset of continuous-valued feature data
         xd = self._X[:, didx] #Subset of discrete-valued feature data
@@ -287,7 +287,7 @@ class ReliefF(BaseEstimator):
                 attr[h] = ('continuous', mx, mn, mx - mn)
         #For each feature/attribute we store (type, max value, min value, max min difference) - the latter three values are set to zero if feature is discrete.
         return attr
-    #==================================================================#
+    
 
     def _distarray_no_missing(self, xc, xd):
         """Distance array calculation for data with no missing values. The 'pdist() function outputs a condense distance array, and squareform() converts this vector-form 
@@ -299,7 +299,7 @@ class ReliefF(BaseEstimator):
         def pre_normalize(x):
             """Normalizes continuous features so they are in the same range (0 to 1)"""
             idx = 0
-            for i in sorted(self.attr.keys()):
+            for i in sorted(self.attr.keys()): #goes through all named features (doesn really need to) this method is only applied to continuous features
                 if self.attr[i][0] == 'discrete':
                     continue
                 cmin = self.attr[i][2]
@@ -310,15 +310,15 @@ class ReliefF(BaseEstimator):
             return x
         #------------------------------------------#
         
-        if self.data_type == 'discrete':
+        if self.data_type == 'discrete': #discrete features only
             return squareform(pdist(self._X, metric='hamming'))
-        elif self.data_type == 'mixed':
+        elif self.data_type == 'mixed': #mix of discrete and continuous features
             d_dist = squareform(pdist(xd, metric='hamming'))
             c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock')) #Cityblock is also known as Manhattan distance
             return np.add(d_dist, c_dist) / self._num_attributes
-        else:
-            self._X = pre_normalize(self._X)
-            return squareform(pdist(self._X, metric='cityblock'))
+        else: #continuous features only
+            xc = pre_normalize(xc)
+            return squareform(pdist(xc, metric='cityblock'))
 
     #==================================================================#
     def _dtype_array(self):
@@ -364,8 +364,7 @@ class ReliefF(BaseEstimator):
 ############################# ReliefF ############################################
 
     def _find_neighbors(self, inst):
-        """ Identify k nearest hits and k nearest misses for given instance. This is accomplished differently based on the type of endpoint (i.e. binary, multiclass, and continuous). 
-        Note that only ReliefF requires different NN identification methods, since SURF, SURF*, MultiSURF*, and MultiSURF rely on a radius to identify NN regardless of endpoint value. """
+        """ Identify k nearest hits and k nearest misses for given instance. This is accomplished differently based on the type of endpoint (i.e. binary, multiclass, and continuous). """
         # Make a vector of distances between target instance (inst) and all others
         dist_vect = []
         for j in range(self._datalen):
@@ -380,70 +379,65 @@ class ReliefF(BaseEstimator):
 
         dist_vect = np.array(dist_vect)
 
-        # Identify neighbors -------------------------------------------------------------------------------------
-        #NN for Binary Endpoints: Steps through ordered instance distance list until k hits and misses are found. 
+        # Identify neighbors-------------------------------------------------------
+        """ NN for Binary Endpoints: """
         if self._class_type == 'binary':
             nn_list = []
-            hit_count = 0
+            match_count = 0
             miss_count = 0
-            for nn_index in np.argsort(dist_vect): #steps through indices of sorted array
+            for nn_index in np.argsort(dist_vect):
                 if self._y[inst] == self._y[nn_index]:  # Hit neighbor identified
-                    if hit_count >= self.n_neighbors:
+                    if match_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
-                    hit_count += 1
+                    match_count += 1
                 else:  # Miss neighbor identified
                     if miss_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
                     miss_count += 1
 
-                if hit_count >= self.n_neighbors and miss_count >= self.n_neighbors:
+                if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
                     break
-
-        #NN for Multiclass Endpoints: Steps through ordered instance distance list until k hits and k misses (from each miss class) are found.
+                
         elif self._class_type == 'multiclass':
             nn_list = []
-            hit_count = 0
+            match_count = 0
             miss_count = dict.fromkeys(self._label_list, 0)
             for nn_index in np.argsort(dist_vect):
                 if self._y[inst] == self._y[nn_index]:  # Hit neighbor identified
-                    if hit_count >= self.n_neighbors:
+                    if match_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
-                    hit_count += 1
-                else: #One of the miss neighbors identified
-                    for label in self._label_list: #Determine miss class
+                    match_count += 1
+                else:
+                    for label in self._label_list:
                         if self._y[nn_index] == label:
                             if miss_count[label] >= self.n_neighbors:
                                 continue
                             nn_list.append(nn_index)
                             miss_count[label] += 1
 
-                if hit_count >= self.n_neighbors and all(v >= self.n_neighbors for v in miss_count.values()):
+                if match_count >= self.n_neighbors and all(v >= self.n_neighbors for v in miss_count.values()):
                     break
-                
-        #NN for Continuous Endpoints: Steps through ordered instance distance list until k hits and k misses are found (determined by endpoint value difference).
         else:
             nn_list = []
-            hit_count = 0
+            match_count = 0
             miss_count = 0
             for nn_index in np.argsort(dist_vect):
-                if abs(self._y[inst]-self._y[nn_index]) < self._labels_std:  # Hit neighbor identified
-                    if hit_count >= self.n_neighbors:
+                if (self._y[inst]-self._y[nn_index]) < self._labels_std:  # Hit neighbor identified
+                    if match_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
-                    hit_count += 1
+                    match_count += 1
                 else:  # Miss neighbor identified
                     if miss_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
                     miss_count += 1
 
-                if hit_count >= self.n_neighbors and miss_count >= self.n_neighbors:
+                if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
                     break
-                
-        # Returns unordered list of nearest neighbors (mix of NN hits and misses)
         return np.array(nn_list)
     
 
@@ -456,7 +450,7 @@ class ReliefF(BaseEstimator):
         # Feature scoring - using identified nearest neighbors
         nan_entries = np.isnan(self._X) #boolean mask for missing data values
         
-        #Call the scoring method for the ReliefF algorithm - loops through all instances
+        #Call the scoring method for the ReliefF algorithm
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
             ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
                                     NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
