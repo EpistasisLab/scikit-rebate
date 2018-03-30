@@ -364,7 +364,8 @@ class ReliefF(BaseEstimator):
 ############################# ReliefF ############################################
 
     def _find_neighbors(self, inst):
-        """ Identify k nearest hits and k nearest misses for given instance. This is accomplished differently based on the type of endpoint (i.e. binary, multiclass, and continuous). """
+        """ Identify k nearest hits and k nearest misses for given instance. This is accomplished differently based on the type of endpoint (i.e. binary, multiclass, and continuous). 
+        Note that only ReliefF requires different NN identification methods, since SURF, SURF*, MultiSURF*, and MultiSURF rely on a radius to identify NN regardless of endpoint value. """
         # Make a vector of distances between target instance (inst) and all others
         dist_vect = []
         for j in range(self._datalen):
@@ -379,65 +380,70 @@ class ReliefF(BaseEstimator):
 
         dist_vect = np.array(dist_vect)
 
-        # Identify neighbors-------------------------------------------------------
-        """ NN for Binary Endpoints: """
+        # Identify neighbors -------------------------------------------------------------------------------------
+        #NN for Binary Endpoints: Steps through ordered instance distance list until k hits and misses are found. 
         if self._class_type == 'binary':
             nn_list = []
-            match_count = 0
+            hit_count = 0
             miss_count = 0
-            for nn_index in np.argsort(dist_vect):
+            for nn_index in np.argsort(dist_vect): #steps through indices of sorted array
                 if self._y[inst] == self._y[nn_index]:  # Hit neighbor identified
-                    if match_count >= self.n_neighbors:
+                    if hit_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
-                    match_count += 1
+                    hit_count += 1
                 else:  # Miss neighbor identified
                     if miss_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
                     miss_count += 1
 
-                if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
+                if hit_count >= self.n_neighbors and miss_count >= self.n_neighbors:
                     break
-                
+
+        #NN for Multiclass Endpoints: Steps through ordered instance distance list until k hits and k misses (from each miss class) are found.
         elif self._class_type == 'multiclass':
             nn_list = []
-            match_count = 0
+            hit_count = 0
             miss_count = dict.fromkeys(self._label_list, 0)
             for nn_index in np.argsort(dist_vect):
                 if self._y[inst] == self._y[nn_index]:  # Hit neighbor identified
-                    if match_count >= self.n_neighbors:
+                    if hit_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
-                    match_count += 1
-                else:
-                    for label in self._label_list:
+                    hit_count += 1
+                else: #One of the miss neighbors identified
+                    for label in self._label_list: #Determine miss class
                         if self._y[nn_index] == label:
                             if miss_count[label] >= self.n_neighbors:
                                 continue
                             nn_list.append(nn_index)
                             miss_count[label] += 1
 
-                if match_count >= self.n_neighbors and all(v >= self.n_neighbors for v in miss_count.values()):
+                if hit_count >= self.n_neighbors and all(v >= self.n_neighbors for v in miss_count.values()):
                     break
+                
+        #NN for Continuous Endpoints: Steps through ordered instance distance list until k hits and k misses are found (determined by endpoint value difference).
         else:
             nn_list = []
-            match_count = 0
+            hit_count = 0
             miss_count = 0
             for nn_index in np.argsort(dist_vect):
-                if (self._y[inst]-self._y[nn_index]) < self._labels_std:  # Hit neighbor identified
-                    if match_count >= self.n_neighbors:
+                if abs(self._y[inst]-self._y[nn_index]) < self._labels_std:  # Hit neighbor identified
+                    if hit_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
-                    match_count += 1
+                    hit_count += 1
                 else:  # Miss neighbor identified
                     if miss_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
                     miss_count += 1
 
-                if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
+                if hit_count >= self.n_neighbors and miss_count >= self.n_neighbors:
                     break
+                
+        # Returns unordered list of nearest neighbors (mix of NN hits and misses)
         return np.array(nn_list)
     
 
@@ -450,7 +456,7 @@ class ReliefF(BaseEstimator):
         # Feature scoring - using identified nearest neighbors
         nan_entries = np.isnan(self._X) #boolean mask for missing data values
         
-        #Call the scoring method for the ReliefF algorithm
+        #Call the scoring method for the ReliefF algorithm - loops through all instances
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
             ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
                                     NN, self._headers, self._class_type, self._X, self._y, self._labels_std)

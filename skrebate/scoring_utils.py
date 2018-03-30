@@ -74,63 +74,68 @@ def get_row_missing(xc, xd, cdiffs, index, cindices, dindices): #(Subset of cont
 
 def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_type, X, y, labels_std, near=True):
     """Flexible feature scoring method that can be used with any core Relief-based method. Scoring proceeds differently
-    based on whether endpoint is binary, multiclass, or continuous. """
+    based on whether endpoint is binary, multiclass, or continuous. This method is called for a single target instance 
+    + feature combination and runs over all items in NN. """
 
     fname = headers[feature] #feature identifier
     ftype = attr[fname][0]  # feature type
     ctype = class_type  # class type (binary, multiclass, continuous)
     diff_hit = diff_miss = 0.0  # Tracks the score contribution
     count_hit = count_miss = 0.0 #Tracks the number of hits/misses. Used in normalizing scores by 'k' in ReliefF, and by m or h in SURF, SURF*, MultiSURF*, and MultiSURF
-    diff = 0
-
-    if nan_entries[inst][feature]:
+    diff = 0 #Initialize 'diff' (The score contribution for this target instance and feature over all NN) 
+    mmdiff = attr[fname][3] # Max/Min range of values for target feature
+    
+    if nan_entries[inst][feature]: #If target instance is missing, then a 'neutral' score contribution of 0 is returned immediately since all NN comparisons will be against this missing value.
         return 0.
+    #Note missing data normalization below regarding missing NN feature values is accomplished by counting hits and misses (missing values are not counted) (happens in parallel with hit/miss imbalance normalization)
 
-    xinstfeature = X[inst][feature]
+    xinstfeature = X[inst][feature]  #value of target instances target feature. 
 
     #--------------------------------------------------------------------------
     if ctype == 'binary':
         for i in range(len(NN)):
-            if nan_entries[NN[i]][feature]:
+            if nan_entries[NN[i]][feature]: #skip any NN with a missing value for this feature.
                 continue
 
             xNNifeature = X[NN[i]][feature]
-            absvalue = abs(xinstfeature - xNNifeature) / mmdiff
+            absvalue = abs(xinstfeature - xNNifeature) / mmdiff  #Normalize absolute value of feature value difference by max-min value range for feature (so score update lies between 0 and 1)
 
-            if near:
+            if near: #SCORING FOR NEAR INSTANCES
                 if y[inst] == y[NN[i]]:   # HIT
                     count_hit += 1
-                    if xinstfeature != xNNifeature:
-                        if ftype == 'continuous':
-                            diff_hit -= absvalue
-                        else:  # discrete
-                            diff_hit -= 1
+                    if ftype == 'continuous': 
+                        diff_hit -= absvalue
+                    else: # discrete feature
+                        if xinstfeature != xNNifeature: # A difference in feature value is observed
+                            diff_hit -= 1 # Feature score is reduced when we observe feature difference between 'near' instances with the same class.
                 else:  # MISS
                     count_miss += 1
-                    if xinstfeature != xNNifeature:
-                        if ftype == 'continuous':
-                            diff_miss += absvalue
-                        else:  # discrete
-                            diff_miss += 1
-            else:  # far
+                    if ftype == 'continuous':
+                        diff_miss += absvalue
+                    else: #discrete feature
+                        if xinstfeature != xNNifeature: # A difference in feature value is observed
+                            diff_miss += 1 # Feature score is increase when we observe feature difference between 'near' instances with different class values.
+                            
+            else:  #SCORING FOR FAR INSTANCES
                 if y[inst] == y[NN[i]]:   # HIT
                     count_hit += 1
-                    if xinstfeature == xNNifeature:
-                        if ftype == 'continuous':
-                            diff_hit -= absvalue
-                        else:  # discrete
-                            diff_hit -= 1
+                    if ftype == 'continuous':
+                        diff_hit += absvalue  #Hits differently add continuous value differences rather than subtract them 
+                    else: #discrete feature
+                        if xinstfeature == xNNifeature: # The same feature value is observed (Used for more efficient 'far' scoring, since there should be fewer same values for 'far' instances)
+                            diff_hit -= 1 # Feature score is reduced when we observe the same feature value between 'far' instances with the same class.
                 else:  # MISS
                     count_miss += 1
-                    if xinstfeature == xNNifeature:
-                        if ftype == 'continuous':
-                            diff_miss += absvalue
-                        else:  # discrete
-                            diff_miss += 1
+                    if ftype == 'continuous':
+                        diff_miss -= absvalue #Misses differntly subtract continuous value differences rather than add them 
+                    else: #discrete feature
+                        if xinstfeature == xNNifeature: # The same feature value is observed (Used for more efficient 'far' scoring, since there should be fewer same values for 'far' instances)
+                            diff_miss += 1 # Feature score is increased when we observe the same feature value between 'far' instances withh different class values.
 
-        hit_proportion = count_hit / float(len(NN))
-        miss_proportion = count_miss / float(len(NN))
-        diff = diff_hit * miss_proportion + diff_miss * hit_proportion
+        """ Score Normalizations:
+        *'n' normalization dividing by the number of training instances (this helps ensure that all final scores end up in the -1 to 1 range
+        *'k','h','m' normalization dividing by the respective number of hits and misses in NN (after ignoring missing values), also helps account for class imbalance within nearest neighbor radius)"""
+        diff = ((diff_hit / count_hit) + (diff_miss / count_miss)) / self._datalen
 
     #--------------------------------------------------------------------------
     elif ctype == 'multiclass':
@@ -148,6 +153,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
 
             xNNifeature = X[NN[i]][feature]
             absvalue = abs(xinstfeature - xNNifeature) / mmdiff
+            
             if near:
                 if(y[inst] == y[NN[i]]):  # HIT
                     count_hit += 1
@@ -201,7 +207,6 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
 
     #--------------------------------------------------------------------------
     else:  # CONTINUOUS endpoint
-        mmdiff = attr[fname][3]
         same_class_bound = labels_std
 
         for i in range(len(NN)):
@@ -241,6 +246,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                             diff_miss += absvalue
                         else:  # discrete
                             diff_miss += 1
+                            
 
         hit_proportion = count_hit / float(len(NN))
         miss_proportion = count_miss / float(len(NN))
@@ -250,7 +256,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
 
 
 def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std):
-    """ Unique scoring procedure for ReliefF algorithm. Scoring based on k nearest hits and misses. """
+    """ Unique scoring procedure for ReliefF algorithm. Scoring based on k nearest hits and misses of current target instance. """
     scores = np.zeros(num_attributes)
     for feature_num in range(num_attributes):
         scores[feature_num] += compute_score(attr, mcmap, NN, feature_num, inst,
@@ -259,7 +265,7 @@ def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, h
 
 
 def SURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std):
-    """ Unique scoring procedure for SURF algorithm. Scoring based on nearest neighbors within defined radius. """
+    """ Unique scoring procedure for SURF algorithm. Scoring based on nearest neighbors within defined radius of current target instance. """
     scores = np.zeros(num_attributes)
     if len(NN) <= 0:
         return scores
@@ -271,7 +277,7 @@ def SURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, head
 
 def SURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, NN_far, headers, class_type, X, y, labels_std):
     """ Unique scoring procedure for SURFstar algorithm. Scoring based on nearest neighbors within defined radius, as well as 
-    'anti-scoring' of far instances outside of radius"""
+    'anti-scoring' of far instances outside of radius of current target instance"""
     scores = np.zeros(num_attributes)
     for feature_num in range(num_attributes):
         if len(NN_near) > 0:
@@ -284,7 +290,7 @@ def SURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_n
 
 
 def MultiSURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, headers, class_type, X, y, labels_std):
-    """ Unique scoring procedure for MultiSURF algorithm. Scoring based on 'extreme' nearest neighbors within defined radius. """
+    """ Unique scoring procedure for MultiSURF algorithm. Scoring based on 'extreme' nearest neighbors within defined radius of current target instance. """
     scores = np.zeros(num_attributes)
     for feature_num in range(num_attributes):
         if len(NN_near) > 0:
@@ -296,7 +302,7 @@ def MultiSURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_
 
 def MultiSURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, NN_far, headers, class_type, X, y, labels_std):
     """ Unique scoring procedure for MultiSURFstar algorithm. Scoring based on 'extreme' nearest neighbors within defined radius, as
-    well as 'anti-scoring' of extreme far instances defined by outer radius. """
+    well as 'anti-scoring' of extreme far instances defined by outer radius of current target instance. """
     scores = np.zeros(num_attributes)
 
     for feature_num in range(num_attributes):
