@@ -42,7 +42,9 @@ class ReliefF(BaseEstimator):
     algorithms with RELIEFF (1997), Applied Intelligence, 7(1), p39-55"""
     
     """Note that ReliefF class establishes core functionality that is inherited by all other Relief-based algorithms.
-    Assumes: There are no missing values in the label/outcome/dependent variable."""
+    Assumes: * There are no missing values in the label/outcome/dependent variable.
+             * For ReliefF, the setting of k is <= to the number of instances that have the least frequent class label 
+             (binary and multiclass endpoint data. """
 
     def __init__(self, n_features_to_select=10, n_neighbors=100, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up ReliefF to perform feature selection. Note that an approximation of the original 'Relief' 
@@ -362,7 +364,7 @@ class ReliefF(BaseEstimator):
 ############################# ReliefF ############################################
 
     def _find_neighbors(self, inst):
-        """ Identify k nearest hits and k nearest misses for given instance. """
+        """ Identify k nearest hits and k nearest misses for given instance. This is accomplished differently based on the type of endpoint (i.e. binary, multiclass, and continuous). """
         # Make a vector of distances between target instance (inst) and all others
         dist_vect = []
         for j in range(self._datalen):
@@ -377,9 +379,8 @@ class ReliefF(BaseEstimator):
 
         dist_vect = np.array(dist_vect)
 
-        # Identify neighbors
-        # ERROR: only seems set up to find binary neighbors
-        # if self._class_type == 'binary':
+        # Identify neighbors-------------------------------------------------------
+        """ NN for Binary Endpoints: """
         if self._class_type == 'binary':
             nn_list = []
             match_count = 0
@@ -398,6 +399,7 @@ class ReliefF(BaseEstimator):
 
                 if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
                     break
+                
         elif self._class_type == 'multiclass':
             nn_list = []
             match_count = 0

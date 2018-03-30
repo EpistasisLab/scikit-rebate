@@ -76,12 +76,11 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
     """Flexible feature scoring method that can be used with any core Relief-based method. Scoring proceeds differently
     based on whether endpoint is binary, multiclass, or continuous. """
 
-    fname = headers[feature] #FIX? Couldn't we just pass fname instead of these two elements (is this constent for all algorithms?
+    fname = headers[feature] #feature identifier
     ftype = attr[fname][0]  # feature type
     ctype = class_type  # class type (binary, multiclass, continuous)
     diff_hit = diff_miss = 0.0  # Tracks the score contribution
-    count_hit = count_miss = 0.0
-    mmdiff = 1
+    count_hit = count_miss = 0.0 #Tracks the number of hits/misses. Used in normalizing scores by 'k' in ReliefF, and by m or h in SURF, SURF*, MultiSURF*, and MultiSURF
     diff = 0
 
     if nan_entries[inst][feature]:
