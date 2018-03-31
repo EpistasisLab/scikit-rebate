@@ -279,13 +279,14 @@ class ReliefF(BaseEstimator):
                 z = z[np.logical_not(np.isnan(z))] #Exclude any missing values from consideration
             zlen = len(np.unique(z))
             if zlen <= limit:
-                attr[h] = ('discrete', 0, 0, 0)
+                attr[h] = ('discrete', 0, 0, 0, 0)
                 d += 1
             else:
                 mx = np.max(z)
                 mn = np.min(z)
-                attr[h] = ('continuous', mx, mn, mx - mn)
-        #For each feature/attribute we store (type, max value, min value, max min difference) - the latter three values are set to zero if feature is discrete.
+                sd = np.std(z)
+                attr[h] = ('continuous', mx, mn, mx - mn, sd)
+        #For each feature/attribute we store (type, max value, min value, max min difference, average, standard deviation) - the latter three values are set to zero if feature is discrete.
         return attr
     
 
@@ -453,7 +454,7 @@ class ReliefF(BaseEstimator):
         #Call the scoring method for the ReliefF algorithm
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
             ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                    NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
+                                    NN, self._headers, self._class_type, self._X, self._y, self.data_type, self._labels_std)
             for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 
         return np.array(scores)
