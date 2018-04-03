@@ -26,8 +26,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from __future__ import print_function
 import numpy as np
-from surf import SURF
-from scoring_utils import SURFstar_compute_scores
+from .surf import SURF
+from .scoring_utils import SURFstar_compute_scores
 from sklearn.externals.joblib import Parallel, delayed
 
 
@@ -44,6 +44,8 @@ class SURFstar(SURF):
 
 ############################# SURF* ########################################
     def _find_neighbors(self, inst, avg_dist):
+        """ Identify nearest as well as farthest hits and misses within radius defined by average distance over whole distance array.
+        This works the same regardless of endpoint type. """
         NN_near = []
         NN_far = []
         min_indices = []
@@ -67,7 +69,9 @@ class SURFstar(SURF):
 
         return np.array(NN_near, dtype=np.int32), np.array(NN_far, dtype=np.int32)
 
+
     def _run_algorithm(self):
+        """ Runs nearest neighbor (NN) identification and feature scoring to yield SURF* scores. """
         sm = cnt = 0
         for i in range(self._datalen):
             sm += sum(self._distance_array[i])
@@ -80,14 +84,14 @@ class SURFstar(SURF):
         NN_near_list = [i[0] for i in NNlist]
         NN_far_list = [i[1] for i in NNlist]
 
-        if self.n_jobs != 1:
+        if self.n_jobs != 1: #Parallelization
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
                 SURFstar_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                         NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std)
+                                         NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
                 for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
-        else:
+        else: #Serial run
             scores = np.sum([SURFstar_compute_scores(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                                     NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std)
+                                                     NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
                              for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)], axis=0)
 
         return np.array(scores)

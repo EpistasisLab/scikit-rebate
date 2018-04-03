@@ -31,7 +31,7 @@ import warnings
 import sys
 from sklearn.base import BaseEstimator
 from sklearn.externals.joblib import Parallel, delayed
-from scoring_utils import get_row_missing, ReliefF_compute_scores
+from .scoring_utils import get_row_missing, ReliefF_compute_scores
 
 
 class ReliefF(BaseEstimator):
@@ -42,7 +42,9 @@ class ReliefF(BaseEstimator):
     algorithms with RELIEFF (1997), Applied Intelligence, 7(1), p39-55"""
 
     """Note that ReliefF class establishes core functionality that is inherited by all other Relief-based algorithms.
-    Assumes: There are no missing values in the label/outcome/dependent variable."""
+    Assumes: * There are no missing values in the label/outcome/dependent variable.
+             * For ReliefF, the setting of k is <= to the number of instances that have the least frequent class label
+             (binary and multiclass endpoint data. """
 
     def __init__(self, n_features_to_select=10, n_neighbors=100, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up ReliefF to perform feature selection. Note that an approximation of the original 'Relief'
@@ -174,8 +176,7 @@ class ReliefF(BaseEstimator):
         # Compute the distance array between all data points ----------------------------------------------------------------
         # For downstream efficiency, separate features in dataset by type (i.e. discrete/continuous)
         diffs, cidx, didx = self._dtype_array()
-        # 0 for discrete features, and max/min continuous value difference for continuous features.
-        cdiffs = diffs[cidx]
+        cdiffs = diffs[cidx]  # max/min continuous value difference for continuous features.
 
         xc = self._X[:, cidx]  # Subset of continuous-valued feature data
         xd = self._X[:, didx]  # Subset of discrete-valued feature data
@@ -283,15 +284,15 @@ class ReliefF(BaseEstimator):
                 z = z[np.logical_not(np.isnan(z))]  # Exclude any missing values from consideration
             zlen = len(np.unique(z))
             if zlen <= limit:
-                attr[h] = ('discrete', 0, 0, 0)
+                attr[h] = ('discrete', 0, 0, 0, 0)
                 d += 1
             else:
                 mx = np.max(z)
                 mn = np.min(z)
-                attr[h] = ('continuous', mx, mn, mx - mn)
-        # For each feature/attribute we store (type, max value, min value, max min difference) - the latter three values are set to zero if feature is discrete.
+                sd = np.std(z)
+                attr[h] = ('continuous', mx, mn, mx - mn, sd)
+        # For each feature/attribute we store (type, max value, min value, max min difference, average, standard deviation) - the latter three values are set to zero if feature is discrete.
         return attr
-    #==================================================================#
 
     def _distarray_no_missing(self, xc, xd):
         """Distance array calculation for data with no missing values. The 'pdist() function outputs a condense distance array, and squareform() converts this vector-form
@@ -303,6 +304,7 @@ class ReliefF(BaseEstimator):
         def pre_normalize(x):
             """Normalizes continuous features so they are in the same range (0 to 1)"""
             idx = 0
+            # goes through all named features (doesn really need to) this method is only applied to continuous features
             for i in sorted(self.attr.keys()):
                 if self.attr[i][0] == 'discrete':
                     continue
@@ -314,16 +316,16 @@ class ReliefF(BaseEstimator):
             return x
         #------------------------------------------#
 
-        if self.data_type == 'discrete':
+        if self.data_type == 'discrete':  # discrete features only
             return squareform(pdist(self._X, metric='hamming'))
-        elif self.data_type == 'mixed':
+        elif self.data_type == 'mixed':  # mix of discrete and continuous features
             d_dist = squareform(pdist(xd, metric='hamming'))
             # Cityblock is also known as Manhattan distance
             c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock'))
             return np.add(d_dist, c_dist) / self._num_attributes
-        else:
-            self._X = pre_normalize(self._X)
-            return squareform(pdist(self._X, metric='cityblock'))
+        else:  # continuous features only
+            xc = pre_normalize(xc)
+            return squareform(pdist(xc, metric='cityblock'))
 
     #==================================================================#
     def _dtype_array(self):
@@ -370,7 +372,7 @@ class ReliefF(BaseEstimator):
 ############################# ReliefF ############################################
 
     def _find_neighbors(self, inst):
-        """ Identify k nearest hits and k nearest misses for given instance. """
+        """ Identify k nearest hits and k nearest misses for given instance. This is accomplished differently based on the type of endpoint (i.e. binary, multiclass, and continuous). """
         # Make a vector of distances between target instance (inst) and all others
         dist_vect = []
         for j in range(self._datalen):
@@ -385,9 +387,8 @@ class ReliefF(BaseEstimator):
 
         dist_vect = np.array(dist_vect)
 
-        # Identify neighbors
-        # ERROR: only seems set up to find binary neighbors
-        # if self._class_type == 'binary':
+        # Identify neighbors-------------------------------------------------------
+        """ NN for Binary Endpoints: """
         if self._class_type == 'binary':
             nn_list = []
             match_count = 0
@@ -406,6 +407,7 @@ class ReliefF(BaseEstimator):
 
                 if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
                     break
+
         elif self._class_type == 'multiclass':
             nn_list = []
             match_count = 0
@@ -454,9 +456,11 @@ class ReliefF(BaseEstimator):
 
         # Feature scoring - using identified nearest neighbors
         nan_entries = np.isnan(self._X)  # boolean mask for missing data values
+
+        # Call the scoring method for the ReliefF algorithm
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
             ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                    NN, self._headers, self._class_type, self._X, self._y, self._labels_std)
+                                    NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
             for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 
         return np.array(scores)
