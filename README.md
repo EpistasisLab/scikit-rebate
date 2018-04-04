@@ -29,7 +29,9 @@ Relief algorithms are commonly applied to genetic analyses, where epistasis (i.e
 
 * Data with missing values
 
-* Discrete endpoints (i.e., classification)
+* Binary endpoints (i.e., classification)
+
+* Multi-class endpoints (i.e., classification)
 
 * Continuous endpoints (i.e., regression)
 

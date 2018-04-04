@@ -30,6 +30,7 @@ from .surfstar import SURFstar
 from .scoring_utils import MultiSURFstar_compute_scores
 from sklearn.externals.joblib import Parallel, delayed
 
+
 class MultiSURFstar(SURFstar):
 
     """Feature selection using data-mined expert knowledge.
@@ -43,6 +44,8 @@ class MultiSURFstar(SURFstar):
 
 ############################# MultiSURF* ########################################
     def _find_neighbors(self, inst):
+        """ Identify nearest as well as farthest hits and misses within radius defined by average distance and standard deviation of distances from target instanace.
+        This works the same regardless of endpoint type. """
         dist_vect = []
         for j in range(self._datalen):
             if inst != j:
@@ -73,22 +76,16 @@ class MultiSURFstar(SURFstar):
 
 
     def _run_algorithm(self):
-        attr = self._get_attribute_info()
+        """ Runs nearest neighbor (NN) identification and feature scoring to yield MultiSURF* scores. """
         nan_entries = np.isnan(self._X)
 
         NNlist = [self._find_neighbors(datalen) for datalen in range(self._datalen)]
         NN_near_list = [i[0] for i in NNlist]
         NN_far_list = [i[1] for i in NNlist]
 
-        if self.n_jobs != 1:
-            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-                MultiSURFstar_compute_scores)(instance_num, attr, nan_entries, self._num_attributes,
-                NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std)
-                 for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
-
-        else:
-            scores = np.sum([MultiSURFstar_compute_scores(instance_num, attr, nan_entries, self._num_attributes,
-                NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std)
-                 for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)], axis=0)
+        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+            MultiSURFstar_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
+                                          NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
+            for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
 
         return np.array(scores)

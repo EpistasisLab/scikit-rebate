@@ -43,7 +43,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
@@ -91,7 +91,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
@@ -137,7 +137,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
@@ -183,7 +183,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
@@ -229,7 +229,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
@@ -245,27 +245,25 @@ print(np.mean(cross_val_score(clf, features, labels)))
 
 TURF advances the feature selection process from a single round to a multi-round process, and can be used in conjunction with any of the Relief-based algorithms. TURF begins with all of the features in the first round, scores them using one of the Relief-based algorithms, then eliminates a portion of them that have the worst scores. With this reduced feature set, TURF again scores the remaining features and eliminates a portion of the worst-scoring features. This process is repeated until a predefined number of features remain.
 
-Essentially, TURF is equivalent to [Recursive Feature Elimination](http://scikit-learn.org/stable/modules/feature_selection.html#recursive-feature-elimination), as [implemented](http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.RFE.html) in scikit-learn. Below is a code sample of how RFE can be used in conjunction with the Relief-based algorithms.
-
 ```python
 import pandas as pd
 import numpy as np
 from sklearn.pipeline import make_pipeline
-from skrebate import ReliefF
-from sklearn.feature_selection import RFE
+from skrebate import TuRF
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
+headers = list(genetic_data.drop("class", axis=1))
 
-clf = make_pipeline(RFE(ReliefF(), n_features_to_select=2),
+clf = make_pipeline(TuRF(core_algorithm="MultiSURF", n_features_to_select=2, step=0.1),
                     RandomForestClassifier(n_estimators=100))
 
-print(np.mean(cross_val_score(clf, features, labels)))
+print(np.mean(cross_val_score(clf, features, labels, fit_params={'turf__headers': headers})))
 >>> 0.795
 ```
 
@@ -281,7 +279,7 @@ from skrebate import ReliefF
 from sklearn.model_selection import train_test_split
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
