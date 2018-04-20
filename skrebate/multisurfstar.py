@@ -74,7 +74,6 @@ class MultiSURFstar(SURFstar):
 
         return np.array(NN_near), np.array(NN_far)
 
-
     def _run_algorithm(self):
         """ Runs nearest neighbor (NN) identification and feature scoring to yield MultiSURF* scores. """
         nan_entries = np.isnan(self._X)
@@ -83,7 +82,7 @@ class MultiSURFstar(SURFstar):
         NN_near_list = [i[0] for i in NNlist]
         NN_far_list = [i[1] for i in NNlist]
 
-        if self.n_jobs != 1:  #Parallelization
+        if self.n_jobs != 1:  # Parallelization
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
                 MultiSURFstar_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
                                               NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)

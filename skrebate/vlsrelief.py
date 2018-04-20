@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import time
 import warnings
 import sys
@@ -14,7 +15,7 @@ from .surfstar import SURFstar
 from .relieff import ReliefF
 
 
-class TuRF(BaseEstimator, TransformerMixin):
+class VLSRelief(BaseEstimator, TransformerMixin):
 
     """Feature selection using data-mined expert knowledge.
 
@@ -25,12 +26,12 @@ class TuRF(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, core_algorithm, n_features_to_select=10, n_neighbors=100, step=0.1,  discrete_threshold=10, verbose=False, n_jobs=1):
-        """Sets up TuRF to perform feature selection.
+    def __init__(self, core_algorithm, n_features_to_select=2, n_neighbors=100, step=0.1, num_feature_subset=40, size_feature_subset=5, discrete_threshold=10, verbose=False, n_jobs=1):
+        """Sets up VLSRelief to perform feature selection.
 
         Parameters
         ----------
-        core_algorithm: Core Relief Algorithm to perform TuRF iterations on
+        core_algorithm: Core Relief Algorithm to perform VLSRelief iterations on
         n_features_to_select: int (default: 10)
             the number of top features (according to the relieff score) to
             retain after feature selection is applied.
@@ -56,6 +57,8 @@ class TuRF(BaseEstimator, TransformerMixin):
         self.discrete_threshold = discrete_threshold
         self.verbose = verbose
         self.n_jobs = n_jobs
+        self.num_feature_subset = num_feature_subset
+        self.size_feature_subset = size_feature_subset
 
     #=========================================================================#
     # headers = list(genetic_data.drop("class",axis=1))
@@ -75,7 +78,7 @@ class TuRF(BaseEstimator, TransformerMixin):
             Feature names
         Returns
         -------
-        Copy of the TuRF instance
+        Copy of the VLSRelief instance
         """
 
         self.X_mat = X
@@ -97,66 +100,46 @@ class TuRF(BaseEstimator, TransformerMixin):
         elif self.core_algorithm.lower() == "relieff":
             core = ReliefF()
 
-        num_features = X.shape[1]
-        iter_count = 0
-        features_iter = []
+        total_num_features = X.shape[1]
+        num_features = self.size_feature_subset
+        features_scores_iter = []
         headers_iter = []
-        feature_retain_check = 0
-        while(num_features > self.n_features_to_select):
+        features_selected = []
 
-            core_fit = core.fit(self.X_mat, self._y)
+        for iteration in range(self.num_feature_subset):
+            features_selected_id = np.random.choice(
+                range(total_num_features), num_features, replace=False)
+            self.X_train = self.X_mat[:, features_selected_id]
 
-            features_iter.append(core_fit.feature_importances_)
-            headers_iter.append(self.headers)
+            core_fit = core.fit(self.X_train, self._y)
 
-            if type(self.step) is float:
+            features_scores_iter.append(core_fit.feature_importances_)
+            features_selected.append(features_selected_id)
+            # headers_iter.append(self.headers[features_selected_id])
 
-                perc_retain = 1 - self.step
-                feature_retain = int(np.round(num_features*perc_retain))
-                # Edge case
-                if feature_retain == feature_retain_check:
-                    feature_retain -= 1
+        self.features_scores_iter = features_scores_iter
+        self.features_selected = features_selected
 
-                if feature_retain < self.n_features_to_select:
-                    num_features = self.n_features_to_select
+        zip_feat_score = [list(zip(features_selected[i], features_scores_iter[i]))
+                          for i in range(len(features_selected))]
+        feat_score = sorted([item for sublist in zip_feat_score for item in sublist])
+        feat_score_df = pd.DataFrame(feat_score)
+        feat_score_df.columns = ['feature', 'score']
+        feat_score_df = feat_score_df.groupby('feature').max().reset_index()
 
-                else:
-                    num_features = feature_retain
+        feature_scores = feat_score_df.values
 
-                select = np.array(features_iter[iter_count].argsort()[-num_features:])
+        feature_scores = [[int(i[0]), i[1]] for i in feature_scores]
 
-                feature_retain_check = feature_retain
+        self.feat_score = feature_scores
 
-                self.X_mat = self.X_mat[:, select]
-                self.headers = [self.headers[i] for i in select]
+        head_idx = [i[0] for i in feature_scores]
+        self.headers_model = list(np.array(self.headers)[head_idx])
 
-            elif type(self.step) is int:
-                feature_retain = num_features - self.step
-                if feature_retain < self.n_features_to_select:
-                    num_features = self.n_features_to_select
+        self.feature_importances_ = [i[1] for i in feature_scores]
+        self.top_features_ = np.argsort(self.feature_importances_)[::-1]
+        self.header_top_features_ = [self.headers_model[i] for i in self.top_features_]
 
-                else:
-                    num_features = feature_retain
-
-                select = np.array(features_iter[iter_count].argsort()[-num_features:])
-
-                self.X_mat = self.X_mat[:, select]
-                self.headers = [self.headers[i] for i in select]
-
-            iter_count += 1
-
-        # For the last iteration
-
-        core_fit = core.fit(self.X_mat, self._y)
-        features_iter.append(core_fit.feature_importances_)
-        headers_iter.append(self.headers)
-        iter_count += 1
-
-        self.num_iter = iter_count
-        self.feature_history = list(zip(headers_iter, features_iter))
-
-        self.feature_importances_ = core_fit.feature_importances_
-        self.top_features_ = [headers.index(i) for i in self.headers]
         return self
 
     #=========================================================================#
@@ -175,7 +158,10 @@ class TuRF(BaseEstimator, TransformerMixin):
             Reduced feature matrix
 
         """
-        return X[:, self.top_features_]
+
+        return X[:, self.top_features_[:self.n_features_to_select]]
+
+        # return X[:, self.top_features_]
 
     #=========================================================================#
 
