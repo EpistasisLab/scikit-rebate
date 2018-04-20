@@ -26,7 +26,7 @@ class VLSRelief(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, core_algorithm, n_features_to_select=2, n_neighbors=100, step=0.1, num_feature_subset=40, size_feature_subset=5, discrete_threshold=10, verbose=False, n_jobs=1):
+    def __init__(self, core_algorithm, n_features_to_select=2, n_neighbors=100, num_feature_subset=40, size_feature_subset=5, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up VLSRelief to perform feature selection.
 
         Parameters
@@ -35,9 +35,10 @@ class VLSRelief(BaseEstimator, TransformerMixin):
         n_features_to_select: int (default: 10)
             the number of top features (according to the relieff score) to
             retain after feature selection is applied.
-        step: float/int (default: 0.1)
-            If of type float, describes the fraction of features to be removed in each iteration.
-            If of type int, describes the number of features to be removed in each iteration.
+        num_feature_subset: int (default: 40)
+            Number of subsets generated at random
+        size_feature_subset: int (default 5)
+            Number of features in each subset generated
         discrete_threshold: int (default: 10)
             Value used to determine if a feature is discrete or continuous.
             If the number of unique levels in a feature is > discrete_threshold, then it is
@@ -64,9 +65,11 @@ class VLSRelief(BaseEstimator, TransformerMixin):
     # headers = list(genetic_data.drop("class",axis=1))
     def fit(self, X, y, headers):
         """
-        Uses the input `core_algorithm` to determine feature importance scores at each iteration.
-        At every iteration, a certain number(determined by input parameter `step`) of least important
-        features are removed, until the feature set is reduced down to the top `n_features_to_select` features.
+        Generates `num_feature_subset` sets of features each of size `size_feature_subset`.
+        Thereafter, uses the input `core_algorithm` to determine feature importance scores
+        for each subset. The global feature score is determined by the max score for that feature
+        from all its occurences in the subsets generated. Once the final feature scores are obtained,
+        the top `n_features_to_select` features can be selected.
 
         Parameters
         ----------
