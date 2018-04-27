@@ -175,7 +175,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
 
     #--------------------------------------------------------------------------
     elif ctype == 'multiclass':
-        class_store = dict()
+        class_store = dict() #only 'miss' classes will be stored
         #missClassPSum = 0
 
         for each in mcmap:
@@ -236,7 +236,6 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
         #Miss component
         for each in class_store:
             count_miss += class_store[each][0]
-            miss_sum += class_store[each][1]
             
         if count_hit == 0.0 and count_miss == 0.0:
             return 0.0
