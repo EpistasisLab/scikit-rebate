@@ -56,17 +56,29 @@ genetic_data_missing_values = pd.read_csv(
 genetic_data_missing_values.rename(columns={'Class': 'class'}, inplace=True)
 genetic_data_missing_values = genetic_data_missing_values.sample(frac=0.25)
 
+genetic_data_multiclass = pd.read_csv('data/3Class_Datasets_Loc_2_01.txt', sep='\t')
+genetic_data_multiclass.rename(columns={'Class': 'class'}, inplace=True)
+genetic_data_multiclass = genetic_data_multiclass.sample(frac=0.25)
+
+
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
 headers = list(genetic_data.drop("class", axis=1))
+
 features_cont_endpoint, labels_cont_endpoint = genetic_data_cont_endpoint.drop(
     'class', axis=1).values, genetic_data_cont_endpoint['class'].values
 headers_cont_endpoint = list(genetic_data_cont_endpoint.drop("class", axis=1))
+
 features_mixed_attributes, labels_mixed_attributes = genetic_data_mixed_attributes.drop(
     'class', axis=1).values, genetic_data_mixed_attributes['class'].values
 headers_mixed_attributes = list(genetic_data_mixed_attributes.drop("class", axis=1))
+
 features_missing_values, labels_missing_values = genetic_data_missing_values.drop(
     'class', axis=1).values, genetic_data_missing_values['class'].values
 headers_missing_values = list(genetic_data_missing_values.drop("class", axis=1))
+
+features_multiclass, labels_multiclass = genetic_data_multiclass.drop(
+    'class', axis=1).values, genetic_data_multiclass['class'].values
+headers_multiclass = list(genetic_data_multiclass.drop("class", axis=1))
 
 
 def test_relieff_init():
@@ -114,14 +126,12 @@ def test_turf_init():
     assert clf.verbose == True
     assert clf.n_jobs == 3
 
-# Parallelization tests
-
-
+# Test Genetic Data and Parallelizations  ------------------------------------------------------------------------------------
 def test_relieff_pipeline():
     """Ensure that ReliefF works in a sklearn pipeline when it is parallelized"""
     np.random.seed(49082)
 
-    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100, n_jobs=-1),
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10, n_jobs=-1),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
@@ -131,7 +141,7 @@ def test_relieff_pipeline_parallel():
     """Ensure that ReliefF works in a sklearn pipeline where cross_val_score is parallelized"""
     np.random.seed(49082)
 
-    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100),
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features, labels, cv=3, n_jobs=-1)) > 0.7
@@ -280,14 +290,92 @@ def test_turfpercent_pipeline_parallel():
     assert np.mean(cross_val_score(clf, features, labels, fit_params={
                    'turf__headers': headers}, cv=3, n_jobs=-1)) > 0.7
 
+# Test Multiclass Data ------------------------------------------------------------------------------------
 
-# Test algorithms with data that has continuous endpoints
+def test_relieff_pipeline_multiclass():
+    """Ensure that ReliefF works in a sklearn pipeline with a multiclass endpoint"""
+    np.random.seed(49082)
+
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10, n_jobs=-1),
+                        Imputer(),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+
+    assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3)) > 0.7
+
+
+def test_relieffpercent_pipeline_multiclass():
+    """Ensure that ReliefF with % neighbors works in a sklearn pipeline with a multiclass endpoint"""
+    np.random.seed(49082)
+
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=0.1, n_jobs=-1),
+                        Imputer(),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+
+    assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3)) > 0.7
+
+
+def test_surf_pipeline_multiclass():
+    """Ensure that SURF works in a sklearn pipeline with a multiclass endpoint"""
+    np.random.seed(240932)
+
+    clf = make_pipeline(SURF(n_features_to_select=2, n_jobs=-1),
+                        Imputer(),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+
+    assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3)) > 0.7
+
+
+def test_surfstar_pipeline_multiclass():
+    """Ensure that SURF* works in a sklearn pipeline with a multiclass endpoint"""
+    np.random.seed(9238745)
+
+    clf = make_pipeline(SURFstar(n_features_to_select=2, n_jobs=-1),
+                        Imputer(),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+
+    assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3)) > 0.7
+
+
+def test_multisurf_pipeline_multiclass():
+    """Ensure that MultiSURF works in a sklearn pipeline with a multiclass endpoint"""
+    np.random.seed(320931)
+
+    clf = make_pipeline(MultiSURF(n_features_to_select=2, n_jobs=-1),
+                        Imputer(),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+
+    assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3)) > 0.7
+
+
+def test_multisurfstar_pipeline_multiclass():
+    """Ensure that MultiSURF* works in a sklearn pipeline with a multiclass endpoint"""
+    np.random.seed(320931)
+
+    clf = make_pipeline(MultiSURFstar(n_features_to_select=2, n_jobs=-1),
+                        Imputer(),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+
+    assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3)) > 0.7
+
+
+def test_turf_pipeline_multiclass():
+    """Ensure that TuRF works in a sklearn pipeline with a multiclass endpoint"""
+    np.random.seed(320931)
+
+    clf = make_pipeline(TuRF(core_algorithm="MultiSURF", n_features_to_select=2, step=0.4, n_jobs=-1),
+                        Imputer(),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+
+    assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass,
+                                   fit_params={'turf__headers': headers_multiclass}, cv=3)) > 0.7
+
+# Test Continuous Data ------------------------------------------------------------------------------------
 
 def test_relieff_pipeline_cont_endpoint():
     """Ensure that ReliefF works in a sklearn pipeline with continuous endpoint data"""
     np.random.seed(49082)
 
-    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100, n_jobs=-1),
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10, n_jobs=-1),
                         RandomForestRegressor(n_estimators=100, n_jobs=-1))
 
     assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint, cv=3))) < 0.5
@@ -353,14 +441,13 @@ def test_turf_pipeline_cont_endpoint():
     assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint,
                                        fit_params={'turf__headers': headers_cont_endpoint}, cv=3))) < 0.5
 
-# Test algorithms with data that has mixed attributes
-
+# Test Mixed Attribute Data ------------------------------------------------------------------------------------
 
 def test_relieff_pipeline_mixed_attributes():
     """Ensure that ReliefF works in a sklearn pipeline with mixed attributes"""
     np.random.seed(49082)
 
-    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100, n_jobs=-1),
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10, n_jobs=-1),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features_mixed_attributes,
@@ -432,14 +519,13 @@ def test_turf_pipeline_mixed_attributes():
     assert np.mean(cross_val_score(clf, features_mixed_attributes, labels_mixed_attributes,
                                    fit_params={'turf__headers': headers_mixed_attributes}, cv=3)) > 0.7
 
-# Test algorithms with data that has missing values
-
+# Test Missing Value Data ------------------------------------------------------------------------------------
 
 def test_relieff_pipeline_missing_values():
     """Ensure that ReliefF works in a sklearn pipeline with missing values"""
     np.random.seed(49082)
 
-    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=100, n_jobs=-1),
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10, n_jobs=-1),
                         Imputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
@@ -511,3 +597,4 @@ def test_turf_pipeline_missing_values():
 
     assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values,
                                    fit_params={'turf__headers': headers_missing_values}, cv=3)) > 0.7
+                                   

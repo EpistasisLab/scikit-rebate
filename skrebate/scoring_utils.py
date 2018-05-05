@@ -245,7 +245,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                 pass
             else: #Normal diff normalization
                 for each in class_store: #multiclass normalization
-                    diff += class_store[each][1] * (class_store[each][0] / count_miss) # Contribution of given miss class weighted by it's observed frequency within NN set.
+                    diff += class_store[each][1] * (class_store[each][0] / count_miss) * len(class_store)# Contribution of given miss class weighted by it's observed frequency within NN set.
                 diff = diff / count_miss #'m' normalization
             
             #Hit component: with 'h' normalization
