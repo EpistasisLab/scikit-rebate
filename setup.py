@@ -13,7 +13,7 @@ setup(
     name='skrebate',
     version=package_version,
     author='Randal S. Olson, Pete Schmitt, and Ryan J. Urbanowicz',
-    author_email='rso@randalolson.com and ryanurb@upenn.edu',
+    author_email='rso@randalolson.com, ryanurb@upenn.edu',
     packages=find_packages(),
     url='https://github.com/EpistasisLab/scikit-rebate',
     license='License :: OSI Approved :: MIT License',

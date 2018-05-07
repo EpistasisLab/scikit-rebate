@@ -426,7 +426,7 @@ class ReliefF(BaseEstimator):
             match_count = 0
             miss_count = 0
             for nn_index in np.argsort(dist_vect):
-                if (self._y[inst]-self._y[nn_index]) < self._labels_std:  # Hit neighbor identified
+                if abs(self._y[inst]-self._y[nn_index]) < self._labels_std:  # Hit neighbor identified
                     if match_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
