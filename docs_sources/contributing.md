@@ -38,7 +38,7 @@ GitHub:
 
 5. Start making changes on your newly created branch, remembering to never work on the ``master`` branch! Work on this copy on your computer using Git to do the version control.
 
-6. Once some changes are saved locally, you can use your tweaked version of scikit-rebate by navigating to the project's base directory and running scikit-rebate in a script. You can use an example script in our [examples directory](examples/GAMETES_Example.md) to begin your testing.
+6. Once some changes are saved locally, you can use your tweaked version of scikit-rebate by navigating to the project's base directory and running scikit-rebate in a script. 
 
 7. To check your changes haven't broken any existing tests and to check new tests you've added pass run the following (note, you must have the `nose` package installed within your dev environment for this to work):
 
@@ -55,8 +55,7 @@ GitHub:
 
 Finally, go to the web page of your fork of the scikit-rebate repo, and click 'Pull Request' (PR) to send your changes to the maintainers for review. Make sure that you send your PR to the `development` branch, as the `master` branch is reserved for the latest stable release. This will start the CI server to check all the project's unit tests run and send an email to the maintainers.
 
-(If any of the above seems like magic to you, then look up the 
-[Git documentation](http://git-scm.com/documentation) on the web.)
+(For details on the above look up the [Git documentation](http://git-scm.com/documentation) on the web.)
 
 ## Before submitting your pull request
 
