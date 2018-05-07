@@ -25,6 +25,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from skrebate import ReliefF, SURF, SURFstar, MultiSURF, MultiSURFstar
 from skrebate.turf import TuRF
+from skrebate.vlsrelief import VLSRelief
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.preprocessing import Imputer
@@ -125,6 +126,26 @@ def test_turf_init():
     assert clf.discrete_threshold == 20
     assert clf.verbose == True
     assert clf.n_jobs == 3
+
+
+def test_vlsrelief_init():
+    """Ensure that the VLSRelief constructor stores custom values correctly"""
+    clf = VLSRelief(core_algorithm="MultiSURF", n_features_to_select=7,
+                    n_neighbors=500,
+                    step=0.4,
+                    discrete_threshold=20,
+                    verbose=True,
+                    n_jobs=3)
+
+    assert clf.core_algorithm == "MultiSURF"
+    assert clf.n_features_to_select == 7
+    assert clf.n_neighbors == 500
+    assert clf.step == 0.4
+    assert clf.discrete_threshold == 20
+    assert clf.verbose == True
+    assert clf.n_jobs == 3
+    assert clf.num_feature_subset == 40
+    assert clf.size_feature_subset == 5
 
 # Test Genetic Data and Parallelizations  ------------------------------------------------------------------------------------
 def test_relieff_pipeline():
@@ -369,6 +390,29 @@ def test_turf_pipeline_multiclass():
     assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass,
                                    fit_params={'turf__headers': headers_multiclass}, cv=3)) > 0.7
 
+
+def test_vlsrelief_pipeline():
+    """Ensure that VLSRelief works in a sklearn pipeline when it is parallelized"""
+    np.random.seed(49082)
+
+    clf = make_pipeline(VLSRelief(core_algorithm="MultiSURF", n_features_to_select=2, step=0.4, n_neighbors=100, n_jobs=-1),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+
+    assert np.mean(cross_val_score(clf, features, labels, fit_params={
+                   'vlsrelief__headers': headers}, cv=3)) > 0.7
+
+
+def test_vlsrelief_pipeline_parallel():
+    """Ensure that VLSRelief works in a sklearn pipeline where cross_val_score is parallelized"""
+    np.random.seed(49082)
+
+    clf = make_pipeline(VLSRelief(core_algorithm="MultiSURF", n_features_to_select=2, step=0.4, n_neighbors=100),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+
+    assert np.mean(cross_val_score(clf, features, labels, fit_params={
+                   'vlsrelief__headers': headers}, cv=3, n_jobs=-1)) > 0.7
+
+
 # Test Continuous Data ------------------------------------------------------------------------------------
 
 def test_relieff_pipeline_cont_endpoint():
@@ -440,6 +484,18 @@ def test_turf_pipeline_cont_endpoint():
 
     assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint,
                                        fit_params={'turf__headers': headers_cont_endpoint}, cv=3))) < 0.5
+
+    
+def test_vlsrelief_pipeline_cont_endpoint():
+    """Ensure that VLSRelief works in a sklearn pipeline with continuous endpoint data"""
+    np.random.seed(320931)
+
+    clf = make_pipeline(VLSRelief(core_algorithm="MultiSURF", n_features_to_select=2, step=0.4, n_jobs=-1),
+                        RandomForestRegressor(n_estimators=100, n_jobs=-1))
+
+    assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint,
+                                       fit_params={'vlsrelief__headers': headers_cont_endpoint}, cv=3))) < 0.5
+
 
 # Test Mixed Attribute Data ------------------------------------------------------------------------------------
 
@@ -519,6 +575,18 @@ def test_turf_pipeline_mixed_attributes():
     assert np.mean(cross_val_score(clf, features_mixed_attributes, labels_mixed_attributes,
                                    fit_params={'turf__headers': headers_mixed_attributes}, cv=3)) > 0.7
 
+
+
+def test_vlsrelief_pipeline_mixed_attributes():
+    """Ensure that VLSRelief works in a sklearn pipeline with mixed attributes"""
+    np.random.seed(320931)
+
+    clf = make_pipeline(VLSRelief(core_algorithm="MultiSURF", n_features_to_select=2, step=0.4, n_jobs=-1),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+
+    assert np.mean(cross_val_score(clf, features_mixed_attributes, labels_mixed_attributes,
+                                   fit_params={'vlsrelief__headers': headers_mixed_attributes}, cv=3)) > 0.7
+
 # Test Missing Value Data ------------------------------------------------------------------------------------
 
 def test_relieff_pipeline_missing_values():
@@ -597,4 +665,15 @@ def test_turf_pipeline_missing_values():
 
     assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values,
                                    fit_params={'turf__headers': headers_missing_values}, cv=3)) > 0.7
-                                   
+
+
+def test_vlsrelief_pipeline_missing_values():
+    """Ensure that VLSRelief works in a sklearn pipeline with missing values"""
+    np.random.seed(320931)
+
+    clf = make_pipeline(VLSRelief(core_algorithm="MultiSURF", n_features_to_select=2, step=0.4, n_jobs=-1),
+                        Imputer(),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+
+    assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values,
+                                   fit_params={'vlsrelief__headers': headers_missing_values}, cv=3)) > 0.7

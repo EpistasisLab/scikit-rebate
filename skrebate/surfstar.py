@@ -69,7 +69,6 @@ class SURFstar(SURF):
 
         return np.array(NN_near, dtype=np.int32), np.array(NN_far, dtype=np.int32)
 
-
     def _run_algorithm(self):
         """ Runs nearest neighbor (NN) identification and feature scoring to yield SURF* scores. """
         sm = cnt = 0
