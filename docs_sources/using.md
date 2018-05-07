@@ -1,6 +1,6 @@
 We have designed the Relief algorithms to be integrated directly into scikit-learn machine learning workflows. Below, we provide code samples showing how the various Relief algorithms can be used as feature selection methods in scikit-learn pipelines.
 
-For details on the algorithmic differences between the various Relief algorithms, please refer to [this research paper](https://biodatamining.biomedcentral.com/articles/10.1186/1756-0381-2-5).
+For details on the algorithmic differences between the various Relief algorithms, please refer to [this research paper](https://arxiv.org/abs/1711.08477).
 
 ## ReliefF
 

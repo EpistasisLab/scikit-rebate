@@ -318,8 +318,8 @@ class ReliefF(BaseEstimator):
             c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock')) #Cityblock is also known as Manhattan distance
             return np.add(d_dist, c_dist) / self._num_attributes
         else: #continuous features only
-            xc = pre_normalize(xc)
-            return squareform(pdist(xc, metric='cityblock'))
+            #xc = pre_normalize(xc)
+            return squareform(pdist(pre_normalize(xc), metric='cityblock'))
 
     #==================================================================#
     def _dtype_array(self):
@@ -426,7 +426,7 @@ class ReliefF(BaseEstimator):
             match_count = 0
             miss_count = 0
             for nn_index in np.argsort(dist_vect):
-                if (self._y[inst]-self._y[nn_index]) < self._labels_std:  # Hit neighbor identified
+                if abs(self._y[inst]-self._y[nn_index]) < self._labels_std:  # Hit neighbor identified
                     if match_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
