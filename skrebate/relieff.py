@@ -318,8 +318,8 @@ class ReliefF(BaseEstimator):
             c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock')) #Cityblock is also known as Manhattan distance
             return np.add(d_dist, c_dist) / self._num_attributes
         else: #continuous features only
-            xc = pre_normalize(xc)
-            return squareform(pdist(xc, metric='cityblock'))
+            #xc = pre_normalize(xc)
+            return squareform(pdist(pre_normalize(xc), metric='cityblock'))
 
     #==================================================================#
     def _dtype_array(self):
