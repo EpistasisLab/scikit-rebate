@@ -67,17 +67,6 @@
           
             <li class="toctree-l1">
 		
-    <span class="caption-text">Examples</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="examples/GAMETES_Example/">GAMETES Example</a>
-                </li>
-    </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
     <a class="" href="contributing/">Contributing</a>
 	    </li>
           
@@ -131,10 +120,10 @@
           <div role="main">
             <div class="section">
               
-                <p><a href="https://github.com/EpistasisLab/scikit-rebate">scikit-rebate</a> is a scikit-learn-compatible Python implementation of ReBATE, a suite of <a href="https://en.wikipedia.org/wiki/Relief_(feature_selection)">Relief</a>-based feature selection algorithms for Machine Learning. <strong>This project is still under active development</strong> and we encourage you to check back on this repository regularly for updates.</p>
+                <p><a href="https://github.com/EpistasisLab/scikit-rebate">scikit-rebate</a> is a scikit-learn-compatible Python implementation of ReBATE, a suite of <a href="https://en.wikipedia.org/wiki/Relief_(feature_selection)">Relief</a>-based feature selection algorithms for Machine Learning. As of 5/7/18, <strong>this project is still under active development</strong> and we encourage you to check back on this repository regularly for updates.</p>
 <p>These algorithms excel at identifying features that are predictive of the outcome in supervised learning problems, and are especially good at identifying feature interactions that are normally overlooked by standard feature selection methods.</p>
-<p>The main benefit of Relief algorithms is that they identify feature interactions without having to exhaustively check every pairwise interaction, thus taking significantly less time than exhaustive pairwise search.</p>
-<p>Relief algorithms are commonly applied to genetic analyses, where epistasis (i.e., feature interactions) is common. However, the algorithms implemented in this package can be applied to almost any supervised classification data set and supports:</p>
+<p>The main benefit of Relief-based algorithms is that they identify feature interactions without having to exhaustively check every pairwise interaction, thus taking significantly less time than exhaustive pairwise search.</p>
+<p>Relief-based algorithms are commonly applied to genetic analyses, where epistasis (i.e., feature interactions) is common. However, the algorithms implemented in this package can be applied to almost any supervised classification data set and supports:</p>
 <ul>
 <li>
 <p>A mix of categorical and/or continuous features</p>
@@ -143,7 +132,10 @@
 <p>Data with missing values</p>
 </li>
 <li>
-<p>Discrete endpoints (i.e., classification)</p>
+<p>Binary endpoints (i.e., classification)</p>
+</li>
+<li>
+<p>Multi-class endpoints (i.e., classification)</p>
 </li>
 <li>
 <p>Continuous endpoints (i.e., regression)</p>
@@ -173,18 +165,18 @@
 
   Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-	  
+      
         </div>
       </div>
 
     </section>
-    
+
   </div>
 
   <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
-          <a href="https://github.com/EpistasisLab/scikit-rebate" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+          <a href="https://github.com/EpistasisLab/scikit-rebate/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
       
@@ -192,12 +184,15 @@
       
     </span>
 </div>
+    <script>var base_url = '.';</script>
     <script src="./js/theme.js"></script>
+      <script src="./search/require.js"></script>
+      <script src="./search/search.js"></script>
 
 </body>
 </html>
 
 <!--
-MkDocs version : 0.16.3
-Build Date UTC : 2017-11-29 15:46:13
+MkDocs version : 0.17.3
+Build Date UTC : 2018-05-07 22:30:12
 -->

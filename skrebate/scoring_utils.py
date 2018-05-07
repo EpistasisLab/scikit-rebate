@@ -165,24 +165,20 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                 if y[inst] == y[NN[i]]:   # HIT
                     count_hit += 1
                     if ftype == 'continuous':
-                        # diff_hit += abs(xinstfeature - xNNifeature) / mmdiff  #Hits differently add continuous value differences rather than subtract them
-                        diff_hit += ramp_function(data_type, attr, fname, xinstfeature, xNNifeature)
-                    else:  # discrete feature
-                        # The same feature value is observed (Used for more efficient 'far' scoring, since there should be fewer same values for 'far' instances)
-                        if xinstfeature == xNNifeature:
-                            # Feature score is reduced when we observe the same feature value between 'far' instances with the same class.
-                            diff_hit -= 1
+
+                        #diff_hit -= abs(xinstfeature - xNNifeature) / mmdiff  #Hits differently add continuous value differences rather than subtract them 
+                        diff_hit -= (1-ramp_function(data_type, attr, fname, xinstfeature, xNNifeature)) #Sameness should yield most negative score
+                    else: #discrete feature
+                        if xinstfeature == xNNifeature: # The same feature value is observed (Used for more efficient 'far' scoring, since there should be fewer same values for 'far' instances)
+                            diff_hit -= 1 # Feature score is reduced when we observe the same feature value between 'far' instances with the same class.
                 else:  # MISS
                     count_miss += 1
                     if ftype == 'continuous':
-                        # diff_miss -= abs(xinstfeature - xNNifeature) / mmdiff #Misses differntly subtract continuous value differences rather than add them
-                        diff_miss -= ramp_function(data_type, attr, fname,
-                                                   xinstfeature, xNNifeature)
-                    else:  # discrete feature
-                        # The same feature value is observed (Used for more efficient 'far' scoring, since there should be fewer same values for 'far' instances)
-                        if xinstfeature == xNNifeature:
-                            # Feature score is increased when we observe the same feature value between 'far' instances with different class values.
-                            diff_miss += 1
+                        #diff_miss += abs(xinstfeature - xNNifeature) / mmdiff #Misses differntly subtract continuous value differences rather than add them 
+                        diff_miss += (1-ramp_function(data_type, attr, fname, xinstfeature, xNNifeature)) #Sameness should yield most negative score
+                    else: #discrete feature
+                        if xinstfeature == xNNifeature: # The same feature value is observed (Used for more efficient 'far' scoring, since there should be fewer same values for 'far' instances)
+                            diff_miss += 1 # Feature score is increased when we observe the same feature value between 'far' instances with different class values.
 
         """ Score Normalizations:
         *'n' normalization dividing by the number of training instances (this helps ensure that all final scores end up in the -1 to 1 range
@@ -199,7 +195,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
 
     #--------------------------------------------------------------------------
     elif ctype == 'multiclass':
-        class_store = dict()
+        class_store = dict() #only 'miss' classes will be stored
         #missClassPSum = 0
 
         for each in mcmap:
@@ -218,8 +214,8 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                     count_hit += 1
                     if ftype == 'continuous':
                         #diff_hit -= abs(xinstfeature - xNNifeature) / mmdiff
-                        diff_hit -= ramp_function(data_type, attr, fname, xinstfeature, xNNifeature)
-                    else:  # discrete feature
+                        diff_hit -= ramp_function(data_type, attr, fname, xinstfeature, xNNifeature) 
+                    else: #discrete feature
                         if xinstfeature != xNNifeature:
                             # Feature score is reduced when we observe feature difference between 'near' instances with the same class.
                             diff_hit -= 1
@@ -240,9 +236,9 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                 if(y[inst] == y[NN[i]]):  # HIT
                     count_hit += 1
                     if ftype == 'continuous':
-                        # Hits differently add continuous value differences rather than subtract them
-                        diff_hit += abs(xinstfeature - xNNifeature) / mmdiff
-                    else:  # discrete features
+                        #diff_hit -= abs(xinstfeature - xNNifeature) / mmdiff  #Hits differently add continuous value differences rather than subtract them 
+                        diff_hit -= (1-ramp_function(data_type, attr, fname, xinstfeature, xNNifeature)) #Sameness should yield most negative score
+                    else: #discrete features
                         if xinstfeature == xNNifeature:
                             # Feature score is reduced when we observe the same feature value between 'far' instances with the same class.
                             diff_hit -= 1
@@ -251,10 +247,9 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                         if(y[NN[i]] == missClass):
                             class_store[missClass][0] += 1
                             if ftype == 'continuous':
-                                #class_store[missClass][1] -= abs(xinstfeature - xNNifeature) / mmdiff
-                                class_store[missClass][1] -= ramp_function(
-                                    data_type, attr, fname, xinstfeature, xNNifeature)
-                            else:  # discrete feature
+                                #class_store[missClass][1] += abs(xinstfeature - xNNifeature) / mmdiff
+                                class_store[missClass][1] += (1-ramp_function(data_type, attr, fname, xinstfeature, xNNifeature)) #Sameness should yield most negative score
+                            else: #discrete feature
                                 if xinstfeature == xNNifeature:
                                     # Feature score is increased when we observe the same feature value between 'far' instances with different class values.
                                     class_store[missClass][1] += 1
@@ -267,20 +262,18 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
         # Miss component
         for each in class_store:
             count_miss += class_store[each][0]
-            miss_sum += class_store[each][1]
 
         if count_hit == 0.0 and count_miss == 0.0:
             return 0.0
         else:
             if count_miss == 0:
                 pass
-            else:  # Normal diff normalization
-                for each in class_store:  # multiclass normalization
-                    # Contribution of given miss class weighted by it's observed frequency within NN set.
-                    diff += class_store[each][1] * (class_store[each][0] / count_miss)
-                diff = diff / count_miss  # 'm' normalization
-
-            # Hit component: with 'h' normalization
+            else: #Normal diff normalization
+                for each in class_store: #multiclass normalization
+                    diff += class_store[each][1] * (class_store[each][0] / count_miss) * len(class_store)# Contribution of given miss class weighted by it's observed frequency within NN set.
+                diff = diff / count_miss #'m' normalization
+            
+            #Hit component: with 'h' normalization
             if count_hit == 0:
                 pass
             else:
@@ -324,8 +317,8 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                     count_hit += 1
                     if ftype == 'continuous':
                         #diff_hit += abs(xinstfeature - xNNifeature) / mmdiff
-                        diff_hit += ramp_function(data_type, attr, fname, xinstfeature, xNNifeature)
-                    else:  # discrete feature
+                        diff_hit -= (1-ramp_function(data_type, attr, fname, xinstfeature, xNNifeature)) #Sameness should yield most negative score
+                    else: #discrete feature
                         if xinstfeature == xNNifeature:
                             # Feature score is reduced when we observe the same feature value between 'far' instances with the same class.
                             diff_hit -= 1
@@ -333,9 +326,8 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                     count_miss += 1
                     if ftype == 'continuous':
                         #diff_miss -= abs(xinstfeature - xNNifeature) / mmdiff
-                        diff_miss -= ramp_function(data_type, attr, fname,
-                                                   xinstfeature, xNNifeature)
-                    else:  # discrete feature
+                        diff_miss += (1-ramp_function(data_type, attr, fname, xinstfeature, xNNifeature)) #Sameness should yield most negative score
+                    else: #discrete feature
                         if xinstfeature == xNNifeature:
                             # Feature score is increased when we observe the same feature value between 'far' instances with different class values.
                             diff_miss += 1

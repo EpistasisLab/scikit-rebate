@@ -19,8 +19,6 @@ pages:
 - Home: index.md
 - Installation: installing.md
 - Using skrebate: using.md
-- Examples:
-  - examples/GAMETES_Example.md
 - Contributing: contributing.md
 - Release Notes: releases.md
 - Citing: citing.md
