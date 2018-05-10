@@ -54,7 +54,6 @@ class VLSRelief(BaseEstimator, TransformerMixin):
         self.core_algorithm = core_algorithm
         self.n_features_to_select = n_features_to_select
         self.n_neighbors = n_neighbors
-        self.step = step
         self.discrete_threshold = discrete_threshold
         self.verbose = verbose
         self.n_jobs = n_jobs
