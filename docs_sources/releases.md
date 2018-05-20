@@ -1,3 +1,17 @@
+# scikit-rebate 0.5
+
+* Added fixes to score normalizations that should ensure that feature scores for all algorithms fall between -1 and 1. 
+
+* Added multi-class endpoint functionality. (now discriminates between binary and multiclass endpoints) Includes new methods for multi-class score update normalization.
+
+* Fixed normalization for missing data.
+
+* Fixed inconsistent pre-normalization for continuous feature data. 
+
+* Added a custom ramp function to improve performance of all algorithms on data with a mix of discrete and continuous features.  Based on the standard deviation of a given continuous feature. 
+
+* Updated the implementation of TuRF as an internal custom component of ReBATE.
+
 # scikit-rebate 0.4
 
 * Added support for multicore processing to all Relief algorithms. Multiprocessing is now also supported in Python 2.

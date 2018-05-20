@@ -64,17 +64,6 @@
           
             <li class="toctree-l1">
 		
-    <span class="caption-text">Examples</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="../examples/GAMETES_Example/">GAMETES Example</a>
-                </li>
-    </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
     <a class="" href="../contributing/">Contributing</a>
 	    </li>
           
@@ -83,6 +72,9 @@
     <a class="current" href="./">Release Notes</a>
     <ul class="subnav">
             
+    <li class="toctree-l2"><a href="#scikit-rebate-05">scikit-rebate 0.5</a></li>
+    
+
     <li class="toctree-l2"><a href="#scikit-rebate-04">scikit-rebate 0.4</a></li>
     
 
@@ -143,7 +135,28 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="scikit-rebate-04">scikit-rebate 0.4</h1>
+                <h1 id="scikit-rebate-05">scikit-rebate 0.5</h1>
+<ul>
+<li>
+<p>Added fixes to score normalizations that should ensure that feature scores for all algorithms fall between -1 and 1. </p>
+</li>
+<li>
+<p>Added multi-class endpoint functionality. (now discriminates between binary and multiclass endpoints) Includes new methods for multi-class score update normalization.</p>
+</li>
+<li>
+<p>Fixed normalization for missing data.</p>
+</li>
+<li>
+<p>Fixed inconsistent pre-normalization for continuous feature data. </p>
+</li>
+<li>
+<p>Added a custom ramp function to improve performance of all algorithms on data with a mix of discrete and continuous features.  Based on the standard deviation of a given continuous feature. </p>
+</li>
+<li>
+<p>Updated the implementation of TuRF as an internal custom component of ReBATE.</p>
+</li>
+</ul>
+<h1 id="scikit-rebate-04">scikit-rebate 0.4</h1>
 <ul>
 <li>
 <p>Added support for multicore processing to all Relief algorithms. Multiprocessing is now also supported in Python 2.</p>
@@ -206,18 +219,18 @@
 
   Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-	  
+      
         </div>
       </div>
 
     </section>
-    
+
   </div>
 
   <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
-          <a href="https://github.com/EpistasisLab/scikit-rebate" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+          <a href="https://github.com/EpistasisLab/scikit-rebate/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
         <span><a href="../contributing/" style="color: #fcfcfc;">&laquo; Previous</a></span>
@@ -227,7 +240,10 @@
       
     </span>
 </div>
+    <script>var base_url = '..';</script>
     <script src="../js/theme.js"></script>
+      <script src="../search/require.js"></script>
+      <script src="../search/search.js"></script>
 
 </body>
 </html>

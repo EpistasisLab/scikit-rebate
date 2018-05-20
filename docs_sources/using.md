@@ -1,6 +1,6 @@
 We have designed the Relief algorithms to be integrated directly into scikit-learn machine learning workflows. Below, we provide code samples showing how the various Relief algorithms can be used as feature selection methods in scikit-learn pipelines.
 
-For details on the algorithmic differences between the various Relief algorithms, please refer to [this research paper](https://biodatamining.biomedcentral.com/articles/10.1186/1756-0381-2-5).
+For details on the algorithmic differences between the various Relief algorithms, please refer to [this research paper](https://arxiv.org/abs/1711.08477).
 
 ## ReliefF
 
@@ -43,7 +43,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
@@ -91,7 +91,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
@@ -137,7 +137,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
@@ -183,7 +183,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
@@ -229,7 +229,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
@@ -254,7 +254,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
@@ -279,7 +279,7 @@ from skrebate import ReliefF
 from sklearn.model_selection import train_test_split
 
 genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/master/data/'
-                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.csv.gz',
+                           'GAMETES_Epistasis_2-Way_20atts_0.4H_EDM-1_1.tsv.gz',
                            sep='\t', compression='gzip')
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
