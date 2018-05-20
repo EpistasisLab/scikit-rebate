@@ -84,7 +84,7 @@ class ReliefF(BaseEstimator):
         self.n_jobs = n_jobs
 
     #=========================================================================#
-    def fit(self, X, y):
+    def fit(self, X, y, weights):
         """Scikit-learn required: Computes the feature importance scores from the training data.
 
         Parameters
@@ -101,7 +101,7 @@ class ReliefF(BaseEstimator):
         """
         self._X = X  # matrix of predictive variables ('independent variables')
         self._y = y  # vector of values for outcome variable ('dependent variable')
-
+        self._weights = weights
         # Set up the properties for ReliefF -------------------------------------------------------------------------------------
         self._datalen = len(self._X)  # Number of training instances ('n')
 
@@ -230,7 +230,7 @@ class ReliefF(BaseEstimator):
         return X[:, self.top_features_[:self.n_features_to_select]]
 
     #=========================================================================#
-    def fit_transform(self, X, y):
+    def fit_transform(self, X, y, weights):
         """Scikit-learn required: Computes the feature importance scores from the training data, then reduces the feature set down to the top `n_features_to_select` features.
 
         Parameters
@@ -246,7 +246,7 @@ class ReliefF(BaseEstimator):
             Reduced feature matrix
 
         """
-        self.fit(X, y)
+        self.fit(X, y, weights)
 
         return self.transform(X)
 
@@ -460,7 +460,7 @@ class ReliefF(BaseEstimator):
         # Call the scoring method for the ReliefF algorithm
         scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
             ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                    NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
+                                    NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type, self._weights)
             for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 
         return np.array(scores)

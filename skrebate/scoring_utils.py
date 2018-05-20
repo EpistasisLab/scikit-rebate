@@ -357,12 +357,12 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
     return diff
 
 
-def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std, data_type):
+def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std, data_type, weights):
     """ Unique scoring procedure for ReliefF algorithm. Scoring based on k nearest hits and misses of current target instance. """
     scores = np.zeros(num_attributes)
     for feature_num in range(num_attributes):
-        scores[feature_num] += compute_score(attr, mcmap, NN, feature_num, inst,
-                                             nan_entries, headers, class_type, X, y, labels_std, data_type)
+        scores[feature_num] += weights[feature_num]*compute_score(attr, mcmap, NN, feature_num, inst,
+                                                                  nan_entries, headers, class_type, X, y, labels_std, data_type)
     return scores
 
 
