@@ -11,8 +11,8 @@ Package information: ![Python 2.7](https://img.shields.io/badge/python-2.7-blue.
 ![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)
 [![PyPI version](https://badge.fury.io/py/skrebate.svg)](https://badge.fury.io/py/skrebate)
 
-# scikit-rebate (scikit-learn compatible relief-based algorithm training environment) 
-This package includes a scikit-learn-compatible Python implementation of ReBATE, a suite of [Relief-based feature selection algorithms](https://en.wikipedia.org/wiki/Relief_(feature_selection)) for Machine Learning. These Relief-Based algorithms (RBAs) are designed for feature weighting/selection as part of a machine learning pipeline (supervised learning). Presently this includes the following core RBAs: ReliefF, SURF, SURF*, and MultiSURF*. Additionally, an implementation of the iterative TuRF mechanism and VLSRelief is included. **It is still under active development** and we encourage you to check back on this repository regularly for updates.
+# scikit-rebate
+This package includes a scikit-learn-compatible Python implementation of ReBATE, a suite of [Relief-based feature selection algorithms](https://en.wikipedia.org/wiki/Relief_(feature_selection)) for Machine Learning. These Relief-Based algorithms (RBAs) are designed for feature weighting/selection as part of a machine learning pipeline (supervised learning). Presently this includes the following core RBAs: ReliefF, SURF, SURF\*, MultiSURF\*, and MultiSURF. Additionally, an implementation of the iterative TuRF mechanism and VLSRelief is included. **It is still under active development** and we encourage you to check back on this repository regularly for updates.
 
 These algorithms offer a computationally efficient way to perform feature selection that is sensitive to feature interactions as well as simple univariate associations, unlike most currently available filter-based feature selection methods. The main benefit of Relief algorithms is that they identify feature interactions without having to exhaustively check every pairwise interaction, thus taking significantly less time than exhaustive pairwise search.
 
