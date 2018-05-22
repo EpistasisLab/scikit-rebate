@@ -19,5 +19,17 @@ Once the prerequisites are installed, you should be able to install scikit-rebat
 ```
 pip install skrebate
 ```
+You can retrieve basic information about your installed version of skrebate with the following pip command:
+
+```
+pip show skrebate
+```
+
+You can check that you have the most up to date pypi release of skrebate with the following pip command:
+
+```
+pip install skrebate -U
+```
+
 
 Please [file a new issue](https://github.com/EpistasisLab/scikit-rebate/issues/new) if you run into installation problems.

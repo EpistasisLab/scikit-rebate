@@ -74,7 +74,6 @@ class MultiSURFstar(SURFstar):
 
         return np.array(NN_near), np.array(NN_far)
 
-
     def _run_algorithm(self):
         """ Runs nearest neighbor (NN) identification and feature scoring to yield MultiSURF* scores. """
         nan_entries = np.isnan(self._X)
