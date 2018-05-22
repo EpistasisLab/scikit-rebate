@@ -88,19 +88,19 @@ class VLSRelief(BaseEstimator, TransformerMixin):
         self.headers = headers
 
         if self.core_algorithm.lower() == "multisurf":
-            core = MultiSURF()
+            core = MultiSURF(n_features_to_select=self.n_features_to_select, discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         elif self.core_algorithm.lower() == "multisurfstar":
-            core = MultiSURFstar()
+            core = MultiSURFstar(n_features_to_select=self.n_features_to_select, discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         elif self.core_algorithm.lower() == "surf":
-            core = SURF()
+            core = SURF(n_features_to_select=self.n_features_to_select, discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         elif self.core_algorithm.lower() == "surfstar":
-            core = SURFstar()
+            core = SURFstar(n_features_to_select=self.n_features_to_select, discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         elif self.core_algorithm.lower() == "relieff":
-            core = ReliefF()
+            core = ReliefF(n_features_to_select=self.n_features_to_select, n_neighbors=self.n_neighbors, discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         total_num_features = X.shape[1]
         num_features = self.size_feature_subset

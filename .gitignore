@@ -69,3 +69,4 @@ testing.ipynb
 *.lprof
 
 *.prof
+/demo_scikitrebate.ipynb

@@ -11,21 +11,16 @@ Package information: ![Python 2.7](https://img.shields.io/badge/python-2.7-blue.
 ![License](https://img.shields.io/badge/license-MIT%20License-blue.svg)
 [![PyPI version](https://badge.fury.io/py/skrebate.svg)](https://badge.fury.io/py/skrebate)
 
-# scikit-rebate
+# scikit-rebate (scikit-learn compatible relief-based algorithm training environment) 
+This package includes a scikit-learn-compatible Python implementation of ReBATE, a suite of [Relief-based feature selection algorithms](https://en.wikipedia.org/wiki/Relief_(feature_selection)) for Machine Learning. These Relief-Based algorithms (RBAs) are designed for feature weighting/selection as part of a machine learning pipeline (supervised learning). Presently this includes the following core RBAs: ReliefF, SURF, SURF*, and MultiSURF*. Additionally, an implementation of the iterative TuRF mechanism and VLSRelief is included. **It is still under active development** and we encourage you to check back on this repository regularly for updates.
 
-A scikit-learn-compatible Python implementation of ReBATE, a suite of Relief-based feature selection algorithms for Machine Learning.
+These algorithms offer a computationally efficient way to perform feature selection that is sensitive to feature interactions as well as simple univariate associations, unlike most currently available filter-based feature selection methods. The main benefit of Relief algorithms is that they identify feature interactions without having to exhaustively check every pairwise interaction, thus taking significantly less time than exhaustive pairwise search.
 
-## Relief-based algorithms
-
-This package contains implementations of the [Relief](https://en.wikipedia.org/wiki/Relief_(feature_selection)) family of feature selection algorithms. **It is still under active development** and we encourage you to check back on this repository regularly for updates.
-
-These algorithms excel at identifying features that are predictive of the outcome in supervised learning problems, and are especially good at identifying feature interactions that are normally overlooked by standard feature selection methods.
-
-The main benefit of Relief algorithms is that they identify feature interactions without having to exhaustively check every pairwise interaction, thus taking significantly less time than exhaustive pairwise search.
+Certain algorithms require user specified run parameters (e.g. ReliefF requires the user to specify some 'k' number of nearest neighbors). 
 
 Relief algorithms are commonly applied to genetic analyses, where epistasis (i.e., feature interactions) is common. However, the algorithms implemented in this package can be applied to almost any supervised classification data set and supports:
 
-* A mix of categorical and/or continuous features
+* Feature sets that are discrete/categorical, continuous-valued or a mix of both
 
 * Data with missing values
 
@@ -34,6 +29,13 @@ Relief algorithms are commonly applied to genetic analyses, where epistasis (i.e
 * Multi-class endpoints (i.e., classification)
 
 * Continuous endpoints (i.e., regression)
+
+Built into this code, is a strategy to 'automatically' detect from the loaded data, these relevant characteristics.
+
+Of our two initial ReBATE software releases, this scikit-learn compatible version primarily focuses on ease of incorporation into a scikit learn analysis pipeline. 
+This code is most appropriate for scikit-learn users, Windows operating system users, beginners, or those looking for the most recent ReBATE developments.
+
+An alternative 'stand-alone' version of [ReBATE](https://github.com/EpistasisLab/ReBATE) is also available that focuses on improving run-time with the use of Cython for optimization. This implementation also outputs feature names and associated feature scores as a text file by default. 
 
 ## License
 
