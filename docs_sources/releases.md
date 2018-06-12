@@ -1,3 +1,23 @@
+# scikit-rebate 0.6
+
+* Fixed internal TuRF implementation so that it outputs scores for all features. Those that make it to the last iteration get true core algorithm scoring, while those that were removed along the way are assigned token scores (lower than the lowest true scoring feature) that indicate when the respective feature(s) were removed. This also alows for greater flexibility in the user specifying the number for features to return. 
+
+* Updated the usage documentation to demonstrate how to use RFE as well as the newly updated internal TuRF implementation. 
+
+* Fixed the pct paramter of TuRF to properly determine the percent of features removed each iteration as well as the total number of iterations as described in the original TuRF paper.  Also managed the edge case to ensure that at least one feature would be removed each TuRF iteration. 
+
+* Fixed ability to parallelize run of core algorithm while using TuRF.
+
+* Updated the unit testing file to remove some excess unite tests, add other relevant ones, speed up testing overall, and make the testing better organized. 
+
+* Added a preliminary implementation of VLSRelief to scikit-rebate, along with associated unit tests. Documentation and code examples not yet supported. 
+
+* Removed some unused code from TuRF implementation.
+
+* Added check in the transform method required by scikit-learn in both relieff.py and turf.py to ensure that the number of selected features requested by the user was not larger than the number of features in the dataset. 
+
+* Reduced the default value for number of features selected
+
 # scikit-rebate 0.5
 
 * Added fixes to score normalizations that should ensure that feature scores for all algorithms fall between -1 and 1. 
