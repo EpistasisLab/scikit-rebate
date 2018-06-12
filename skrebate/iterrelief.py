@@ -8,14 +8,18 @@ from sklearn.base import TransformerMixin
 # from sklearn.feature_selection.base import SelectorMixin
 from sklearn.externals.joblib import Parallel, delayed
 # from .scoring_utils import get_row_missing, ReliefF_compute_scores
-from .multisurf import MultiSURF
-from .multisurfstar import MultiSURFstar
-from .surf import SURF
-from .surfstar import SURFstar
-from .relieff import ReliefF
+# from multisurf import MultiSURF
+# from multisurfstar import MultiSURFstar
+# from surf import SURF
+# from surfstar import SURFstar
+from multisurf import MultiSURF
+from multisurfstar import MultiSURFstar
+from surf import SURF
+from surfstar import SURFstar
+from relieff import ReliefF
 
 
-class IRelief(BaseEstimator, TransformerMixin):
+class IterRelief(BaseEstimator, TransformerMixin):
 
     """Feature selection using data-mined expert knowledge.
 
@@ -26,7 +30,7 @@ class IRelief(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, core_algorithm, weight_flag=1, n_features_to_select=2, n_neighbors=100, max_iter=10, discrete_threshold=10, verbose=False, n_jobs=1):
+    def __init__(self, core_algorithm, weight_flag=2, n_features_to_select=2, n_neighbors=100, max_iter=10, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up VLSRelief to perform feature selection.
 
         Parameters
@@ -57,7 +61,6 @@ class IRelief(BaseEstimator, TransformerMixin):
         self.core_algorithm = core_algorithm
         self.n_features_to_select = n_features_to_select
         self.n_neighbors = n_neighbors
-        self.step = step
         self.discrete_threshold = discrete_threshold
         self.verbose = verbose
         self.n_jobs = n_jobs
@@ -66,7 +69,7 @@ class IRelief(BaseEstimator, TransformerMixin):
 
     #=========================================================================#
     # headers = list(genetic_data.drop("class",axis=1))
-    def fit(self, X, y, headers):
+    def fit(self, X, y):
         """
         Generates `num_feature_subset` sets of features each of size `size_feature_subset`.
         Thereafter, uses the input `core_algorithm` to determine feature importance scores
@@ -89,7 +92,7 @@ class IRelief(BaseEstimator, TransformerMixin):
 
         self.X_mat = X
         self._y = y
-        self.headers = headers
+        #self.headers = headers
 
         if self.core_algorithm.lower() == "multisurf":
             core = MultiSURF()
@@ -111,18 +114,23 @@ class IRelief(BaseEstimator, TransformerMixin):
 
         iteration = 0
 
-        while iteration < self.max_iter:
-            core_fit = core.fit(self.X_train, self._y, weights)
+        while (iteration < self.max_iter):
+            core_fit = core.fit(self.X_mat, self._y, weights, self.weight_flag)
 
-            if self.weight_flag == 2:
-                weights = core_fit.feature_importances_
-                weights = [0 if i < 0 else i for i in weights]
+            # When all weights become 0, break
+            if all(w == 0 for w in core_fit.feature_importances_):
+                break
 
+            weights = core_fit.feature_importances_
+            weights = [0 if i < 0 else i for i in weights]
+
+            # print('iter', iteration)
+            # print('w', weights)
             iteration += 1
 
         self.feature_importances_ = weights
         self.top_features_ = np.argsort(self.feature_importances_)[::-1]
-        self.header_top_features_ = [self.headers_model[i] for i in self.top_features_]
+        #self.header_top_features_ = [self.headers_model[i] for i in self.top_features_]
 
         return self
 

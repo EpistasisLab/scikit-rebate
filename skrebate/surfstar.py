@@ -26,8 +26,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from __future__ import print_function
 import numpy as np
-from .surf import SURF
-from .scoring_utils import SURFstar_compute_scores
+from surf import SURF
+from scoring_utils import SURFstar_compute_scores
 from sklearn.externals.joblib import Parallel, delayed
 
 
@@ -83,9 +83,16 @@ class SURFstar(SURF):
         NN_near_list = [i[0] for i in NNlist]
         NN_far_list = [i[1] for i in NNlist]
 
-        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-            SURFstar_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                     NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
-            for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
+        if self.weight_flag == 2:
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+                SURFstar_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
+                                         NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type, self.weight_flag, self._weights)
+                for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
+
+        else:
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+                SURFstar_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
+                                         NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
+                for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
 
         return np.array(scores)
