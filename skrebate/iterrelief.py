@@ -12,11 +12,11 @@ from sklearn.externals.joblib import Parallel, delayed
 # from multisurfstar import MultiSURFstar
 # from surf import SURF
 # from surfstar import SURFstar
-from multisurf import MultiSURF
-from multisurfstar import MultiSURFstar
-from surf import SURF
-from surfstar import SURFstar
-from relieff import ReliefF
+from .multisurf import MultiSURF
+from .multisurfstar import MultiSURFstar
+from .surf import SURF
+from .surfstar import SURFstar
+from .relieff import ReliefF
 
 
 class IterRelief(BaseEstimator, TransformerMixin):

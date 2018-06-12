@@ -26,9 +26,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from __future__ import print_function
 import numpy as np
-from surfstar import SURFstar
+from .surfstar import SURFstar
 from sklearn.externals.joblib import Parallel, delayed
-from scoring_utils import MultiSURF_compute_scores
+from .scoring_utils import MultiSURF_compute_scores
 
 
 class MultiSURF(SURFstar):
