@@ -1,3 +1,4 @@
+
 import numpy as np
 import time
 import warnings
@@ -135,9 +136,8 @@ class TuRF(BaseEstimator, TransformerMixin):
             # Identify the index location of the top 'num_feature' scoring features (for this particular iteration)
             select = np.array(features_iter[iter_count].argsort()[-num_features:])
             # Make index list of features not removed
-            non_select = np.array(features_iter[iter_count].argsort()[:num_features])
-            #num_features_non_select = len(features_iter[iter_count]) - num_features
-            #non_select = np.array(features_iter[iter_count].argsort()[:num_features_non_select])
+            num_features_non_select = len(features_iter[iter_count]) - num_features
+            non_select = np.array(features_iter[iter_count].argsort()[:num_features_non_select])
             # Make a dictionary that stores dropped features and the iteration they were dropped.
             for i in non_select:
                 # For feature name, store iteration rank it was removed (bigger rank for sooner removal)
