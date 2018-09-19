@@ -107,6 +107,8 @@ class VLSRelief(BaseEstimator, TransformerMixin):
         features_scores_iter = []
         headers_iter = []
         features_selected = []
+        print (core)
+        print ("new vls")
 
         for iteration in range(self.num_feature_subset):
             features_selected_id = np.random.choice(
