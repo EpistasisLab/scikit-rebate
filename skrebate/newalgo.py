@@ -15,7 +15,7 @@ from .surfstar import SURFstar
 from .relieff import ReliefF
 
 
-class VLSRelief(BaseEstimator, TransformerMixin):
+class NewAlgo(BaseEstimator, TransformerMixin):
 
     """Feature selection using data-mined expert knowledge.
 
@@ -26,7 +26,7 @@ class VLSRelief(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, core_algorithm, n_features_to_select=2, n_neighbors=100, num_feature_subset=40, size_feature_subset=5, discrete_threshold=10, verbose=False, n_jobs=1):
+    def __init__(self, core_algorithm, weight_flag = 2, n_features_to_select=2, n_neighbors=100, num_feature_subset=40, size_feature_subset=5, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up VLSRelief to perform feature selection.
 
         Parameters
@@ -59,6 +59,7 @@ class VLSRelief(BaseEstimator, TransformerMixin):
         self.n_jobs = n_jobs
         self.num_feature_subset = num_feature_subset
         self.size_feature_subset = size_feature_subset
+        self.weight_flag = weight_flag
 
     #=========================================================================#
     # headers = list(genetic_data.drop("class",axis=1))
@@ -107,15 +108,20 @@ class VLSRelief(BaseEstimator, TransformerMixin):
         features_scores_iter = []
         headers_iter = []
         features_selected = []
-        print core
+        weights = np.ones(total_num_features)
+        print (core)
+
+        iteration = 0
+        weight_history = []
 
         for iteration in range(self.num_feature_subset):
             features_selected_id = np.random.choice(
                 range(total_num_features), num_features, replace=False)
             self.X_train = self.X_mat[:, features_selected_id]
 
-            core_fit = core.fit(self.X_train, self._y)
-
+            core_fit = core.fit(self.X_train, self._y, weights, self.weight_flag)
+            print ("core fit: ")
+            print(core_fit)
             features_scores_iter.append(core_fit.feature_importances_)
             features_selected.append(features_selected_id)
             # headers_iter.append(self.headers[features_selected_id])
@@ -123,17 +129,22 @@ class VLSRelief(BaseEstimator, TransformerMixin):
         self.features_scores_iter = features_scores_iter
         self.features_selected = features_selected
 
+        print(features_selected)
+
         zip_feat_score = [list(zip(features_selected[i], features_scores_iter[i]))
                           for i in range(len(features_selected))]
         feat_score = sorted([item for sublist in zip_feat_score for item in sublist])
         feat_score_df = pd.DataFrame(feat_score)
         feat_score_df.columns = ['feature', 'score']
         feat_score_df = feat_score_df.groupby('feature').max().reset_index()
+        print("feat_score_df")
+        print(feat_score_df)
 
         feature_scores = feat_score_df.values
 
         feature_scores = [[int(i[0]), i[1]] for i in feature_scores]
 
+        print (feature_scores)
         self.feat_score = feature_scores
 
         head_idx = [i[0] for i in feature_scores]

@@ -13,7 +13,7 @@ genetic_data = pd.read_csv('https://github.com/EpistasisLab/scikit-rebate/raw/ma
 
 features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
 headers = list(genetic_data.drop("class", axis=1))
-fs = NewAlgo(core_algorithm="ReliefF", n_features_to_select=2, num_feature_subset=40, size_feature_subset=5,verbose=True)
+fs = NewAlgo(core_algorithm="ReliefF", n_features_to_select=2,pct=0.5,verbose=True)
 fs.fit(features, labels, headers)
 for feature_name, feature_score in zip(genetic_data.drop('class', axis=1).columns, fs.feature_importances_):
     print(feature_name, '\t', feature_score)
