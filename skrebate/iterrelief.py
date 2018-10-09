@@ -89,19 +89,24 @@ class IterRelief(BaseEstimator, TransformerMixin):
 
         # Combine IterRelief with specified 'core' Relief-based algorithm
         if self.core_algorithm.lower() == "multisurf":
-            core = MultiSURF()
+            core = MultiSURF(n_features_to_select=self.n_features_to_select,
+                             discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         elif self.core_algorithm.lower() == "multisurfstar":
-            core = MultiSURFstar()
+            core = MultiSURFstar(n_features_to_select=self.n_features_to_select,
+                                 discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         elif self.core_algorithm.lower() == "surf":
-            core = SURF()
+            core = SURF(n_features_to_select=self.n_features_to_select,
+                        discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         elif self.core_algorithm.lower() == "surfstar":
-            core = SURFstar()
+            core = SURFstar(n_features_to_select=self.n_features_to_select,
+                            discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         elif self.core_algorithm.lower() == "relieff":
-            core = ReliefF()
+            core = ReliefF(n_features_to_select=self.n_features_to_select, n_neighbors=self.n_neighbors,
+                           discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         # Determine total number of features
         total_num_features = X.shape[1]
