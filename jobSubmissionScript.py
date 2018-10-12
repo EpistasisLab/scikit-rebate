@@ -22,20 +22,24 @@ def main(argv):
             jobName = scratchPath+'scikit-rebate_'+coreDataName+'_'+str(algorithm)+str(i)+'_'+str(time.time())+'_run.sh'                                                  
             shFile = open(jobName, 'w')
             shFile.write('#!/bin/bash\n')
+
             shFile.write('#BSUB -J '+'scikit-rebate_'+coreDataName+'_'+str(algorithm)+str(i)+'_'+str(time.time())+'\n')
             #shFile.write('#BSUB -M 45000'+'\n')
             shFile.write('#BSUB -o ' + logPath+'scikit-rebate_'+coreDataName+'_'+str(algorithm)+str(i)+'_'+str(time.time())+'.o\n')
-            shFile.write('#BSUB -e ' + logPath+'scikit-rebate_'+coreDataName+'_'+str(algorithm)+str(i)+'_'+str(time.time())+'.e\n\n')
+            shFile.write('#BSUB -e ' + logPath+'scikit-rebate_'+coreDataName+'_'+str(algorithm)+str(i)+'_'+str(time.time())+'.e\n')
 
-            if i > 1000:
-                shFile.write('#BSUB -R "rusage[mem=20000]"')
-                shFile.write('#BSUB -M 25000')
+            if i > 10000:
+                shFile.write('#BSUB -R "rusage[mem=12000]"\n')
+                shFile.write('#BSUB -M 15000\n\n')
                 
             shFile.write('python '+'run_job_sub.py '+str(dataset)+' '+str(outfile)+' '+str(algorithm)+'\n') 
             print(str(dataset)+' '+str(outfile)+' '+str(algorithm))
 
             shFile.close()
-            os.system('bsub < '+jobName)   
+            if i > 10000:
+                os.system('bsub -q moore_long < ' + jobName)
+            else:
+                os.system('bsub < '+jobName)   
 
 if __name__=="__main__":
     

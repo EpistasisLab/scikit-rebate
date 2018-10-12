@@ -2,6 +2,7 @@
 def main(dataset, outfile, algorithm):
 
     genetic_data = pd.read_csv(dataset, sep='\t', compression='gzip')
+    tBefore = time.time()
 
     features, labels = genetic_data.drop('Class', axis=1).values, genetic_data['Class'].values
     headers = list(genetic_data.drop('Class', axis=1))
@@ -23,10 +24,11 @@ def main(dataset, outfile, algorithm):
         scoreDict[feature_name] = feature_score
 
     sorted_names = sorted(scoreDict, key=lambda x: scoreDict[x], reverse=True)
+    tAfter = (time.time() - tBefore)
 
     fh = open(outfile, 'w')
     fh.write(algorithm + ' Analysis Completed with REBATE\n')
-    fh.write('Run Time (sec): ' + str('NA') + '\n')
+    fh.write('Run Time (sec): ' + str(tAfter) + '\n')
     fh.write('=== SCORES ===\n')
     n = 1
     for k in sorted_names:
@@ -47,6 +49,7 @@ if __name__=="__main__":
     
     import sys
     import os
+    import time
     
     dataset = sys.argv[1]
     outfile = sys.argv[2]
