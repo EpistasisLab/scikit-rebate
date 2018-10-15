@@ -29,12 +29,12 @@ import numpy as np
 import time
 import warnings
 import sys
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.externals.joblib import Parallel, delayed
 from .scoring_utils import get_row_missing, ReliefF_compute_scores
 
 
-class ReliefF(BaseEstimator):
+class ReliefF(BaseEstimator, TransformerMixin):
 
     """Feature selection using data-mined expert knowledge.
     Based on the ReliefF algorithm as introduced in:
@@ -140,7 +140,7 @@ class ReliefF(BaseEstimator):
             self._labels_std = np.std(self._y, ddof=1)
 
         self._num_attributes = len(self._X[0])  # Number of features in training data
-        
+
         # Number of missing data values in predictor variable matrix.
         self._missing_data_count = np.isnan(self._X).sum()
 
@@ -230,7 +230,7 @@ class ReliefF(BaseEstimator):
         """
         if self._num_attributes < self.n_features_to_select:
             raise ValueError('Number of features to select is larger than the number of features in the dataset.')
-        
+
         return X[:, self.top_features_[:self.n_features_to_select]]
 
     #=========================================================================#
