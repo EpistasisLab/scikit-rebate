@@ -77,7 +77,7 @@ class MultiSURF(SURFstar):
 
         NNlist = [self._find_neighbors(datalen) for datalen in range(self._datalen)]
 
-        if n_jobs == 1:
+        if self.n_jobs == 1:
             scores = 0
             for instance_num, NN_near in zip(range(self._datalen), NNlist):
                 scores += MultiSURF_compute_scores(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
