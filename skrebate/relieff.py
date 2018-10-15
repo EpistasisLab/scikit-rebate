@@ -31,6 +31,7 @@ import warnings
 import sys
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.externals.joblib import Parallel, delayed
+from sklearn.utils import check_X_y
 from .scoring_utils import get_row_missing, ReliefF_compute_scores
 
 
@@ -99,8 +100,9 @@ class ReliefF(BaseEstimator, TransformerMixin):
         Copy of the ReliefF instance
 
         """
-        self._X = X  # matrix of predictive variables ('independent variables')
-        self._y = y  # vector of values for outcome variable ('dependent variable')
+        # X matrix of predictive variables ('independent variables')
+        # y vector of values for outcome variable ('dependent variable')
+        self._X, self._y = check_X_y(X, y, dtype=np.float64, order="C", force_all_finite=True)
 
         # Set up the properties for ReliefF -------------------------------------------------------------------------------------
         self._datalen = len(self._X)  # Number of training instances ('n')
