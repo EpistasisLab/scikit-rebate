@@ -54,4 +54,5 @@ if __name__=="__main__":
     dataset = sys.argv[1]
     outfile = sys.argv[2]
     algorithm = sys.argv[3]
+    print(dataset, outfile, algorithm)
     main(dataset, outfile, algorithm)
