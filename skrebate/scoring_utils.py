@@ -94,7 +94,6 @@ def get_row_missing_iter(xc, xd, cdiffs, index, cindices, dindices, weights):
     # Boolean mask locating missing values for discrete features for index instance
     dan = dindices[index]
     tf = len(cinst1) + len(dinst1)  # total number of features.
-
     # Progressively compare current instance to all others. Excludes comparison with self indexed instance. (Building the distance matrix triangle).
     for j in range(index):
         dist = 0
@@ -126,12 +125,14 @@ def get_row_missing_iter(xc, xd, cdiffs, index, cindices, dindices, weights):
         wc = np.delete(weights, idx)  # delete weights corresponding to missing continuous features
 
         # Add discrete feature distance contributions (missing values excluded) - Hamming distance
-        hamming_dist = np.not_equal(d1, d2).astype(float)
-        weight_hamming_dist = np.dot(hamming_dist, wd)/np.sum(wd)
-        dist += weight_hamming_dist
+        if len(d1)!=0: #To ensure there is atleast one discrete variable
+            hamming_dist = np.not_equal(d1, d2).astype(float)
+            weight_hamming_dist = np.dot(hamming_dist, wd)/np.sum(wd)
+            dist += weight_hamming_dist
 
         # Add continuous feature distance contributions (missing values excluded) - Manhattan distance (Note that 0-1 continuous value normalization is included ~ subtraction of minimums cancel out)
-        dist += np.dot((np.absolute(np.subtract(c1, c2)) / cdf), wc)/np.sum(wc)
+        if len(c1)!=0: #To ensure there is atleast one continuous variable
+            dist += np.dot((np.absolute(np.subtract(c1, c2)) / cdf), wc)/np.sum(wc)
 
         # Normalize distance calculation based on total number of missing values bypassed in either discrete or continuous features.
         tnmc = tf - dmc - cmc  # Total number of unique missing counted

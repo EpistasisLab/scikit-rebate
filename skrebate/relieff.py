@@ -31,7 +31,7 @@ import warnings
 import sys
 from sklearn.base import BaseEstimator
 from sklearn.externals.joblib import Parallel, delayed
-from .scoring_utils import get_row_missing, ReliefF_compute_scores
+from .scoring_utils import get_row_missing, ReliefF_compute_scores,get_row_missing_iter
 
 
 class ReliefF(BaseEstimator):
@@ -180,7 +180,6 @@ class ReliefF(BaseEstimator):
         # For downstream efficiency, separate features in dataset by type (i.e. discrete/continuous)
         diffs, cidx, didx = self._dtype_array()
         cdiffs = diffs[cidx]  # max/min continuous value difference for continuous features.
-
         xc = self._X[:, cidx]  # Subset of continuous-valued feature data
         xd = self._X[:, didx]  # Subset of discrete-valued feature data
 
