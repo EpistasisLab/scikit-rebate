@@ -85,7 +85,7 @@ class ReliefF(BaseEstimator, TransformerMixin):
         self.n_jobs = n_jobs
 
     #=========================================================================#
-    def fit(self, X, y):
+    def fit(self, X, y, weights=None, weight_flag=0):
         """Scikit-learn required: Computes the feature importance scores from the training data.
 
         Parameters
@@ -94,6 +94,7 @@ class ReliefF(BaseEstimator, TransformerMixin):
             Training instances to compute the feature importance scores from
         y: array-like {n_samples}
             Training labels
+        weights: parameter for irelief
 
         Returns
         -------
@@ -103,7 +104,8 @@ class ReliefF(BaseEstimator, TransformerMixin):
         # X matrix of predictive variables ('independent variables')
         # y vector of values for outcome variable ('dependent variable')
         self._X, self._y = check_X_y(X, y, dtype=np.float64, order="C", force_all_finite=True)
-
+        self._weights = weights
+        self.weight_flag = weight_flag
         # Set up the properties for ReliefF -------------------------------------------------------------------------------------
         self._datalen = len(self._X)  # Number of training instances ('n')
 
@@ -187,9 +189,16 @@ class ReliefF(BaseEstimator, TransformerMixin):
         """ For efficiency, the distance array is computed more efficiently for data with no missing values.
         This distance array will only be used to identify nearest neighbors. """
         if self._missing_data_count > 0:
-            self._distance_array = self._distarray_missing(xc, xd, cdiffs)
+            if self.weight_flag == 0:
+                self._distance_array = self._distarray_missing(xc, xd, cdiffs)
+            else:
+                self._distance_array = self._distarray_missing_iter(xc, xd, cdiffs, self._weights)
+
         else:
-            self._distance_array = self._distarray_no_missing(xc, xd)
+            if self.weight_flag == 0:
+                self._distance_array = self._distarray_no_missing(xc, xd)
+            else:
+                self._distance_array = self._distarray_no_missing_iter(xc, xd, self._weights)
 
         if self.verbose:
             elapsed = time.time() - start
@@ -231,12 +240,17 @@ class ReliefF(BaseEstimator, TransformerMixin):
 
         """
         if self._num_attributes < self.n_features_to_select:
+<<<<<<< HEAD
             raise ValueError('Number of features to select is larger than the number of features in the dataset.')
+=======
+            raise ValueError(
+                'Number of features to select is larger than the number of features in the dataset.')
+>>>>>>> upstearm/development
 
         return X[:, self.top_features_[:self.n_features_to_select]]
 
     #=========================================================================#
-    def fit_transform(self, X, y):
+    def fit_transform(self, X, y, weights=None, weight_flag=0):
         """Scikit-learn required: Computes the feature importance scores from the training data, then reduces the feature set down to the top `n_features_to_select` features.
 
         Parameters
@@ -252,7 +266,7 @@ class ReliefF(BaseEstimator, TransformerMixin):
             Reduced feature matrix
 
         """
-        self.fit(X, y)
+        self.fit(X, y, weights, weight_flag)
 
         return self.transform(X)
 
@@ -330,30 +344,10 @@ class ReliefF(BaseEstimator, TransformerMixin):
             c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock'))
             return np.add(d_dist, c_dist) / self._num_attributes
 
-        else: #continuous features only
+        else:  # continuous features only
             #xc = pre_normalize(xc)
             return squareform(pdist(pre_normalize(xc), metric='cityblock'))
 
-    #==================================================================#
-    def _dtype_array(self):
-        """Return mask for discrete(0)/continuous(1) attributes and their indices. Return array of max/min diffs of attributes."""
-        attrtype = []
-        attrdiff = []
-
-        for key in self._headers:
-            if self.attr[key][0] == 'continuous':
-                attrtype.append(1)
-            else:
-                attrtype.append(0)
-            attrdiff.append(self.attr[key][3])
-
-        attrtype = np.array(attrtype)
-        cidx = np.where(attrtype == 1)[0]
-        didx = np.where(attrtype == 0)[0]
-
-        attrdiff = np.array(attrdiff)
-
-        return attrdiff, cidx, didx
     #==================================================================#
 
     def _distarray_missing(self, xc, xd, cdiffs):
@@ -375,6 +369,86 @@ class ReliefF(BaseEstimator, TransformerMixin):
 
         return np.array(dist_array)
     #==================================================================#
+
+    # For Iter Relief
+    def _distarray_no_missing_iter(self, xc, xd, weights):
+        """Distance array calculation for data with no missing values. The 'pdist() function outputs a condense distance array, and squareform() converts this vector-form
+        distance vector to a square-form, redundant distance matrix.
+        *This could be a target for saving memory in the future, by not needing to expand to the redundant square-form matrix. """
+        from scipy.spatial.distance import pdist, squareform
+
+        #------------------------------------------#
+        def pre_normalize(x):
+            """Normalizes continuous features so they are in the same range (0 to 1)"""
+            idx = 0
+            # goes through all named features (doesn really need to) this method is only applied to continuous features
+            for i in sorted(self.attr.keys()):
+                if self.attr[i][0] == 'discrete':
+                    continue
+                cmin = self.attr[i][2]
+                diff = self.attr[i][3]
+                x[:, idx] -= cmin
+                x[:, idx] /= diff
+                idx += 1
+            return x
+        #------------------------------------------#
+
+        if self.data_type == 'discrete':  # discrete features only
+            return squareform(pdist(self._X, metric='hamming', w=weights))
+        elif self.data_type == 'mixed':  # mix of discrete and continuous features
+            d_dist = squareform(pdist(xd, metric='hamming', w=weights))
+            # Cityblock is also known as Manhattan distance
+            c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock', w=weights))
+            return np.add(d_dist, c_dist) / self._num_attributes
+
+        else:  # continuous features only
+            #xc = pre_normalize(xc)
+            return squareform(pdist(pre_normalize(xc), metric='cityblock', w=weights))
+
+    #==================================================================#
+
+    # For Iterrelief - get_row_missing_iter is called
+    def _distarray_missing_iter(self, xc, xd, cdiffs, weights):
+        """Distance array calculation for data with missing values"""
+        cindices = []
+        dindices = []
+        # Get Boolean mask locating missing values for continuous and discrete features separately. These correspond to xc and xd respectively.
+        for i in range(self._datalen):
+            cindices.append(np.where(np.isnan(xc[i]))[0])
+            dindices.append(np.where(np.isnan(xd[i]))[0])
+
+        if self.n_jobs != 1:
+            dist_array = Parallel(n_jobs=self.n_jobs)(delayed(get_row_missing_iter)(
+                xc, xd, cdiffs, index, cindices, dindices, weights) for index in range(self._datalen))
+        else:
+            # For each instance calculate distance from all other instances (in non-redundant manner) (i.e. computes triangle, and puts zeros in for rest to form square).
+            dist_array = [get_row_missing_iter(xc, xd, cdiffs, index, cindices, dindices, weights)
+                          for index in range(self._datalen)]
+
+        return np.array(dist_array)
+    #==================================================================#
+
+    def _dtype_array(self):
+        """Return mask for discrete(0)/continuous(1) attributes and their indices. Return array of max/min diffs of attributes."""
+        attrtype = []
+        attrdiff = []
+
+        for key in self._headers:
+            if self.attr[key][0] == 'continuous':
+                attrtype.append(1)
+            else:
+                attrtype.append(0)
+            attrdiff.append(self.attr[key][3])
+
+        attrtype = np.array(attrtype)
+        cidx = np.where(attrtype == 1)[0]
+        didx = np.where(attrtype == 0)[0]
+
+        attrdiff = np.array(attrdiff)
+
+        return attrdiff, cidx, didx
+    #==================================================================#
+
 
 ############################# ReliefF ############################################
 
@@ -464,10 +538,17 @@ class ReliefF(BaseEstimator, TransformerMixin):
         # Feature scoring - using identified nearest neighbors
         nan_entries = np.isnan(self._X)  # boolean mask for missing data values
 
-        # Call the scoring method for the ReliefF algorithm
-        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-            ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                    NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
-            for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
+        if self.weight_flag == 2:
+            # Call the scoring method for the ReliefF algorithm for IRelief
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+                ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
+                                        NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type, self.weight_flag, self._weights)
+                for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
+        else:
+            # Call the scoring method for the ReliefF algorithm
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+                ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
+                                        NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
+                for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 
         return np.array(scores)
