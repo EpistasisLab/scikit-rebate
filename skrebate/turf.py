@@ -122,7 +122,7 @@ class TuRF(BaseEstimator, TransformerMixin):
             features_iter.append(core_fit.feature_importances_)  # HISTORY
             headers_iter.append(self.headers)  # HISTORY
 
-
+            # Calculate features to keep
             perc_retain = 1 - self.pct
             feature_retain = int(np.round(num_features*perc_retain))
 
