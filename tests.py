@@ -307,9 +307,10 @@ def test_vlsrelief_pipeline():
 
     clf = make_pipeline(VLSRelief(core_algorithm="ReliefF", n_features_to_select=2, n_neighbors=100),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
+    mean_cv_score = np.mean(cross_val_score(clf, features, labels, fit_params={
+                   'vlsrelief__headers': headers}, cv=3, n_jobs=-1))
 
-    assert np.mean(cross_val_score(clf, features, labels, fit_params={
-                   'vlsrelief__headers': headers}, cv=3, n_jobs=-1)) > 0.7
+    assert mean_cv_score > 0.7
 
 
 def test_vlsrelief_pipeline_parallel():
