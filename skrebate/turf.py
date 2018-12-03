@@ -78,7 +78,7 @@ class TuRF(BaseEstimator, TransformerMixin):
         """
 
 
-        self.X_mat, self._y = check_X_y(X, y, dtype=np.float64, order="C", force_all_finite=True)
+        self.X_mat, self._y = check_X_y(X, y, dtype=np.float64, order="C", force_all_finite=False)
         self.headers = headers
         self._num_attributes = len(self.X_mat[0])
         self._lost = {}
@@ -111,31 +111,18 @@ class TuRF(BaseEstimator, TransformerMixin):
         headers_iter = []
         feature_retain_check = 0
 
-<<<<<<< HEAD
-        #Determine maximum number of iterations.
-        iterMax = int(1/float(self.pct))
-
-        #Main iterative loop of TuRF
-=======
         # Determine maximum number of iterations.
         iterMax = int(1/float(self.pct))
 
         # Main iterative loop of TuRF
->>>>>>> upstearm/development
         while(iter_count < iterMax):
             # Run Core Relief-based algorithm
             core_fit = core.fit(self.X_mat, self._y)
-<<<<<<< HEAD
-            features_iter.append(core_fit.feature_importances_) #HISTORY
-            headers_iter.append(self.headers) #HISTORY
 
-            #Calculate features to keep
-=======
             features_iter.append(core_fit.feature_importances_)  # HISTORY
             headers_iter.append(self.headers)  # HISTORY
 
-            # Calculate features to keep
->>>>>>> upstearm/development
+
             perc_retain = 1 - self.pct
             feature_retain = int(np.round(num_features*perc_retain))
 
@@ -151,19 +138,14 @@ class TuRF(BaseEstimator, TransformerMixin):
             non_select = np.array(features_iter[iter_count].argsort()[:num_features])
             # Make a dictionary that stores dropped features and the iteration they were dropped.
             for i in non_select:
-<<<<<<< HEAD
-                self._lost[self.headers[i]] = iterMax - iter_count #For feature name, store iteration rank it was removed (bigger rank for sooner removal)
 
-            #Drop non-selected features and headers.
-            self.X_mat = self.X_mat[:, select] #select all instances and only features indexed from select.
-=======
                 # For feature name, store iteration rank it was removed (bigger rank for sooner removal)
                 self._lost[self.headers[i]] = iterMax - iter_count
 
             # Drop non-selected features and headers.
             # select all instances and only features indexed from select.
             self.X_mat = self.X_mat[:, select]
->>>>>>> upstearm/development
+
             self.headers = [self.headers[i] for i in select]
 
             iter_count += 1
@@ -177,15 +159,7 @@ class TuRF(BaseEstimator, TransformerMixin):
         self.num_iter = iter_count
         self.feature_history = list(zip(headers_iter, features_iter))  # HISTORY
 
-<<<<<<< HEAD
-        #Prepare for assigning token scores to features that had been removed in a previous TuRF iteration.  These scores are only meaningful in that they give an idea of when these feature(s) were removed.
-        low_score = min(core_fit.feature_importances_)
-        reduction = 0.01 * (max(core_fit.feature_importances_) - low_score)
 
-        #For consistency we report feature importances ordered in same way as original dataset.  Same is true for headers.
-        #Step through each feature name
-        self.feature_importances_= []
-=======
         # Prepare for assigning token scores to features that had been removed in a previous TuRF iteration.  These scores are only meaningful in that they give an idea of when these feature(s) were removed.
         low_score = min(core_fit.feature_importances_)
         reduction = 0.01 * (max(core_fit.feature_importances_) - low_score)
@@ -193,19 +167,15 @@ class TuRF(BaseEstimator, TransformerMixin):
         # For consistency we report feature importances ordered in same way as original dataset.  Same is true for headers.
         # Step through each feature name
         self.feature_importances_ = []
->>>>>>> upstearm/development
+
 
         for i in headers_iter[0]:
             # Check lost dictionary
             if i in self._lost:
-<<<<<<< HEAD
-                self.feature_importances_.append(low_score - reduction * self._lost[i]) #append discounted score as a marker of when the feature was removed.
-            else: #Feature made final cut
-=======
+
                 # append discounted score as a marker of when the feature was removed.
                 self.feature_importances_.append(low_score - reduction * self._lost[i])
             else:  # Feature made final cut
->>>>>>> upstearm/development
                 score_index = self.headers.index(i)
                 self.feature_importances_.append(core_fit.feature_importances_[score_index])
 
@@ -234,12 +204,9 @@ class TuRF(BaseEstimator, TransformerMixin):
 
         """
         if self._num_attributes < self.n_features_to_select:
-<<<<<<< HEAD
-            raise ValueError('Number of features to select is larger than the number of features in the dataset.')
-=======
             raise ValueError(
-                'Number of features to select is larger than the number of features in the dataset.')
->>>>>>> upstearm/development
+                'Number of features to select is larger than the number of features in the dataset.'
+                )
 
         return X[:, self.top_features_[:self.n_features_to_select]]
         # return X[:, self.top_features_]

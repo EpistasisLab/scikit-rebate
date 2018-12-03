@@ -103,7 +103,7 @@ class ReliefF(BaseEstimator, TransformerMixin):
         """
         # X matrix of predictive variables ('independent variables')
         # y vector of values for outcome variable ('dependent variable')
-        self._X, self._y = check_X_y(X, y, dtype=np.float64, order="C", force_all_finite=True)
+        self._X, self._y = check_X_y(X, y, dtype=np.float64, order="C", force_all_finite=False)
         self._weights = weights
         self.weight_flag = weight_flag
         # Set up the properties for ReliefF -------------------------------------------------------------------------------------
@@ -240,12 +240,10 @@ class ReliefF(BaseEstimator, TransformerMixin):
 
         """
         if self._num_attributes < self.n_features_to_select:
-<<<<<<< HEAD
-            raise ValueError('Number of features to select is larger than the number of features in the dataset.')
-=======
             raise ValueError(
-                'Number of features to select is larger than the number of features in the dataset.')
->>>>>>> upstearm/development
+                'Number of features to select is larger than the number of features in the dataset.'
+                )
+
 
         return X[:, self.top_features_[:self.n_features_to_select]]
 
