@@ -128,7 +128,8 @@ class IterRelief(BaseEstimator, TransformerMixin):
             # Update weights
             weights = core_fit.feature_importances_
             # Round negative weights to 0
-            weights = [0 if i < 0 else i for i in weights]
+            if (iteration < self.max_iter):
+                weights = [0 if i < 0 else i for i in weights]
             weight_history.append(weights)
 
             # print('iter', iteration)

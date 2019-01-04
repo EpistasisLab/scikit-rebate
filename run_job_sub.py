@@ -9,7 +9,8 @@ def main(dataset, outfile, algorithm):
     if algorithm == "turf":
     	fs = TuRF(core_algorithm="MultiSURF", n_features_to_select=2,pct=0.5,verbose=True)
     	fs.fit(features, labels, headers)
-    elif algorithm == "vls":	
+    elif algorithm == "vls":
+        
     	fs = VLSRelief(core_algorithm="MultiSURF", n_features_to_select=2,n_neighbors = 100,verbose=True)
     	fs.fit(features, labels, headers)
     elif algorithm == "iter":
@@ -27,6 +28,7 @@ def main(dataset, outfile, algorithm):
     tAfter = (time.time() - tBefore)
 
     fh = open(outfile, 'w')
+    fh.write(outfile)
     fh.write(algorithm + ' Analysis Completed with REBATE\n')
     fh.write('Run Time (sec): ' + str(tAfter) + '\n')
     fh.write('=== SCORES ===\n')
