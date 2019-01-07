@@ -29,8 +29,8 @@ def main(dataset, outfile, algorithm):
 
     fh = open(outfile, 'w')
     fh.write('The output (if any) follows:' + '\n')
+    fh.write(dataset + '\n')
     fh.write(algorithm + '\n')
-    fh.write(algorithm + ' Analysis Completed with REBATE\n')
     fh.write('Run Time (sec): ' + str(tAfter) + '\n')
     fh.write('=== SCORES ===\n')
     n = 1
