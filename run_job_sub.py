@@ -10,7 +10,6 @@ def main(dataset, outfile, algorithm):
     	fs = TuRF(core_algorithm="MultiSURF", n_features_to_select=2,pct=0.5,verbose=True)
     	fs.fit(features, labels, headers)
     elif algorithm == "vls":
-        
     	fs = VLSRelief(core_algorithm="MultiSURF", n_features_to_select=2,n_neighbors = 100,verbose=True)
     	fs.fit(features, labels, headers)
     elif algorithm == "iter":
