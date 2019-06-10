@@ -387,6 +387,8 @@ class ReliefF(BaseEstimator):
         #------------------------------------------#
 
         if self.data_type == 'discrete':  # discrete features only
+            print("sqfm")
+            print(squareform(pdist(self._X, metric='hamming', w=weights)))
             return squareform(pdist(self._X, metric='hamming', w=weights))
         elif self.data_type == 'mixed':  # mix of discrete and continuous features
             d_dist = squareform(pdist(xd, metric='hamming', w=weights))

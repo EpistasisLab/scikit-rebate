@@ -30,7 +30,7 @@ class IterRelief(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, core_algorithm, weight_flag=2, n_features_to_select=2, n_neighbors=100, max_iter=10, discrete_threshold=10, verbose=False, n_jobs=1):
+    def __init__(self, core_algorithm, weight_flag=1, n_features_to_select=2, n_neighbors=100, max_iter=10, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up IterRelief to perform feature selection.
 
         Parameters
@@ -110,34 +110,48 @@ class IterRelief(BaseEstimator, TransformerMixin):
 
         # Determine total number of features
         total_num_features = X.shape[1]
+
+        print("num featuers")
+        print(total_num_features)
         # Initialize weights
-        weights = np.ones(total_num_features)
+        distance_weights = np.ones(total_num_features)
 
         iteration = 0
         weight_history = []
 
+
         # Iterate till max iteration reached or all weights are really tiny
-        while ((iteration < self.max_iter) & (any(w >= 0.1 for w in weights))):
+        while ((iteration < self.max_iter) & (any(w >= 0.0001 for w in distance_weights))):
             # Run Core Relief-based algorithm
-            core_fit = core.fit(self.X_mat, self._y, weights, self.weight_flag)
+            core_fit = core.fit(self.X_mat, self._y, distance_weights, self.weight_flag)
 
             # When all weights become 0, break
             if all(w == 0 for w in core_fit.feature_importances_):
                 break
 
             # Update weights
-            weights = core_fit.feature_importances_
-            # Round negative weights to 0
-            if (iteration < self.max_iter):
-                weights = [0 if i < 0 else i for i in weights]
-            weight_history.append(weights)
+            feature_weights = core_fit.feature_importances_
+            
+            mx = max(feature_weights)
+            mn = min(feature_weights)
+            rg = mx - mn
 
+            weight_history.append(feature_weights)
+
+            feature_weights = [(x - mn)/(rg) for x in feature_weights]
+            distance_weights += feature_weights
+
+
+            # Round negative weights to 0
+            # if (iteration < self.max_iter):
+            #     weights = [0 if i < 0 else i for i in weights]
+            
             # print('iter', iteration)
             # print('w', weights)
             iteration += 1
 
         #print('final w', weights)
-        self.feature_importances_ = weights
+        self.feature_importances_ = weight_history[len(weight_history)-1]
         self.history = weight_history
         self.top_features_ = np.argsort(self.feature_importances_)[::-1]
         #self.header_top_features_ = [self.headers_model[i] for i in self.top_features_]

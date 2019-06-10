@@ -107,18 +107,29 @@ class VLSRelief(BaseEstimator, TransformerMixin):
         features_scores_iter = []
         headers_iter = []
         features_selected = []
-        print (core)
-        print ("new vls")
+        print("total num features")
+        print(range(total_num_features))
 
         for iteration in range(self.num_feature_subset):
             features_selected_id = np.random.choice(
                 range(total_num_features), num_features, replace=False)
             self.X_train = self.X_mat[:, features_selected_id]
 
+            print("features selected: ")
+            print(features_selected_id)
+
             core_fit = core.fit(self.X_train, self._y)
 
             features_scores_iter.append(core_fit.feature_importances_)
             features_selected.append(features_selected_id)
+
+            print("features_scores_iter:")
+            print(features_scores_iter)
+            print("headers_iter:")
+            print(headers_iter)
+            print("features_selected:")
+            print(features_selected)
+
             # headers_iter.append(self.headers[features_selected_id])
 
         self.features_scores_iter = features_scores_iter
@@ -136,6 +147,9 @@ class VLSRelief(BaseEstimator, TransformerMixin):
         feature_scores = [[int(i[0]), i[1]] for i in feature_scores]
 
         self.feat_score = feature_scores
+
+        print("feature scores")
+        print(feature_scores)
 
         head_idx = [i[0] for i in feature_scores]
         self.headers_model = list(np.array(self.headers)[head_idx])
