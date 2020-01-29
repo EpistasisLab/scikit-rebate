@@ -27,7 +27,7 @@ class TuRF(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, core_algorithm, n_features_to_select=10, n_neighbors=100, pct=0.5, discrete_threshold=10, verbose=False, n_jobs=1):
+    def __init__(self, core_algorithm, n_features_to_select=10, n_neighbors=100, pct=0.5, discrete_threshold=10, max_iter = 1, verbose=False, n_jobs=1):
         """Sets up TuRF to perform feature selection.
 
         Parameters
@@ -56,6 +56,7 @@ class TuRF(BaseEstimator, TransformerMixin):
         self.n_neighbors = n_neighbors
         self.pct = pct
         self.discrete_threshold = discrete_threshold
+        self.max_iter = max_iter
         self.verbose = verbose
         self.n_jobs = n_jobs
 
@@ -114,8 +115,7 @@ class TuRF(BaseEstimator, TransformerMixin):
         headers_iter = []
         feature_retain_check = 0
 
-        # Determine maximum number of iterations.
-        iterMax = int(1/float(self.pct))
+        iterMax = self.max_iter
 
         # Main iterative loop of TuRF
         while(iter_count < iterMax):
@@ -151,7 +151,7 @@ class TuRF(BaseEstimator, TransformerMixin):
 
             iter_count += 1
 
-        # Final scoring iteration
+        # Final scoring with the last remaining features
         core_fit = core.fit(self.X_mat, self._y)
         features_iter.append(core_fit.feature_importances_)  # HISTORY
         headers_iter.append(self.headers)  # HISTORY
@@ -179,8 +179,6 @@ class TuRF(BaseEstimator, TransformerMixin):
 
         # Turn feature imporance list into array
         self.feature_importances_ = np.array(self.feature_importances_)
-        #self.feature_importances_ = core_fit.feature_importances_
-
         self.top_features_ = [headers.index(i) for i in self.headers]
         self.top_features_ = self.top_features_[::-1]
         return self

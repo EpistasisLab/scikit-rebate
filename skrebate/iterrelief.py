@@ -111,8 +111,6 @@ class IterRelief(BaseEstimator, TransformerMixin):
         # Determine total number of features
         total_num_features = X.shape[1]
 
-        print("num featuers")
-        print(total_num_features)
         # Initialize weights
         distance_weights = np.ones(total_num_features)
 
@@ -121,9 +119,12 @@ class IterRelief(BaseEstimator, TransformerMixin):
 
 
         # Iterate till max iteration reached or all weights are really tiny
-        while ((iteration < self.max_iter) & (any(w >= 0.0001 for w in distance_weights))):
+        while (iteration < self.max_iter):
             # Run Core Relief-based algorithm
             core_fit = core.fit(self.X_mat, self._y, distance_weights, self.weight_flag)
+
+            #reset distance_weights so that only previous run affects next one
+            distance_weights = np.ones(total_num_features)
 
             # When all weights become 0, break
             if all(w == 0 for w in core_fit.feature_importances_):
@@ -131,31 +132,44 @@ class IterRelief(BaseEstimator, TransformerMixin):
 
             # Update weights
             feature_weights = core_fit.feature_importances_
-            
+
+            # if weight change is minimal, stop running iter and break
+            # if no_diff is True, that means all features do not have a significant difference in weights between previous and current run.
+            no_diff = True
+            # if first iteration, set false
+            if iteration == 0:
+                no_diff = False
+            else:
+                for i in range(len(feature_weights)):
+                    #previous array of feature_weights
+                    prev = weight_history[len(weight_history)-1]
+                    diff = abs(prev[i] - feature_weights[i])
+                    # first encounter of value that has difference greater than threshold, set no_diff to False, and break out of checking loop
+                    if diff >= 0.0001:
+                        no_diff = False
+                        break;
+            if no_diff:
+                break;
+
             mx = max(feature_weights)
-            mn = min(feature_weights)
-            rg = mx - mn
 
             weight_history.append(feature_weights)
 
-            feature_weights = [(x - mn)/(rg) for x in feature_weights]
+            #normalize and update scores
+            #negative numbers -> 0, positive numbers become normalized so maximum is 1.
+            for i in range(0, len(feature_weights)):
+                if feature_weights[i] <= 0:
+                    feature_weights[i] = 0
+                else:
+                    feature_weights[i] = feature_weights[i] / mx
+
             distance_weights += feature_weights
 
-
-            # Round negative weights to 0
-            # if (iteration < self.max_iter):
-            #     weights = [0 if i < 0 else i for i in weights]
-            
-            # print('iter', iteration)
-            # print('w', weights)
             iteration += 1
 
-        #print('final w', weights)
         self.feature_importances_ = weight_history[len(weight_history)-1]
         self.history = weight_history
         self.top_features_ = np.argsort(self.feature_importances_)[::-1]
-        #self.header_top_features_ = [self.headers_model[i] for i in self.top_features_]
-
         return self
 
     #=========================================================================#
