@@ -1,4 +1,3 @@
-
 import numpy as np
 import time
 import warnings
@@ -15,7 +14,6 @@ from .surfstar import SURFstar
 from .relieff import ReliefF
 
 
-
 class TuRF(BaseEstimator, TransformerMixin):
 
     """Feature selection using data-mined expert knowledge.
@@ -27,7 +25,7 @@ class TuRF(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, core_algorithm, n_features_to_select=10, n_neighbors=100, pct=0.5, discrete_threshold=10, max_iter = 1, verbose=False, n_jobs=1):
+    def __init__(self, core_algorithm, n_features_to_select=10, n_neighbors=100, pct=0.5, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up TuRF to perform feature selection.
 
         Parameters
@@ -56,7 +54,6 @@ class TuRF(BaseEstimator, TransformerMixin):
         self.n_neighbors = n_neighbors
         self.pct = pct
         self.discrete_threshold = discrete_threshold
-        self.max_iter = max_iter
         self.verbose = verbose
         self.n_jobs = n_jobs
 
@@ -84,29 +81,24 @@ class TuRF(BaseEstimator, TransformerMixin):
         self.X_mat = X
         self._y = y
         self.headers = headers
-        self._num_attributes = len(self.X_mat[0])
+        self._num_attributes = len(self.X_mat[0]) 
         self._lost = {}
-
-        # Combine TuRF with specified 'core' Relief-based algorithm
+        
+        #Combine TuRF with specified 'core' Relief-based algorithm
         if self.core_algorithm.lower() == "multisurf":
-            core = MultiSURF(n_features_to_select=self.n_features_to_select,
-                             discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
+            core = MultiSURF(n_features_to_select=self.n_features_to_select, discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         elif self.core_algorithm.lower() == "multisurfstar":
-            core = MultiSURFstar(n_features_to_select=self.n_features_to_select,
-                                 discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
+            core = MultiSURFstar(n_features_to_select=self.n_features_to_select, discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         elif self.core_algorithm.lower() == "surf":
-            core = SURF(n_features_to_select=self.n_features_to_select,
-                        discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
+            core = SURF(n_features_to_select=self.n_features_to_select, discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         elif self.core_algorithm.lower() == "surfstar":
-            core = SURFstar(n_features_to_select=self.n_features_to_select,
-                            discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
+            core = SURFstar(n_features_to_select=self.n_features_to_select, discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         elif self.core_algorithm.lower() == "relieff":
-            core = ReliefF(n_features_to_select=self.n_features_to_select, n_neighbors=self.n_neighbors,
-                           discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
+            core = ReliefF(n_features_to_select=self.n_features_to_select, n_neighbors=self.n_neighbors, discrete_threshold=self.discrete_threshold, verbose=self.verbose, n_jobs=self.n_jobs)
 
         num_features = X.shape[1]
 
@@ -114,71 +106,70 @@ class TuRF(BaseEstimator, TransformerMixin):
         features_iter = []
         headers_iter = []
         feature_retain_check = 0
-
-        iterMax = self.max_iter
-
-        # Main iterative loop of TuRF
+        
+        #Determine maximum number of iterations. 
+        iterMax = int(1/float(self.pct))
+        
+        #Main iterative loop of TuRF
         while(iter_count < iterMax):
-            # Run Core Relief-based algorithm
+            #Run Core Relief-based algorithm
             core_fit = core.fit(self.X_mat, self._y)
-            features_iter.append(core_fit.feature_importances_)  # HISTORY
-            headers_iter.append(self.headers)  # HISTORY
-
-            # Calculate features to keep
+            features_iter.append(core_fit.feature_importances_) #HISTORY
+            headers_iter.append(self.headers) #HISTORY
+            
+            #Calculate features to keep
             perc_retain = 1 - self.pct
             feature_retain = int(np.round(num_features*perc_retain))
-
+            
             # Edge case (ensures that each iteration, at least one feature is removed)
             if feature_retain == feature_retain_check:
                 feature_retain -= 1
 
             num_features = feature_retain
             feature_retain_check = feature_retain
-            # Identify the index location of the top 'num_feature' scoring features (for this particular iteration)
+            #Identify the index location of the top 'num_feature' scoring features (for this particular iteration)
             select = np.array(features_iter[iter_count].argsort()[-num_features:])
-            # Make index list of features not removed
-            num_features_non_select = len(features_iter[iter_count]) - num_features
-            non_select = np.array(features_iter[iter_count].argsort()[:num_features_non_select])
-            # Make a dictionary that stores dropped features and the iteration they were dropped.
+            #Make index list of features not removed
+            non_select = np.array(features_iter[iter_count].argsort()[:num_features])
+            #Make a dictionary that stores dropped features and the iteration they were dropped.
             for i in non_select:
-                # For feature name, store iteration rank it was removed (bigger rank for sooner removal)
-                self._lost[self.headers[i]] = iterMax - iter_count
-
-            # Drop non-selected features and headers.
-            # select all instances and only features indexed from select.
-            self.X_mat = self.X_mat[:, select]
+                self._lost[self.headers[i]] = iterMax - iter_count #For feature name, store iteration rank it was removed (bigger rank for sooner removal)
+                
+            #Drop non-selected features and headers. 
+            self.X_mat = self.X_mat[:, select] #select all instances and only features indexed from select. 
             self.headers = [self.headers[i] for i in select]
 
             iter_count += 1
 
-        # Final scoring with the last remaining features
+        #Final scoring iteration
         core_fit = core.fit(self.X_mat, self._y)
-        features_iter.append(core_fit.feature_importances_)  # HISTORY
-        headers_iter.append(self.headers)  # HISTORY
+        features_iter.append(core_fit.feature_importances_) #HISTORY
+        headers_iter.append(self.headers) #HISTORY
         iter_count += 1
 
         self.num_iter = iter_count
-        self.feature_history = list(zip(headers_iter, features_iter))  # HISTORY
+        self.feature_history = list(zip(headers_iter, features_iter)) #HISTORY
 
-        # Prepare for assigning token scores to features that had been removed in a previous TuRF iteration.  These scores are only meaningful in that they give an idea of when these feature(s) were removed.
+        #Prepare for assigning token scores to features that had been removed in a previous TuRF iteration.  These scores are only meaningful in that they give an idea of when these feature(s) were removed. 
         low_score = min(core_fit.feature_importances_)
         reduction = 0.01 * (max(core_fit.feature_importances_) - low_score)
 
-        # For consistency we report feature importances ordered in same way as original dataset.  Same is true for headers.
-        # Step through each feature name
-        self.feature_importances_ = []
+        #For consistency we report feature importances ordered in same way as original dataset.  Same is true for headers. 
+        #Step through each feature name
+        self.feature_importances_= []
 
         for i in headers_iter[0]:
-            # Check lost dictionary
+            #Check lost dictionary
             if i in self._lost:
-                # append discounted score as a marker of when the feature was removed.
-                self.feature_importances_.append(low_score - reduction * self._lost[i])
-            else:  # Feature made final cut
+                self.feature_importances_.append(low_score - reduction * self._lost[i]) #append discounted score as a marker of when the feature was removed. 
+            else: #Feature made final cut
                 score_index = self.headers.index(i)
                 self.feature_importances_.append(core_fit.feature_importances_[score_index])
 
-        # Turn feature imporance list into array
-        self.feature_importances_ = np.array(self.feature_importances_)
+        #Turn feature imporance list into array
+        self.feature_importances_= np.array(self.feature_importances_)
+        #self.feature_importances_ = core_fit.feature_importances_
+        
         self.top_features_ = [headers.index(i) for i in self.headers]
         self.top_features_ = self.top_features_[::-1]
         return self
@@ -200,11 +191,10 @@ class TuRF(BaseEstimator, TransformerMixin):
 
         """
         if self._num_attributes < self.n_features_to_select:
-            raise ValueError(
-                'Number of features to select is larger than the number of features in the dataset.')
-
+            raise ValueError('Number of features to select is larger than the number of features in the dataset.')
+        
         return X[:, self.top_features_[:self.n_features_to_select]]
-        # return X[:, self.top_features_]
+        #return X[:, self.top_features_]
 
     #=========================================================================#
 

@@ -109,39 +109,14 @@ class VLSRelief(BaseEstimator, TransformerMixin):
         features_selected = []
 
         for iteration in range(self.num_feature_subset):
-            if iteration == 1:
-                # grab the previous features_selected
-                # grab new features so that there is no overlap
-                features_selected_id = []
-                prev_selection = np.sort(features_selected[0])
-                index = 0
-                for i in range(total_num_features):
-                    if index >= num_features:
-                        features_selected_id.append(i)
-                    elif prev_selection[index] != i:
-                        features_selected_id.append(i)
-                    else:
-                        index += 1
-            else:
-                features_selected_id = np.random.choice(
-                    range(total_num_features), num_features, replace=False)
-                self.X_train = self.X_mat[:, features_selected_id]
-
-            #print("features selected:")
-            #print(features_selected_id)
+            features_selected_id = np.random.choice(
+                range(total_num_features), num_features, replace=False)
+            self.X_train = self.X_mat[:, features_selected_id]
 
             core_fit = core.fit(self.X_train, self._y)
 
             features_scores_iter.append(core_fit.feature_importances_)
             features_selected.append(features_selected_id)
-
-            #print("features_scores_iter:")
-            #print(features_scores_iter)
-            #print("headers_iter:")
-            #print(headers_iter)
-            #print("features_selected:")
-            #print(features_selected)
-
             # headers_iter.append(self.headers[features_selected_id])
 
         self.features_scores_iter = features_scores_iter
@@ -166,12 +141,6 @@ class VLSRelief(BaseEstimator, TransformerMixin):
         self.feature_importances_ = [i[1] for i in feature_scores]
         self.top_features_ = np.argsort(self.feature_importances_)[::-1]
         self.header_top_features_ = [self.headers_model[i] for i in self.top_features_]
-        #print("feature_importances_")
-        #print(self.feature_importances_)
-        #print("top_features")
-        #print(self.top_features_)
-        #print("header_top_features_")
-        #print(self.header_top_features_)
 
         return self
 
