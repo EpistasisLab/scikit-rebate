@@ -1,10 +1,12 @@
 language: python
+virtualenv:
+  system_site_packages: true
 env:
   matrix:
     # let's start simple:
-    - PYTHON_VERSION="3.7" LATEST="true"
-    - PYTHON_VERSION="3.7" COVERAGE="true" LATEST="true"
-    - PYTHON_VERSION="3.7" LATEST="true"
+    - PYTHON_VERSION="3.5" LATEST="true"
+    - PYTHON_VERSION="3.5" COVERAGE="true" LATEST="true"
+    - PYTHON_VERSION="3.5" LATEST="true"
 install: source ./ci/.travis_install.sh
 script: bash ./ci/.travis_test.sh
 after_success:
