@@ -142,8 +142,8 @@ def test_vlsrelief_init():
     assert clf.discrete_threshold == 20
     assert clf.verbose == True
     assert clf.n_jobs == 3
-    assert clf.num_feature_subset == 40
-    assert clf.size_feature_subset == 5
+    assert clf.num_feature_subset == 20
+    assert clf.size_feature_subset == 10
 
 
 # Basic Parallelization Tests and Core binary data and discrete feature data testing (Focus on ReliefF only for efficiency)------------------------------------------------------------
