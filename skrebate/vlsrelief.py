@@ -26,7 +26,7 @@ class VLSRelief(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, core_algorithm, n_features_to_select=2, n_neighbors=100, num_feature_subset=40, size_feature_subset=5, discrete_threshold=10, verbose=False, n_jobs=1):
+    def __init__(self, core_algorithm, n_features_to_select=2, n_neighbors=100, num_feature_subset=20, size_feature_subset=10, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up VLSRelief to perform feature selection.
 
         Parameters
