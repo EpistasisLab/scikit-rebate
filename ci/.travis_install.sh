@@ -32,7 +32,7 @@ conda update --yes conda
 # Configure the conda environment and put it in the path using the
 # provided versions
 conda create -n testenv --yes python=$PYTHON_VERSION pip nose \
-    numpy scipy scikit-learn cython pandas
+    numpy scipy scikit-learn cython pandas joblib
 
 source activate testenv
 
