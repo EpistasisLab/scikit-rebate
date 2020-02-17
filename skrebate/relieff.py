@@ -30,7 +30,7 @@ import time
 import warnings
 import sys
 from sklearn.base import BaseEstimator
-from sklearn.externals.joblib import Parallel, delayed
+from joblib import Parallel, delayed
 from .scoring_utils import get_row_missing, ReliefF_compute_scores
 
 

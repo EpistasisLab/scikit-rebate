@@ -28,7 +28,7 @@ from __future__ import print_function
 import numpy as np
 from .surfstar import SURFstar
 from .scoring_utils import MultiSURFstar_compute_scores
-from sklearn.externals.joblib import Parallel, delayed
+from joblib import Parallel, delayed
 
 
 class MultiSURFstar(SURFstar):

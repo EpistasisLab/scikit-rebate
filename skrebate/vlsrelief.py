@@ -6,7 +6,7 @@ import sys
 from sklearn.base import BaseEstimator
 from sklearn.base import TransformerMixin
 # from sklearn.feature_selection.base import SelectorMixin
-from sklearn.externals.joblib import Parallel, delayed
+from joblib import Parallel, delayed
 # from .scoring_utils import get_row_missing, ReliefF_compute_scores
 from .multisurf import MultiSURF
 from .multisurfstar import MultiSURFstar

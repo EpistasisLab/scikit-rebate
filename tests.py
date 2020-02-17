@@ -28,7 +28,7 @@ from skrebate.turf import TuRF
 from skrebate.vlsrelief import VLSRelief
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.preprocessing import Imputer
+from sklearn.impute import SimpleImputer
 from sklearn.model_selection import cross_val_score
 import pandas as pd
 import numpy as np
@@ -308,7 +308,7 @@ def test_relieff_pipeline_multiclass():
     np.random.seed(49082)
  
     clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
  
     assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3, n_jobs=-1)) > 0.7
@@ -319,7 +319,7 @@ def test_surf_pipeline_multiclass():
     np.random.seed(240932)
  
     clf = make_pipeline(SURF(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
  
     assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3, n_jobs=-1)) > 0.7
@@ -330,7 +330,7 @@ def test_surfstar_pipeline_multiclass():
     np.random.seed(9238745)
  
     clf = make_pipeline(SURFstar(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
  
     assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3, n_jobs=-1)) > 0.7
@@ -341,7 +341,7 @@ def test_multisurfstar_pipeline_multiclass():
     np.random.seed(320931)
  
     clf = make_pipeline(MultiSURFstar(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
  
     assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3, n_jobs=-1)) > 0.7
@@ -352,7 +352,7 @@ def test_multisurf_pipeline_multiclass():
     np.random.seed(320931)
  
     clf = make_pipeline(MultiSURF(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
  
     assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3, n_jobs=-1)) > 0.7
@@ -472,7 +472,7 @@ def test_relieff_pipeline_missing_values():
     np.random.seed(49082)
  
     clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
  
     assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values, cv=3, n_jobs=-1)) > 0.7
@@ -483,7 +483,7 @@ def test_surf_pipeline_missing_values():
     np.random.seed(240932)
  
     clf = make_pipeline(SURF(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
  
     assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values, cv=3, n_jobs=-1)) > 0.7
@@ -494,7 +494,7 @@ def test_surfstar_pipeline_missing_values():
     np.random.seed(9238745)
  
     clf = make_pipeline(SURFstar(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
  
     assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values, cv=3, n_jobs=-1)) > 0.7
@@ -505,7 +505,7 @@ def test_multisurfstar_pipeline_missing_values():
     np.random.seed(320931)
  
     clf = make_pipeline(MultiSURFstar(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
  
     assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values, cv=3, n_jobs=-1)) > 0.7
@@ -516,7 +516,7 @@ def test_multisurf_pipeline_missing_values():
     np.random.seed(320931)
  
     clf = make_pipeline(MultiSURF(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
  
     assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values, cv=3, n_jobs=-1)) > 0.7
