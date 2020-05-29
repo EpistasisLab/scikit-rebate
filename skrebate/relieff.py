@@ -33,7 +33,6 @@ from sklearn.base import BaseEstimator
 from sklearn.externals.joblib import Parallel, delayed
 from .scoring_utils import get_row_missing, ReliefF_compute_scores,get_row_missing_iter
 
-
 class ReliefF(BaseEstimator):
 
     """Feature selection using data-mined expert knowledge.
