@@ -14,3 +14,17 @@ class VLS(BaseEstimator):
         self.num_feature_subset = num_feature_subset
         self.size_feature_subset = size_feature_subset
         pass
+
+    def fit(self, X, y):
+        """Scikit-learn required: Computes the feature importance scores from the training data.
+        Parameters
+        ----------
+        X: array-like {n_samples, n_features} Training instances to compute the feature importance scores from
+        y: array-like {n_samples}             Training labels
+
+        Returns
+         -------
+         self
+        """
+
+        return self

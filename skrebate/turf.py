@@ -14,3 +14,17 @@ class TURF(BaseEstimator):
         self.pct = pct
         self.num_scores_to_return = num_scores_to_return
         pass
+
+    def fit(self, X, y):
+        """Scikit-learn required: Computes the feature importance scores from the training data.
+        Parameters
+        ----------
+        X: array-like {n_samples, n_features} Training instances to compute the feature importance scores from
+        y: array-like {n_samples}             Training labels
+
+        Returns
+         -------
+         self
+        """
+
+        return self
