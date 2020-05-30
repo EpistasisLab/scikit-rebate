@@ -122,3 +122,13 @@ class VLS(BaseEstimator):
             return True
         except:
             return False
+
+    def transform(self, X):
+        if X.shape[1] < self.relief_object.n_features_to_select:
+            raise ValueError('Number of features to select is larger than the number of features in the dataset.')
+
+        return X[:, self.top_features_[:self.relief_object.n_features_to_select]]
+
+    def fit_transform(self, X, y, weights=None):
+        self.fit(X, y, weights)
+        return self.transform(X)

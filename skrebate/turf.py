@@ -36,7 +36,7 @@ class TURF(BaseEstimator):
          self
         """
         #Adjust num_scores_to_return
-        num_features = X.shape[0]
+        num_features = X.shape[1]
         self.num_scores_to_return = min(self.num_scores_to_return,num_features)
 
         if self.num_scores_to_return != num_features and self.pct == 1:
@@ -95,8 +95,8 @@ class TURF(BaseEstimator):
         if num_features != num_scores_to_return:
             if self.check_is_int(pct) and not self.check_is_float(pct):  # Is int
                 while True:
-                    if features_left - num_features > num_scores_to_return:
-                        features_left -= num_features
+                    if features_left - pct > num_scores_to_return:
+                        features_left -= pct
                         features_per_iteration.append(features_left)
                     else:
                         features_per_iteration.append(num_scores_to_return)
@@ -127,3 +127,13 @@ class TURF(BaseEstimator):
             return True
         except:
             return False
+
+    def transform(self, X):
+        if X.shape[1] < self.relief_object.n_features_to_select:
+            raise ValueError('Number of features to select is larger than the number of features in the dataset.')
+
+        return X[:, self.top_features_[:self.relief_object.n_features_to_select]]
+
+    def fit_transform(self, X, y):
+        self.fit(X, y)
+        return self.transform(X)
