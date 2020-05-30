@@ -42,7 +42,7 @@ class SURF(ReliefF):
 
     """
 
-    def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False, n_jobs=1):
+    def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False, n_jobs=1,weight_final_scores=False):
         """Sets up ReliefF to perform feature selection.
 
         Parameters
@@ -66,6 +66,7 @@ class SURF(ReliefF):
         self.discrete_threshold = discrete_threshold
         self.verbose = verbose
         self.n_jobs = n_jobs
+        self.weight_final_scores = weight_final_scores
 
 ############################# SURF ############################################
     def _find_neighbors(self, inst, avg_dist):
@@ -98,10 +99,10 @@ class SURF(ReliefF):
 
         NNlist = [self._find_neighbors(datalen, avg_dist) for datalen in range(self._datalen)]
 
-        if self.weight_flag == 2:
+        if self._weights != None and self.weight_final_scores:
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
                 SURF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                     NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type, self.weight_flag, self._weights)
+                                     NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type, self._weights)
                 for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
         else:
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(

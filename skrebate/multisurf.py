@@ -77,10 +77,10 @@ class MultiSURF(SURFstar):
 
         NNlist = [self._find_neighbors(datalen) for datalen in range(self._datalen)]
 
-        if self.weight_flag == 2:
+        if self._weights != None and self.weight_final_scores:
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
                 MultiSURF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                          NN_near, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type, self.weight_flag, self._weights)
+                                          NN_near, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type, self._weights)
                 for instance_num, NN_near in zip(range(self._datalen), NNlist)), axis=0)
         else:
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(

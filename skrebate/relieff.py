@@ -45,7 +45,7 @@ class ReliefF(BaseEstimator):
              * For ReliefF, the setting of k is <= to the number of instances that have the least frequent class label
              (binary and multiclass endpoint data. """
 
-    def __init__(self, n_features_to_select=10, n_neighbors=100, discrete_threshold=10, verbose=False, n_jobs=1):
+    def __init__(self, n_features_to_select=10, n_neighbors=100, discrete_threshold=10, verbose=False, n_jobs=1,weight_final_scores=False):
         """Sets up ReliefF to perform feature selection. Note that an approximation of the original 'Relief'
         algorithm may be run by setting 'n_features_to_select' to 1. Also note that the original Relief parameter 'm'
         is not included in this software. 'm' specifies the number of random training instances out of 'n' (total
@@ -81,9 +81,10 @@ class ReliefF(BaseEstimator):
         self.discrete_threshold = discrete_threshold
         self.verbose = verbose
         self.n_jobs = n_jobs
+        self.weight_final_scores = weight_final_scores
 
     #=========================================================================#
-    def fit(self, X, y, weights=None, weight_flag=0):
+    def fit(self, X, y, weights=None):
         """Scikit-learn required: Computes the feature importance scores from the training data.
 
         Parameters
@@ -101,8 +102,19 @@ class ReliefF(BaseEstimator):
         """
         self._X = X  # matrix of predictive variables ('independent variables')
         self._y = y  # vector of values for outcome variable ('dependent variable')
+
+        if weights != None:
+            if isinstance(weights,np.ndarray):
+                if len(weights) != len(X[0]):
+                    raise Exception('Dimension of weights param must match number of features')
+            elif isinstance(weights,list):
+                if len(weights) != len(X[0]):
+                    raise Exception('Dimension of weights param must match number of features')
+                weights = np.ndarray(weights)
+            else:
+                raise Exception('weights param must be numpy array or list')
+
         self._weights = weights
-        self.weight_flag = weight_flag
         # Set up the properties for ReliefF -------------------------------------------------------------------------------------
         self._datalen = len(self._X)  # Number of training instances ('n')
 
@@ -185,13 +197,13 @@ class ReliefF(BaseEstimator):
         """ For efficiency, the distance array is computed more efficiently for data with no missing values.
         This distance array will only be used to identify nearest neighbors. """
         if self._missing_data_count > 0:
-            if self.weight_flag == 0:
+            if self._weights == None:
                 self._distance_array = self._distarray_missing(xc, xd, cdiffs)
             else:
                 self._distance_array = self._distarray_missing_iter(xc, xd, cdiffs, self._weights)
 
         else:
-            if self.weight_flag == 0:
+            if self._weights == None:
                 self._distance_array = self._distarray_no_missing(xc, xd)
             else:
                 self._distance_array = self._distarray_no_missing_iter(xc, xd, self._weights)
@@ -229,12 +241,15 @@ class ReliefF(BaseEstimator):
         X: array-like {n_samples, n_features}
             Feature matrix to perform feature selection on
 
+        n_features_to_select: overrides initialization value
+
         Returns
         -------
         X_reduced: array-like {n_samples, n_features_to_select}
             Reduced feature matrix
 
         """
+
         if self._num_attributes < self.n_features_to_select:
             raise ValueError(
                 'Number of features to select is larger than the number of features in the dataset.')
@@ -242,7 +257,7 @@ class ReliefF(BaseEstimator):
         return X[:, self.top_features_[:self.n_features_to_select]]
 
     #=========================================================================#
-    def fit_transform(self, X, y, weights=None, weight_flag=0):
+    def fit_transform(self, X, y, weights=None):
         """Scikit-learn required: Computes the feature importance scores from the training data, then reduces the feature set down to the top `n_features_to_select` features.
 
         Parameters
@@ -258,7 +273,7 @@ class ReliefF(BaseEstimator):
             Reduced feature matrix
 
         """
-        self.fit(X, y, weights, weight_flag)
+        self.fit(X, y, weights)
 
         return self.transform(X)
 
@@ -532,11 +547,11 @@ class ReliefF(BaseEstimator):
         # Feature scoring - using identified nearest neighbors
         nan_entries = np.isnan(self._X)  # boolean mask for missing data values
 
-        if self.weight_flag == 2:
+        if self._weights != None and self.weight_final_scores:
             # Call the scoring method for the ReliefF algorithm for IRelief
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
                 ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                        NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type, self.weight_flag, self._weights)
+                                        NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type, self._weights)
                 for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
         else:
             # Call the scoring method for the ReliefF algorithm
