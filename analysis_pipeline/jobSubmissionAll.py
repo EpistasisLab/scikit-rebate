@@ -3,7 +3,6 @@ import os
 import argparse
 import time
 
-
 def main(argv):
     writepath = outputPath+coreDataName
     data_type = ['additive', 'continuous', 'heterogeneous', 'imbalanced', 'na']
