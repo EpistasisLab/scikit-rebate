@@ -14,11 +14,11 @@ class VLS(BaseEstimator):
         :param size_feature_subset:     Number of features in each subset. Cannot exceed number of features.
         '''
 
-        if not self.check_is_int(num_feature_subset) or num_feature_subset < 0:
-            raise Exception('num_feature_subset must be a nonnegative integer')
+        if not self.check_is_int(num_feature_subset) or num_feature_subset <= 0:
+            raise Exception('num_feature_subset must be a positive integer')
 
-        if not self.check_is_int(size_feature_subset) or size_feature_subset < 0:
-            raise Exception('size_feature_subset must be a nonnegative integer')
+        if not self.check_is_int(size_feature_subset) or size_feature_subset <= 0:
+            raise Exception('size_feature_subset must be a positive integer')
 
         self.relief_object = relief_object
         self.num_feature_subset = num_feature_subset
@@ -45,10 +45,10 @@ class VLS(BaseEstimator):
         for subset in subsets:
             new_X = self.custom_transform(X,subset)
             copy_relief_object = copy.deepcopy(self.relief_object)
-            if weights == None:
+            if not isinstance(weights,np.ndarray):
                 copy_relief_object.fit(new_X,y)
             else:
-                copy_relief_object.fit(new_X,y,weights=weights)
+                copy_relief_object.fit(new_X,y,weights=weights[subset])
             raw_score = copy_relief_object.feature_importances_
             score = np.empty(num_features)
             score.fill(np.NINF)
@@ -57,6 +57,10 @@ class VLS(BaseEstimator):
                 score[index] = raw_score[counter]
                 counter+=1
             scores.append(score)
+
+            #DEBUGGING
+            print(score)
+
         scores = np.array(scores)
 
         #Merge results by selecting largest found weight for each feature
@@ -78,6 +82,9 @@ class VLS(BaseEstimator):
         if num_feature_subset * size_feature_subset < len(possible_indices):
             raise Exception('num_feature_subset * size_feature_subset must be >= number of total features')
 
+        if size_feature_subset > len(possible_indices):
+            raise Exception('size_feature_subset cannot be > number of total features')
+
         random.shuffle(possible_indices)
         remaining_indices = copy.deepcopy(possible_indices)
 
@@ -98,7 +105,7 @@ class VLS(BaseEstimator):
                     if not (potential_index in remaining_indices):
                         remaining_indices.append(potential_index)
                         break
-        subsets.append(remaining_indices)
+            subsets.append(remaining_indices)
 
         subsets_left = num_feature_subset - len(subsets)
         for i in range(subsets_left):

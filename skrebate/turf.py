@@ -57,10 +57,11 @@ class TURF(BaseEstimator):
 
             #Map raw features indices to original feature indices array
             onesCounter = 0
+            copy_tracker = copy.deepcopy(binary_scores_existence_tracker)
             for i in range(len(binary_scores_existence_tracker)):
                 if not (onesCounter in best_raw_indices):
                     binary_scores_existence_tracker[i] = 0
-                if binary_scores_existence_tracker[i] == 1:
+                if copy_tracker[i] == 1:
                     onesCounter+=1
 
             #Get new X
@@ -68,6 +69,13 @@ class TURF(BaseEstimator):
             for i in range(len(binary_scores_existence_tracker)):
                 if binary_scores_existence_tracker[i] == 1:
                     new_indices.append(i)
+
+            ###DEBUGGING
+            # print(num_features_to_use_in_iteration)
+            # print(best_raw_indices)
+            # print(binary_scores_existence_tracker)
+            # print(new_indices)
+            # print()
 
             new_X = X[:,new_indices]
 
@@ -93,7 +101,7 @@ class TURF(BaseEstimator):
         features_per_iteration = [num_features]
         features_left = num_features
         if num_features != num_scores_to_return:
-            if self.check_is_int(pct) and not self.check_is_float(pct):  # Is int
+            if self.check_is_int(pct):  # Is int
                 while True:
                     if features_left - pct > num_scores_to_return:
                         features_left -= pct

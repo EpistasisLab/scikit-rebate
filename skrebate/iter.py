@@ -49,6 +49,9 @@ class Iter(BaseEstimator):
                     break
                 last_iteration_scores = copy_relief_object.feature_importances_
 
+            #DEBUGGING
+            print(last_iteration_scores)
+
         #Save final FI as feature_importances_
         self.feature_importances_ = last_iteration_scores
         self.top_features_ = np.argsort(self.feature_importances_)[::-1]
@@ -70,7 +73,7 @@ class Iter(BaseEstimator):
                 if max_val == 0:
                     weights[i] = 0
                 else:
-                    weights[i] /= max_val
+                    weights[i] = weights[i]/max_val
         return weights
 
     def check_is_int(self, num):

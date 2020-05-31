@@ -98,7 +98,7 @@ class SURF(ReliefF):
 
         NNlist = [self._find_neighbors(datalen, avg_dist) for datalen in range(self._datalen)]
 
-        if self._weights != None and self.weight_final_scores:
+        if isinstance(self._weights,np.ndarray) and self.weight_final_scores:
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
                 SURF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
                                      NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type, self._weights)

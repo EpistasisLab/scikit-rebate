@@ -103,7 +103,7 @@ class ReliefF(BaseEstimator):
         self._X = X  # matrix of predictive variables ('independent variables')
         self._y = y  # vector of values for outcome variable ('dependent variable')
 
-        if weights != None:
+        if isinstance(weights,np.ndarray):
             if isinstance(weights,np.ndarray):
                 if len(weights) != len(X[0]):
                     raise Exception('Dimension of weights param must match number of features')
@@ -197,13 +197,13 @@ class ReliefF(BaseEstimator):
         """ For efficiency, the distance array is computed more efficiently for data with no missing values.
         This distance array will only be used to identify nearest neighbors. """
         if self._missing_data_count > 0:
-            if self._weights == None:
+            if not isinstance(self._weights,np.ndarray):
                 self._distance_array = self._distarray_missing(xc, xd, cdiffs)
             else:
                 self._distance_array = self._distarray_missing_iter(xc, xd, cdiffs, self._weights)
 
         else:
-            if self._weights == None:
+            if not isinstance(self._weights,np.ndarray):
                 self._distance_array = self._distarray_no_missing(xc, xd)
             else:
                 self._distance_array = self._distarray_no_missing_iter(xc, xd, self._weights)
@@ -401,8 +401,6 @@ class ReliefF(BaseEstimator):
         #------------------------------------------#
 
         if self.data_type == 'discrete':  # discrete features only
-            #print("sqfm")
-            #print(squareform(pdist(self._X, metric='hamming', w=weights)))
             return squareform(pdist(self._X, metric='hamming', w=weights))
         elif self.data_type == 'mixed':  # mix of discrete and continuous features
             d_dist = squareform(pdist(xd, metric='hamming', w=weights))
@@ -547,7 +545,7 @@ class ReliefF(BaseEstimator):
         # Feature scoring - using identified nearest neighbors
         nan_entries = np.isnan(self._X)  # boolean mask for missing data values
 
-        if self._weights != None and self.weight_final_scores:
+        if isinstance(self._weights,np.ndarray) and self.weight_final_scores:
             # Call the scoring method for the ReliefF algorithm for IRelief
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
                 ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,

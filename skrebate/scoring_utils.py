@@ -431,7 +431,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
 def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std, data_type, weights=None):
     """ Unique scoring procedure for ReliefF algorithm. Scoring based on k nearest hits and misses of current target instance. """
     scores = np.zeros(num_attributes)
-    if weights != None:
+    if isinstance(weights,np.ndarray):
         for feature_num in range(num_attributes):
             scores[feature_num] += weights[feature_num]*compute_score(attr, mcmap, NN, feature_num, inst,
                                                                       nan_entries, headers, class_type, X, y, labels_std, data_type)
@@ -445,7 +445,7 @@ def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, h
 def SURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std, data_type, weights=None):
     """ Unique scoring procedure for SURF algorithm. Scoring based on nearest neighbors within defined radius of current target instance. """
     scores = np.zeros(num_attributes)
-    if weights != None:
+    if isinstance(weights,np.ndarray):
         if len(NN) <= 0:
             return scores
         for feature_num in range(num_attributes):
@@ -464,7 +464,7 @@ def SURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_n
     """ Unique scoring procedure for SURFstar algorithm. Scoring based on nearest neighbors within defined radius, as well as
     'anti-scoring' of far instances outside of radius of current target instance"""
     scores = np.zeros(num_attributes)
-    if weights != None:
+    if isinstance(weights,np.ndarray):
         for feature_num in range(num_attributes):
             if len(NN_near) > 0:
                 scores[feature_num] += weights[feature_num]*compute_score(attr, mcmap, NN_near, feature_num, inst,
@@ -488,7 +488,7 @@ def SURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_n
 def MultiSURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, headers, class_type, X, y, labels_std, data_type, weights=None):
     """ Unique scoring procedure for MultiSURF algorithm. Scoring based on 'extreme' nearest neighbors within defined radius of current target instance. """
     scores = np.zeros(num_attributes)
-    if weights != None:
+    if isinstance(weights,np.ndarray):
         for feature_num in range(num_attributes):
             if len(NN_near) > 0:
                 scores[feature_num] += weights[feature_num]*compute_score(attr, mcmap, NN_near, feature_num, inst,
@@ -506,7 +506,7 @@ def MultiSURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap,
     """ Unique scoring procedure for MultiSURFstar algorithm. Scoring based on 'extreme' nearest neighbors within defined radius, as
     well as 'anti-scoring' of extreme far instances defined by outer radius of current target instance. """
     scores = np.zeros(num_attributes)
-    if weights != None:
+    if isinstance(weights,np.ndarray):
         for feature_num in range(num_attributes):
             if len(NN_near) > 0:
                 scores[feature_num] += weights[feature_num]*compute_score(attr, mcmap, NN_near, feature_num, inst,
