@@ -56,8 +56,8 @@ def main(argv):
                 continue
             for algorithm in ['multisurf','vls','iter','turf','vls_iter','vls_turf']:
                 outfile = output_path + '/' + experiment_name + '/rawoutputs/' + algorithm + '_' + filename[:-3]
-                submitLocalJob(algorithm,os.path.join(dirpath, filename),class_label,random_state,outfile)
-                #submitClusterJob(algorithm, os.path.join(dirpath, filename), output_path + '/' + experiment_name,class_label, random_state,outfile)
+                #submitLocalJob(algorithm,os.path.join(dirpath, filename),class_label,random_state,outfile)
+                submitClusterJob(algorithm, os.path.join(dirpath, filename), output_path + '/' + experiment_name,class_label, random_state,outfile)
 
 def submitLocalJob(algorithm,datapath,class_label,random_state,outfile):
     jobSubmission.job(algorithm,datapath,class_label,random_state,outfile)
