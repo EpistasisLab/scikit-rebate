@@ -5,13 +5,14 @@ import numpy as np
 
 class VLS(BaseEstimator):
 
-    def __init__(self,relief_object,num_feature_subset=40,size_feature_subset=5):
+    def __init__(self,relief_object,num_feature_subset=40,size_feature_subset=5,random_state = None):
         '''
         :param relief_object:           Must be an object that implements the standard sklearn fit function, and after fit, has attribute feature_importances_
                                         that can be accessed. Scores must be a 1D np.ndarray of length # of features. The fit function must also be able to
                                         take in an optional 1D np.ndarray 'weights' parameter of length num_features.
         :param num_feature_subset:      Number of feature subsets generated at random
         :param size_feature_subset:     Number of features in each subset. Cannot exceed number of features.
+        :param random_state:            random seed
         '''
 
         if not self.check_is_int(num_feature_subset) or num_feature_subset <= 0:
@@ -20,9 +21,13 @@ class VLS(BaseEstimator):
         if not self.check_is_int(size_feature_subset) or size_feature_subset <= 0:
             raise Exception('size_feature_subset must be a positive integer')
 
+        if random_state != None and not self.check_is_int(random_state):
+            raise Exception('random_state must be None or integer')
+
         self.relief_object = relief_object
         self.num_feature_subset = num_feature_subset
         self.size_feature_subset = size_feature_subset
+        self.random_state = random_state
 
     def fit(self, X, y,weights=None):
         """Scikit-learn required: Computes the feature importance scores from the training data.
@@ -35,6 +40,10 @@ class VLS(BaseEstimator):
          -------
          self
         """
+        #random_state
+        if self.random_state != None:
+            np.random.seed(self.random_state)
+            random.seed(self.random_state)
 
         #Make subsets with all the features
         num_features = X.shape[1]
@@ -59,7 +68,7 @@ class VLS(BaseEstimator):
             scores.append(score)
 
             #DEBUGGING
-            print(score)
+            #print(score)
 
         scores = np.array(scores)
 

@@ -17,7 +17,7 @@ class Iter(BaseEstimator):
             raise Exception('max_iter must be a nonnegative integer')
 
         if not self.check_is_float(convergence_threshold) or convergence_threshold < 0:
-            raise Exception('conveergence_threshold must be a nonnegative float')
+            raise Exception('convergence_threshold must be a nonnegative float')
 
         self.relief_object = relief_object
         self.max_iter = max_iter
@@ -50,7 +50,7 @@ class Iter(BaseEstimator):
                 last_iteration_scores = copy_relief_object.feature_importances_
 
             #DEBUGGING
-            print(last_iteration_scores)
+            #print(last_iteration_scores)
 
         #Save final FI as feature_importances_
         self.feature_importances_ = last_iteration_scores

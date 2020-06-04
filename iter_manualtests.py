@@ -2,16 +2,18 @@ from skrebate.vls import VLS
 from skrebate.iter import Iter
 from skrebate.turf import TURF
 from skrebate.relieff import ReliefF
-from skrebate import SURF
+from skrebate import SURF,MultiSURF
 import random
 import pandas as pd
 
 ######CONTROL PANEL#####################################################################################################
 test_VLS = False
 test_TURF = False
-test_TURFfit = False
+test_TURFfit = True
 test_Iterfit = True
-test_VLSfit = False
+test_VLSfit = True
+
+dataset = 'data/Hetero.csv'
 
 #Test VLS Subset Method#################################################################################################
 def test_subsets(num_indices,num_subsets,size_subsets):
@@ -83,58 +85,74 @@ if test_TURF:
 
 #Test VLS Fit###########################################################################################################
 if test_VLSfit:
-    data = pd.read_csv('data/Multiplexer20Modified.csv', sep=',')
+    data = pd.read_csv(dataset, sep=',')
     data_features = data.drop('Class', axis=1).values
     data_phenotypes = data['Class'].values
 
-    t = VLS(ReliefF(n_jobs=-1), num_feature_subset=4, size_feature_subset=6)
+    print('VLS + MultiSURF')
+    t = VLS(MultiSURF(n_jobs=-1), num_feature_subset=4, size_feature_subset=6)
     t.fit(data_features, data_phenotypes)
     print(t.feature_importances_)
     print(t.top_features_)
+    print()
 
+    print('VLS + SURF')
     t = VLS(SURF(n_jobs=-1), num_feature_subset=4, size_feature_subset=6)
     t.fit(data_features, data_phenotypes)
     print(t.feature_importances_)
     print(t.top_features_)
+    print()
 
 #Test TURF Fit##########################################################################################################
 if test_TURFfit:
-    data = pd.read_csv('data/Multiplexer20Modified.csv', sep=',')
+    data = pd.read_csv(dataset, sep=',')
     data_features = data.drop('Class', axis=1).values
     data_phenotypes = data['Class'].values
 
-    t = TURF(ReliefF(n_jobs=-1),pct=0.8,num_scores_to_return=8)
+    print('TURF + MultiSURF')
+    t = TURF(MultiSURF(n_jobs=-1),pct=0.8,num_scores_to_return=8)
     t.fit(data_features,data_phenotypes)
     print(t.feature_importances_)
     print(t.top_features_)
+    print()
 
+    print('TURF + SURF')
     t = TURF(SURF(n_jobs=-1),pct=0.5,num_scores_to_return=12)
     t.fit(data_features,data_phenotypes)
     print(t.feature_importances_)
     print(t.top_features_)
+    print()
 
-    t = TURF(VLS(ReliefF(n_jobs=-1),num_feature_subset=4,size_feature_subset=6),pct=0.5,num_scores_to_return=12)
+    print('TURF + VLS + MultiSURF')
+    t = TURF(VLS(MultiSURF(n_jobs=-1),num_feature_subset=4,size_feature_subset=6),pct=0.5,num_scores_to_return=12)
     t.fit(data_features,data_phenotypes)
     print(t.feature_importances_)
     print(t.top_features_)
+    print()
 
 #Test Iter Fit##########################################################################################################
 if test_Iterfit:
-    data = pd.read_csv('data/Multiplexer20Modified.csv', sep=',')
+    data = pd.read_csv(dataset, sep=',')
     data_features = data.drop('Class', axis=1).values
     data_phenotypes = data['Class'].values
 
-    t = Iter(ReliefF(n_jobs=-1), max_iter=3)
+    print('Iter + MultiSURF')
+    t = Iter(MultiSURF(n_jobs=-1), max_iter=3)
     t.fit(data_features, data_phenotypes)
     print(t.feature_importances_)
     print(t.top_features_)
+    print()
 
+    print('Iter + SURF')
     t = Iter(SURF(n_jobs=-1), max_iter=3)
     t.fit(data_features, data_phenotypes)
     print(t.feature_importances_)
     print(t.top_features_)
+    print()
 
-    t = Iter(VLS(ReliefF(n_jobs=-1), num_feature_subset=4, size_feature_subset=6), max_iter=2)
+    print('Iter + VLS + MultiSURF')
+    t = Iter(VLS(MultiSURF(n_jobs=-1), num_feature_subset=4, size_feature_subset=6), max_iter=2)
     t.fit(data_features, data_phenotypes)
     print(t.feature_importances_)
     print(t.top_features_)
+    print()
