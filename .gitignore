@@ -70,3 +70,6 @@ testing.ipynb
 
 *.prof
 /demo_scikitrebate.ipynb
+
+*.DS_Store
+.idea/
