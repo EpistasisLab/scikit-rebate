@@ -27,6 +27,18 @@ def job(algorithm, datapath, class_label,random_state,outfile):
         estimator = Iter(VLS(MultiSURF(n_jobs=-1),random_state=random_state))
     elif algorithm == 'vls_turf':
         estimator = TURF(VLS(MultiSURF(n_jobs=-1),random_state=random_state),num_scores_to_return=10)
+    elif algorithm == 'multisurf_abs':
+        estimator = MultiSURF(n_jobs=-1,rank_absolute=True)
+    elif algorithm == 'vls_abs':
+        estimator = VLS(MultiSURF(n_jobs=-1,rank_absolute=True))
+    elif algorithm == 'iter_abs':
+        estimator = Iter(MultiSURF(n_jobs=-1,rank_absolute=True))
+    elif algorithm == 'turf_abs':
+        estimator = TURF(MultiSURF(n_jobs=-1,rank_absolute=True),num_scores_to_return=10)
+    elif algorithm == 'vls_iter_abs':
+        estimator = Iter(VLS(MultiSURF(n_jobs=-1,rank_absolute=True),random_state=random_state))
+    elif algorithm == 'vls_turf_abs':
+        estimator = TURF(VLS(MultiSURF(n_jobs=-1,rank_absolute=True),random_state=random_state),num_scores_to_return=10)
     else:
         raise Exception('Algorithm invalid')
 
@@ -36,20 +48,14 @@ def job(algorithm, datapath, class_label,random_state,outfile):
     job_time = time.time() - job_start_time
 
     # Write Scores
-    score_dict = {}
-    for feature_name,feature_score in zip(genetic_data.drop(class_label, axis=1).columns, estimator.feature_importances_):
-        score_dict[feature_name] = feature_score
-
-    sorted_features = sorted(score_dict, key=lambda x: score_dict[x], reverse=True)
-
     outfile = open(outfile,mode='w')
     outfile.write(algorithm+' Analysis Completed with REBATE\n')
     outfile.write('Run Time (sec): ' + str(job_time) + '\n')
     outfile.write('=== SCORES ===\n')
-    n = 1
-    for k in sorted_features:
-        outfile.write(str(k) + '\t' + str(score_dict[k]) + '\t' + str(n) + '\n')
-        n += 1
+
+    feature_names = genetic_data.drop(class_label, axis=1).columns
+    for feature_index in estimator.top_features_:
+        outfile.write(str(feature_names[feature_index]) + '\t' + str(estimator.feature_importances_[feature_index]) + '\n')
     outfile.close()
 
     print(algorithm+' '+datapath+' job complete')

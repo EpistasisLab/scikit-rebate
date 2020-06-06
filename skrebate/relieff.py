@@ -45,7 +45,7 @@ class ReliefF(BaseEstimator):
              * For ReliefF, the setting of k is <= to the number of instances that have the least frequent class label
              (binary and multiclass endpoint data. """
 
-    def __init__(self, n_features_to_select=10, n_neighbors=100, discrete_threshold=10, verbose=False, n_jobs=1,weight_final_scores=False):
+    def __init__(self, n_features_to_select=10, n_neighbors=100, discrete_threshold=10, verbose=False, n_jobs=1,weight_final_scores=False,rank_absolute=False):
         """Sets up ReliefF to perform feature selection. Note that an approximation of the original 'Relief'
         algorithm may be run by setting 'n_features_to_select' to 1. Also note that the original Relief parameter 'm'
         is not included in this software. 'm' specifies the number of random training instances out of 'n' (total
@@ -74,7 +74,10 @@ class ReliefF(BaseEstimator):
             The number of cores to dedicate to computing the scores with joblib.
             Assigning this parameter to -1 will dedicate as many cores as are available on your system.
             We recommend setting this parameter to -1 to speed up the algorithm as much as possible.
-
+        weight_final_scores: bool (default: False)
+            Whether to multiply given weights (in fit) to final scores. Only applicable if weights are given.
+        rank_absolute: bool (default: False)
+            Whether to give top features as by ranking features by absolute value.
         """
         self.n_features_to_select = n_features_to_select
         self.n_neighbors = n_neighbors
@@ -82,7 +85,7 @@ class ReliefF(BaseEstimator):
         self.verbose = verbose
         self.n_jobs = n_jobs
         self.weight_final_scores = weight_final_scores
-
+        self.rank_absolute = rank_absolute
     #=========================================================================#
     def fit(self, X, y, weights=None):
         """Scikit-learn required: Computes the feature importance scores from the training data.
@@ -228,7 +231,10 @@ class ReliefF(BaseEstimator):
             print('Completed scoring in {} seconds.'.format(elapsed))
 
         # Compute indices of top features
-        self.top_features_ = np.argsort(self.feature_importances_)[::-1]
+        if self.rank_absolute:
+            self.top_features_ = np.argsort(np.absolute(self.feature_importances_))[::-1]
+        else:
+            self.top_features_ = np.argsort(self.feature_importances_)[::-1]
 
         return self
 

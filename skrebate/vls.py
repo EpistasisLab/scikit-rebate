@@ -28,6 +28,7 @@ class VLS(BaseEstimator):
         self.num_feature_subset = num_feature_subset
         self.size_feature_subset = size_feature_subset
         self.random_state = random_state
+        self.rank_absolute = self.relief_object.rank_absolute
 
     def fit(self, X, y,weights=None):
         """Scikit-learn required: Computes the feature importance scores from the training data.
@@ -60,7 +61,10 @@ class VLS(BaseEstimator):
                 copy_relief_object.fit(new_X,y,weights=weights[subset])
             raw_score = copy_relief_object.feature_importances_
             score = np.empty(num_features)
-            score.fill(np.NINF)
+            if self.rank_absolute:
+                score.fill(0)
+            else:
+                score.fill(np.NINF)
             counter = 0
             for index in subset:
                 score[index] = raw_score[counter]
@@ -75,12 +79,23 @@ class VLS(BaseEstimator):
         #Merge results by selecting largest found weight for each feature
         max_scores = []
         for score in scores.T:
-            max_scores.append(np.max(score))
+            if self.rank_absolute:
+                max = np.max(np.absolute(score))
+                if max in score:
+                    max_scores.append(max)
+                else:
+                    max_scores.append(-max)
+            else:
+                max_scores.append(np.max(score))
         max_scores = np.array(max_scores)
 
         #Save FI as feature_importances_
         self.feature_importances_ = max_scores
-        self.top_features_ = np.argsort(self.feature_importances_)[::-1]
+
+        if self.rank_absolute:
+            self.top_features_ = np.argsort(np.absolute(self.feature_importances_))[::-1]
+        else:
+            self.top_features_ = np.argsort(self.feature_importances_)[::-1]
 
         return self
 

@@ -22,6 +22,7 @@ class Iter(BaseEstimator):
         self.relief_object = relief_object
         self.max_iter = max_iter
         self.converage_threshold = convergence_threshold
+        self.rank_absolute = self.relief_object.rank_absolute
 
     def fit(self, X, y):
         """Scikit-learn required: Computes the feature importance scores from the training data.
@@ -43,7 +44,11 @@ class Iter(BaseEstimator):
                 copy_relief_object.fit(X,y)
                 last_iteration_scores = copy_relief_object.feature_importances_
             else:
-                copy_relief_object.fit(X,y,weights=self.transform_weights(last_iteration_scores))
+                if self.rank_absolute:
+                    transformed_weights = np.absolute(last_iteration_scores)
+                else:
+                    transformed_weights = self.transform_weights(last_iteration_scores)
+                copy_relief_object.fit(X,y,weights=transformed_weights)
                 if self.has_converged(last_iteration_scores,copy_relief_object.feature_importances_):
                     last_iteration_scores = copy_relief_object.feature_importances_
                     break
@@ -54,7 +59,11 @@ class Iter(BaseEstimator):
 
         #Save final FI as feature_importances_
         self.feature_importances_ = last_iteration_scores
-        self.top_features_ = np.argsort(self.feature_importances_)[::-1]
+
+        if self.rank_absolute:
+            self.top_features_ = np.argsort(np.absolute(self.feature_importances_))[::-1]
+        else:
+            self.top_features_ = np.argsort(self.feature_importances_)[::-1]
 
         return self
 

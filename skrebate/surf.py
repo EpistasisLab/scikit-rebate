@@ -41,7 +41,7 @@ class SURF(ReliefF):
 
     """
 
-    def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False, n_jobs=1,weight_final_scores=False):
+    def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False, n_jobs=1,weight_final_scores=False,rank_absolute=False):
         """Sets up ReliefF to perform feature selection.
 
         Parameters
@@ -59,13 +59,17 @@ class SURF(ReliefF):
             The number of cores to dedicate to computing the scores with joblib.
             Assigning this parameter to -1 will dedicate as many cores as are available on your system.
             We recommend setting this parameter to -1 to speed up the algorithm as much as possible.
-
+        weight_final_scores: bool (default: False)
+            Whether to multiply given weights (in fit) to final scores. Only applicable if weights are given.
+        rank_absolute: bool (default: False)
+            Whether to give top features as by ranking features by absolute value.
         """
         self.n_features_to_select = n_features_to_select
         self.discrete_threshold = discrete_threshold
         self.verbose = verbose
         self.n_jobs = n_jobs
         self.weight_final_scores = weight_final_scores
+        self.rank_absolute = rank_absolute
 
 ############################# SURF ############################################
     def _find_neighbors(self, inst, avg_dist):

@@ -23,6 +23,7 @@ class TURF(BaseEstimator):
         self.relief_object = relief_object
         self.pct = pct
         self.num_scores_to_return = num_scores_to_return
+        self.rank_absolute = self.relief_object.rank_absolute
 
     def fit(self, X, y):
         """Scikit-learn required: Computes the feature importance scores from the training data.
@@ -93,7 +94,11 @@ class TURF(BaseEstimator):
 
         # Save FI as feature_importances_
         self.feature_importances_ = binary_scores_existence_tracker
-        self.top_features_ = np.argsort(self.feature_importances_)[::-1]
+
+        if self.rank_absolute:
+            self.top_features_ = np.argsort(np.absolute(self.feature_importances_))[::-1]
+        else:
+            self.top_features_ = np.argsort(self.feature_importances_)[::-1]
 
         return self
 
