@@ -6,7 +6,7 @@ import jobSubmission
 
 '''
 Sample Run Code:
-python jobSubmissionMain.py --data-path /home/robertzh/scikit-rebate/data --output-path /home/robertzh/scikit-rebate/analysis_pipeline/output --experiment-name run1
+python jobSubmissionMain.py --data-path /home/robertzh/data --output-path /home/robertzh/outputs --experiment-name run1
 python jobSubmissionMain.py --data-path /Users/robert/Desktop/rebateDatasets --output-path /Users/robert/Desktop/outputs --experiment-name rebate1
 
 '''
@@ -50,7 +50,7 @@ def main(argv):
     #CONTROL PANEL######################################################################################################
     #Choose from 'multisurf','vls','iter','turf','vls_iter','vls_turf','multisurf_abs','vls_abs','iter_abs','turf_abs','vls_iter_abs','vls_turf_abs'
 
-    algorithms_to_use = ['vls','vls_abs','iter_abs']
+    algorithms_to_use = ['multisurf','vls','iter','turf','vls_iter','vls_turf']
 
     ####################################################################################################################
 
@@ -63,8 +63,8 @@ def main(argv):
                 continue
             for algorithm in algorithms_to_use:
                 outfile = output_path + '/' + experiment_name + '/rawoutputs/' + algorithm + '_' + filename[:-3]
-                submitLocalJob(algorithm,os.path.join(dirpath, filename),class_label,random_state,outfile)
-                #submitClusterJob(algorithm, os.path.join(dirpath, filename), output_path + '/' + experiment_name,class_label, random_state,outfile)
+                #submitLocalJob(algorithm,os.path.join(dirpath, filename),class_label,random_state,outfile)
+                submitClusterJob(algorithm, os.path.join(dirpath, filename), output_path + '/' + experiment_name,class_label, random_state,outfile)
 
 def submitLocalJob(algorithm,datapath,class_label,random_state,outfile):
     jobSubmission.job(algorithm,datapath,class_label,random_state,outfile)

@@ -41,7 +41,7 @@ class SURF(ReliefF):
 
     """
 
-    def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False, n_jobs=1,weight_final_scores=False,rank_absolute=False):
+    def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False, n_jobs=-1,weight_final_scores=False,rank_absolute=False):
         """Sets up ReliefF to perform feature selection.
 
         Parameters
@@ -55,7 +55,7 @@ class SURF(ReliefF):
             considered continuous, or discrete otherwise.
         verbose: bool (default: False)
             If True, output timing of distance array and scoring
-        n_jobs: int (default: 1)
+        n_jobs: int (default: -1)
             The number of cores to dedicate to computing the scores with joblib.
             Assigning this parameter to -1 will dedicate as many cores as are available on your system.
             We recommend setting this parameter to -1 to speed up the algorithm as much as possible.

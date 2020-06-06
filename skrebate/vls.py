@@ -50,7 +50,7 @@ class VLS(BaseEstimator):
         num_features = X.shape[1]
         subsets = self.make_subsets(list(range(num_features)),self.num_feature_subset,self.size_feature_subset)
 
-        #Fit each subset in parallel
+        #Fit each subset
         scores = []
         for subset in subsets:
             new_X = self.custom_transform(X,subset)

@@ -4,7 +4,7 @@ import argparse
 
 '''
 Sample Run Code
-python checkjobs --data-path /Users/robert/Desktop/rebateDatasets --output-path /Users/robert/Desktop/outputs --experiment-name rebate1
+python checkjobs.py --data-path /Users/robert/Desktop/rebateDatasets --output-path /Users/robert/Desktop/outputs --experiment-name rebate1
 '''
 
 def main(argv):
