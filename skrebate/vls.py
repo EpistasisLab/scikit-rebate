@@ -48,6 +48,7 @@ class VLS(BaseEstimator):
 
         #Make subsets with all the features
         num_features = X.shape[1]
+        self.size_feature_subset = min(self.size_feature_subset,num_features)
         subsets = self.make_subsets(list(range(num_features)),self.num_feature_subset,self.size_feature_subset)
 
         #Fit each subset
