@@ -27,8 +27,8 @@ def job(algorithm, datapath, class_label,random_state,outfile):
         size_feature_subset = int(num_features/10)
 
     # Number of VLS subsets
-    if num_features >= 1000 or num_features == 100:
-        num_feature_subset = 40 #CHANGE BASED ON ALEX'S CODE
+    if num_features >= 10000:
+        num_feature_subset = 400
     else:
         num_feature_subset = 3
 
