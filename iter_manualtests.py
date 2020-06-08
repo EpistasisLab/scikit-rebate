@@ -7,11 +7,11 @@ import random
 import pandas as pd
 
 ######CONTROL PANEL#####################################################################################################
-test_VLS = False
+test_VLS = True
 test_TURF = False
-test_TURFfit = True
-test_Iterfit = True
-test_VLSfit = True
+test_TURFfit = False
+test_Iterfit = False
+test_VLSfit = False
 
 dataset = 'data/Hetero.csv'
 

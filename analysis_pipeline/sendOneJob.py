@@ -3,6 +3,12 @@ import os
 import argparse
 import jobSubmissionMain
 
+'''
+Sample Run Code
+python sendOneJob.py --data-path /Users/robert/Desktop/rebateDatasets/datafile1.txt.gz --output-path /Users/robert/Desktop/outputs --experiment-name rebate1 --algo vls_turf
+'''
+
+
 def main(argv):
     # Parse arguments
     parser = argparse.ArgumentParser(description='')

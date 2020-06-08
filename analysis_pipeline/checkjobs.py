@@ -26,12 +26,19 @@ def main(argv):
     if not os.path.exists(output_path+'/'+experiment_name):
         raise Exception("Provided experiment path does not exist")
 
+    # CONTROL PANEL######################################################################################################
+    # Choose from 'multisurf','vls','iter','turf','vls_iter','vls_turf','multisurf_abs','vls_abs','iter_abs','turf_abs','vls_iter_abs','vls_turf_abs'
+
+    algorithms_to_use = ['multisurf', 'vls', 'iter', 'turf', 'vls_iter', 'vls_turf']
+
+    ####################################################################################################################
+
     all_done = True
     for dirpath, dirnames, filenames in os.walk(data_path):
         for filename in filenames:
             if not filename.endswith('.txt.gz'):
                 continue
-            for algorithm in ['multisurf','vls','iter','turf','vls_iter','vls_turf']:
+            for algorithm in algorithms_to_use:
                 outfile = output_path + '/' + experiment_name + '/rawoutputs/' + algorithm + '_' + filename[:-3]
                 if not os.path.exists(outfile):
                     all_done = False

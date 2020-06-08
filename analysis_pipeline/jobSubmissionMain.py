@@ -50,7 +50,7 @@ def main(argv):
     #CONTROL PANEL######################################################################################################
     #Choose from 'multisurf','vls','iter','turf','vls_iter','vls_turf','multisurf_abs','vls_abs','iter_abs','turf_abs','vls_iter_abs','vls_turf_abs'
 
-    algorithms_to_use = ['multisurf','vls','iter','turf','vls_iter','vls_turf']
+    algorithms_to_use = ['multisurf','vls','iter','turf','vls_turf','vls_iter']
 
     ####################################################################################################################
 
@@ -63,8 +63,8 @@ def main(argv):
                 continue
             for algorithm in algorithms_to_use:
                 outfile = output_path + '/' + experiment_name + '/rawoutputs/' + algorithm + '_' + filename[:-3]
-                #submitLocalJob(algorithm,os.path.join(dirpath, filename),class_label,random_state,outfile)
-                submitClusterJob(algorithm, os.path.join(dirpath, filename), output_path + '/' + experiment_name,class_label, random_state,outfile)
+                submitLocalJob(algorithm,os.path.join(dirpath, filename),class_label,random_state,outfile)
+                #submitClusterJob(algorithm, os.path.join(dirpath, filename), output_path + '/' + experiment_name,class_label, random_state,outfile)
 
 def submitLocalJob(algorithm,datapath,class_label,random_state,outfile):
     jobSubmission.job(algorithm,datapath,class_label,random_state,outfile)
