@@ -107,7 +107,7 @@ def main(argv):
 
         custom_cmap = sb.color_palette('Oranges', n_colors=1000)[:800] + sb.color_palette('Blues', n_colors=1000)[800:]
         sb.heatmap(data=df, vmin=0, vmax=1, cmap=custom_cmap)
-        plt.title(merged_dataset)
+        #plt.title(merged_dataset)
         plt.xlabel('Predictive features in top % of ranked features')
         plt.savefig(output_path + "/" + experiment_name + '/' + merged_dataset + '.pdf', bbox_inches = 'tight')
         plt.savefig(output_path + "/" + experiment_name + '/' + merged_dataset + '.eps', bbox_inches='tight')
