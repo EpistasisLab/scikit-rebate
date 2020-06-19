@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 '''
 Sample Run Code:
 python parseResults.py --output-path /Users/robert/Desktop/outputs --experiment-name rebate1
+
+python parseResults.py --output-path D:\MyProfile\Desktop\Outputs --experiment-name rebate2
 '''
 
 def main(argv):
@@ -106,11 +108,27 @@ def main(argv):
         df = pd.DataFrame(df_array,columns=cols,index=algos)
 
         custom_cmap = sb.color_palette('Oranges', n_colors=1000)[:800] + sb.color_palette('Blues', n_colors=1000)[800:]
-        sb.heatmap(data=df, vmin=0, vmax=1, cmap=custom_cmap)
-        plt.title(merged_dataset)
+        ax = sb.heatmap(data=df, vmin=0, vmax=1, cmap=custom_cmap)
+
+        
+        #This following code removes all the xtick labels and replaces it with regularly spaced ones
+        new_labels=['Optimal','10%','20%','30%','40%','50%','60%','70%','80%','90%','']
+        old_ticks = ax.get_xticks()
+        new_ticks = np.linspace(np.min(old_ticks), np.max(old_ticks), len(new_labels))
+        ax.set_xticks(new_ticks)
+        ax.set_xticklabels(new_labels,fontsize=8)
+        ax.tick_params(axis='both', which='both', length=0)
+        
+        #add title here if want
+        #plt.title('Title here')
         plt.xlabel('Predictive features in top % of ranked features')
+
+        #rotate xtick and ytick so that it is horizontal
+        plt.yticks(rotation='horizontal')
+        plt.xticks(rotation='horizontal')
+        
         plt.savefig(output_path + "/" + experiment_name + '/' + merged_dataset + '.pdf', bbox_inches = 'tight')
-        plt.savefig(output_path + "/" + experiment_name + '/' + merged_dataset + '.eps', bbox_inches='tight')
+        plt.savefig(output_path + "/" + experiment_name + '/' + merged_dataset + '.png', bbox_inches='tight')
         plt.close('all')
 
 def getPercentile(ranked_features):
