@@ -29,7 +29,7 @@ def main(argv):
     # CONTROL PANEL######################################################################################################
     # Choose from 'multisurf','vls','iter','turf','vls_iter','vls_turf','multisurf_abs','vls_abs','iter_abs','turf_abs','vls_iter_abs','vls_turf_abs'
 
-    algorithms_to_use = ['multisurf', 'vls', 'iter', 'turf', 'vls_iter', 'vls_turf']
+    algorithms_to_use = ['multisurf', 'multisurf_abs']
 
     ####################################################################################################################
 

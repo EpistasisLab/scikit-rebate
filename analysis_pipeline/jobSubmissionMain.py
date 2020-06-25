@@ -6,8 +6,9 @@ import jobSubmission
 
 '''
 Sample Run Code:
-python jobSubmissionMain.py --data-path /home/robertzh/data --output-path /home/robertzh/outputs --experiment-name run2
-python jobSubmissionMain.py --data-path /Users/robert/Desktop/rebateDatasets --output-path /Users/robert/Desktop/outputs --experiment-name rebate1
+python jobSubmissionMain.py --data-path /home/robertzh/data --output-path /home/robertzh/outputs --experiment-name big1
+python jobSubmissionMain.py --data-path /Users/robert/Desktop/rebateDatasets --output-path /Users/robert/Desktop/outputs --experiment-name iter
+python jobSubmissionMain.py --data-path /Users/robert/Desktop/rebateDatasets --output-path /Users/robert/Desktop/outputs --experiment-name iter --do-cloud 0
 
 '''
 
@@ -19,6 +20,7 @@ def main(argv):
     parser.add_argument('--experiment-name', dest='experiment_name', type=str, help='name of experiment (no spaces)')
     parser.add_argument('--class-label', dest='class_label', type=str, help='outcome label of all datasets',default="Class")
     parser.add_argument('--random-state', dest='random_state', type=int, default=42)
+    parser.add_argument('--do-cloud', dest='do_cloud',type=int,default=1)
 
     options = parser.parse_args(argv[1:])
     data_path = options.data_path
@@ -26,6 +28,7 @@ def main(argv):
     experiment_name = options.experiment_name
     class_label = options.class_label
     random_state = options.random_state
+    do_cloud = options.do_cloud
 
     # Check to make sure data_path exists and experiment name is valid & unique
     if not os.path.exists(data_path):
@@ -50,7 +53,7 @@ def main(argv):
     #CONTROL PANEL######################################################################################################
     #Choose from 'multisurf','vls','iter','turf','vls_iter','vls_turf','multisurf_abs','vls_abs','iter_abs','turf_abs','vls_iter_abs','vls_turf_abs'
 
-    algorithms_to_use = ['multisurf','vls','iter','turf','vls_turf','vls_iter']
+    algorithms_to_use = ['iter_abs']
 
     ####################################################################################################################
 
@@ -63,8 +66,10 @@ def main(argv):
                 continue
             for algorithm in algorithms_to_use:
                 outfile = output_path + '/' + experiment_name + '/rawoutputs/' + algorithm + '_' + filename[:-3]
-                #submitLocalJob(algorithm,os.path.join(dirpath, filename),class_label,random_state,outfile)
-                submitClusterJob(algorithm, os.path.join(dirpath, filename), output_path + '/' + experiment_name,class_label, random_state,outfile)
+                if do_cloud == 0:
+                    submitLocalJob(algorithm,os.path.join(dirpath, filename),class_label,random_state,outfile)
+                elif do_cloud == 1:
+                    submitClusterJob(algorithm, os.path.join(dirpath, filename), output_path + '/' + experiment_name,class_label, random_state,outfile)
 
 def submitLocalJob(algorithm,datapath,class_label,random_state,outfile):
     jobSubmission.job(algorithm,datapath,class_label,random_state,outfile)
@@ -82,10 +87,7 @@ def submitClusterJob(algorithm,datapath,experiment_path,class_label,random_state
     sh_file.write('python ' + this_file_path + '/jobSubmission.py ' + algorithm + " " + datapath + " " + class_label +
                   ' ' + str(random_state) + ' ' + outfile + '\n')
     sh_file.close()
-    if 'a_100000' in datapath:
-        os.system('bsub -q moore_long < ' + job_name)
-    else:
-        os.system('bsub < ' + job_name)
+    os.system('bsub < ' + job_name)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
