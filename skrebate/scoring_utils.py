@@ -143,6 +143,9 @@ def get_row_missing_iter(xc, xd, cdiffs, index, cindices, dindices, weights):
 
     return row
 
+def sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature):
+    """Sigmoid function used for middle terms"""
+
 
 def ramp_function(data_type, attr, fname, xinstfeature, xNNifeature):
     """ Our own user simplified variation of the ramp function suggested by Hong 1994, 1997. Hong's method requires the user to specifiy two thresholds
@@ -201,7 +204,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
 
             xNNifeature = X[NN[i]][feature]
 
-            if near:  # SCORING FOR NEAR INSTANCES
+            if near == True:  # SCORING FOR NEAR INSTANCES
                 if y[inst] == y[NN[i]]:   # HIT
                     count_hit += 1
                     if ftype == 'continuous':
@@ -221,6 +224,15 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                         if xinstfeature != xNNifeature:  # A difference in feature value is observed
                             # Feature score is increase when we observe feature difference between 'near' instances with different class values.
                             diff_miss += 1
+
+
+            elif NN == "middle": #SCORING FOR MIDDLE INSTANCES (SIGMOID SCORING USED FOR SWRF*)
+                if y[inst] == y[NN[i]]: #HIT
+                    count_hit+=1
+                    if ftype == 'continuous':
+
+
+
 
             else:  # SCORING FOR FAR INSTANCES (ONLY USED BY MULTISURF* BASED ON HOW CODED)
                 if y[inst] == y[NN[i]]:   # HIT
@@ -278,7 +290,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
 
             xNNifeature = X[NN[i]][feature]
 
-            if near:  # SCORING FOR NEAR INSTANCES
+            if near == True:  # SCORING FOR NEAR INSTANCES
                 if(y[inst] == y[NN[i]]):  # HIT
                     count_hit += 1
                     if ftype == 'continuous':
@@ -524,5 +536,34 @@ def MultiSURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap,
             if len(NN_far) > 0:
                 scores[feature_num] += compute_score(attr, mcmap, NN_far, feature_num, inst,
                                                      nan_entries, headers, class_type, X, y, labels_std, data_type, near=False)
+
+    return scores
+
+def SWRFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, NN_far, NN_middle, headers, class_type, X, y, labels_std, data_type, weights=None):
+    """ Unique scoring procedure for SWRFstar algorithm. Scoring based on 'extreme' nearest neighbors within defined radius, sigmoid weighting for instances in the 'dead zone' and 'anti-scoring' of extreme far instances defined by outer radius of current target instance."""
+    scores = np.zeros(num_attributes)
+    if isinstance(weights,np.ndarray):
+        for feature_num in range(num_attributes):
+            if len(NN_near) > 0:
+                scores[feature_num] += weights[feature_num]*compute_score(attr, mcmap, NN_near, feature_num, inst,
+                                                                          nan_entries, headers, class_type, X, y, labels_std, data_type)
+            if len(NN_far) > 0:
+                scores[feature_num] += weights[feature_num]*compute_score(attr, mcmap, NN_far, feature_num, inst,
+                                                                          nan_entries, headers, class_type, X, y, labels_std, data_type, near=False)
+            #near is set to false for instances in the middle zone so that it will not be treated as a near instance. It is treated separately as a middle instance using sigmoid weighting.
+            if len(NN_middle) > 0:
+                scores[feature_num] += weights[feature_num]*compute_score(attr, mcmap, NN_middle, feature_num, inst,
+                                                                          nan_entries, headers, class_type, X, y, labels_std, data_type, near="middle")
+    else:
+        for feature_num in range(num_attributes):
+            if len(NN_near) > 0:
+                scores[feature_num] += compute_score(attr, mcmap, NN_near, feature_num, inst,
+                                                     nan_entries, headers, class_type, X, y, labels_std, data_type)
+            if len(NN_far) > 0:
+                scores[feature_num] += compute_score(attr, mcmap, NN_far, feature_num, inst,
+                                                     nan_entries, headers, class_type, X, y, labels_std, data_type, near=False)
+            if len(NN_far) > 0:
+                scores[feature_num] += compute_score(attr, mcmap, NN_middle, feature_num, inst,
+                                                     nan_entries, headers, class_type, X, y, labels_std, data_type, near="middle")
 
     return scores

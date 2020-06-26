@@ -1,7 +1,7 @@
 import sys
 import pandas as pd
 import time
-from skrebatewip import MultiSURF,TURF,VLS,Iter
+from skrebatewip import MultiSURF,TURF,VLS,Iter,swrfstar
 import random
 import numpy as np
 
