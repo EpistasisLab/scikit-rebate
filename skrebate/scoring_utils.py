@@ -25,6 +25,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
 import numpy as np
+import math
 
 
 # (Subset of continuous-valued feature data, Subset of discrete-valued feature data, max/min difference, instance index, boolean mask for continuous, boolean mask for discrete)
@@ -144,7 +145,23 @@ def get_row_missing_iter(xc, xd, cdiffs, index, cindices, dindices, weights):
     return row
 
 def sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature):
-    """Sigmoid function used for middle terms"""
+    """Sigmoid function used for middle terms in SWRF*"""
+    diff = 0
+    mmdiff = attr[fname][3]
+    rawfd = abs(xinstfeature - xNNifeature)
+
+    if data_type == 'mixed': 
+        standDev = attr[fname[4]]
+        if rawfd > standDev: #SWRF* should not satisfy this statement at any point for middle terms, since it was prechecked
+            diff = 1
+        else:
+            diff = 2 * (1 / (1 + math.exp(-(T-(xinstfeature-xNNifeature))/(standDev/4)))) - 1 
+            #Setting S to standard deviation (of the pairwise instances)? and S to 4 for now.
+    else:
+        diff = 2 * (1 / (1 + math.exp(-(T-(xinstfeature-xNNifeature))/(standDev/4)))) - 1 
+    
+    return diff
+
 
 
 def ramp_function(data_type, attr, fname, xinstfeature, xNNifeature):
@@ -171,7 +188,7 @@ def ramp_function(data_type, attr, fname, xinstfeature, xNNifeature):
 
     return diff
 
-
+#added 2 parameters, s and scale, default to 0 so that methods other than SWRF and SWRF* do not need to use these params
 def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_type, X, y, labels_std, data_type, near=True):
     """Flexible feature scoring method that can be used with any core Relief-based method. Scoring proceeds differently
     based on whether endpoint is binary, multiclass, or continuous. This method is called for a single target instance
@@ -225,15 +242,12 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                             # Feature score is increase when we observe feature difference between 'near' instances with different class values.
                             diff_miss += 1
 
-
             elif NN == "middle": #SCORING FOR MIDDLE INSTANCES (SIGMOID SCORING USED FOR SWRF*)
                 if y[inst] == y[NN[i]]: #HIT
                     count_hit+=1
                     if ftype == 'continuous':
-
-
-
-
+                        print()
+            
             else:  # SCORING FOR FAR INSTANCES (ONLY USED BY MULTISURF* BASED ON HOW CODED)
                 if y[inst] == y[NN[i]]:   # HIT
                     count_hit += 1
@@ -562,7 +576,7 @@ def SWRFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_n
             if len(NN_far) > 0:
                 scores[feature_num] += compute_score(attr, mcmap, NN_far, feature_num, inst,
                                                      nan_entries, headers, class_type, X, y, labels_std, data_type, near=False)
-            if len(NN_far) > 0:
+            if len(NN_middle) > 0:
                 scores[feature_num] += compute_score(attr, mcmap, NN_middle, feature_num, inst,
                                                      nan_entries, headers, class_type, X, y, labels_std, data_type, near="middle")
 
