@@ -114,6 +114,11 @@ def get_row_missing_iter(xc, xd, cdiffs, index, cindices, dindices, weights):
         wd = np.delete(weights, idx)  # delete weights corresponding to missing discrete features
         # Manage missing values in continuous features
         # Boolean mask locating missing values for continuous features for compared instance
+
+
+
+
+
         cbn = cindices[j]
         # indexes where there is at least one missing value in the feature between an instance pair.
         idx = np.unique(np.append(can, cbn))
@@ -144,24 +149,14 @@ def get_row_missing_iter(xc, xd, cdiffs, index, cindices, dindices, weights):
 
     return row
 
-def sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature):
-    """Sigmoid function used for middle terms in SWRF*"""
+def sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature, SWRF_Tval, dist_array):
+    """sigmoid function used for scoring in SWRF* and SWRF, currently there is some code redundancy but it is written this way to allow for expansion on how SWRF* will treat continuous features"""
     diff = 0
-    mmdiff = attr[fname][3]
-    rawfd = abs(xinstfeature - xNNifeature)
+    standDev = attr[fname[4]] #Standard deviation (line 327 in relieff, set to 0 when discrete?)
+    dist_array
 
-    if data_type == 'mixed': 
-        standDev = attr[fname[4]]
-        if rawfd > standDev: #SWRF* should not satisfy this statement at any point for middle terms, since it was prechecked
-            diff = 1
-        else:
-            diff = 2 * (1 / (1 + math.exp(-(T-(xinstfeature-xNNifeature))/(standDev/4)))) - 1 
-            #Setting S to standard deviation (of the pairwise instances)? and S to 4 for now.
-    else:
-        diff = 2 * (1 / (1 + math.exp(-(T-(xinstfeature-xNNifeature))/(standDev/4)))) - 1 
-    
-    return diff
-
+    diff = 2 * (1 / (1 + math.exp(-(SWRF_Tval-(dist_array))/(standDev/4)))) - 1 
+    #distarray parameter needs tweaking
 
 
 def ramp_function(data_type, attr, fname, xinstfeature, xNNifeature):
@@ -188,8 +183,8 @@ def ramp_function(data_type, attr, fname, xinstfeature, xNNifeature):
 
     return diff
 
-#added 2 parameters, s and scale, default to 0 so that methods other than SWRF and SWRF* do not need to use these params
-def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_type, X, y, labels_std, data_type, near=True):
+#sigmoid and SWRF_Tval are used for SWRF and SWRF* scoring only, the other methods do not use these parameters
+def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_type, X, y, labels_std, data_type, near=True, SWRF_Tval=None,dist_array=None, sigmoid=False):
     """Flexible feature scoring method that can be used with any core Relief-based method. Scoring proceeds differently
     based on whether endpoint is binary, multiclass, or continuous. This method is called for a single target instance
     + feature combination and runs over all items in NN. """
@@ -221,7 +216,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
 
             xNNifeature = X[NN[i]][feature]
 
-            if near == True:  # SCORING FOR NEAR INSTANCES
+            if near and sigmoid == False:  # SCORING FOR NEAR INSTANCES
                 if y[inst] == y[NN[i]]:   # HIT
                     count_hit += 1
                     if ftype == 'continuous':
@@ -242,12 +237,27 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                             # Feature score is increase when we observe feature difference between 'near' instances with different class values.
                             diff_miss += 1
 
-            elif NN == "middle": #SCORING FOR MIDDLE INSTANCES (SIGMOID SCORING USED FOR SWRF*)
+            #the following 2 elif statements apply to only SWRF and SWRF*
+            #right now there is no difference in how SWRF* treats continuous and non continuous functions
+            elif near and sigmoid:
                 if y[inst] == y[NN[i]]: #HIT
-                    count_hit+=1
-                    if ftype == 'continuous':
-                        print()
-            
+                    count_hit += 1
+                    diff_hit -= sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature, SWRF_Tval, dist_array)
+                else: #MISS
+                    count_miss += 1
+                    diff_miss += sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature, SWRF_Tval, dist_array)
+                    
+
+            elif near == False and sigmoid:
+                if y[inst] == y[NN[i]]: #HIT
+                    count_hit += 1
+                    diff_hit += sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature, SWRF_Tval, dist_array)
+                else: #MISS
+                    count_miss += 1
+                    diff_miss -= sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature, SWRF_Tval, dist_array)
+
+
+
             else:  # SCORING FOR FAR INSTANCES (ONLY USED BY MULTISURF* BASED ON HOW CODED)
                 if y[inst] == y[NN[i]]:   # HIT
                     count_hit += 1
@@ -304,7 +314,7 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
 
             xNNifeature = X[NN[i]][feature]
 
-            if near == True:  # SCORING FOR NEAR INSTANCES
+            if near and sigmoid==False:  # SCORING FOR NEAR INSTANCES
                 if(y[inst] == y[NN[i]]):  # HIT
                     count_hit += 1
                     if ftype == 'continuous':
@@ -326,6 +336,25 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
                                 if xinstfeature != xNNifeature:
                                     # Feature score is increase when we observe feature difference between 'near' instances with different class values.
                                     class_store[missClass][1] += 1
+            
+            #the following 2 elif statements apply to only SWRF and SWRF*
+            #right now there is no difference in how SWRF* treats continuous and non continuous functions
+            elif near and sigmoid:
+                if y[inst] == y[NN[i]]: #HIT
+                    count_hit += 1
+                    diff_hit -= sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature, SWRF_Tval)
+                else: #MISS
+                    count_miss += 1
+                    diff_miss += sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature, SWRF_Tval)
+                    
+
+            elif near == False and sigmoid:
+                if y[inst] == y[NN[i]]: #HIT
+                    count_hit += 1
+                    diff_hit += sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature, SWRF_Tval)
+                else: #MISS
+                    count_miss += 1
+                    diff_miss -= sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature, SWRF_Tval)
 
             else:  # SCORING FOR FAR INSTANCES (ONLY USED BY MULTISURF* BASED ON HOW CODED)
                 if(y[inst] == y[NN[i]]):  # HIT
@@ -553,31 +582,27 @@ def MultiSURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap,
 
     return scores
 
-def SWRFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, NN_far, NN_middle, headers, class_type, X, y, labels_std, data_type, weights=None):
-    """ Unique scoring procedure for SWRFstar algorithm. Scoring based on 'extreme' nearest neighbors within defined radius, sigmoid weighting for instances in the 'dead zone' and 'anti-scoring' of extreme far instances defined by outer radius of current target instance."""
+
+def SWRFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, NN_far, headers, class_type, X, y, labels_std, data_type, SWRF_Tval, dist_array, weights=None):
+    """ Unique scoring procedure for SURFstar algorithm. Scoring based on nearest neighbors within defined radius, as well as
+    'anti-scoring' of far instances outside of radius of current target instance"""
     scores = np.zeros(num_attributes)
     if isinstance(weights,np.ndarray):
         for feature_num in range(num_attributes):
             if len(NN_near) > 0:
                 scores[feature_num] += weights[feature_num]*compute_score(attr, mcmap, NN_near, feature_num, inst,
-                                                                          nan_entries, headers, class_type, X, y, labels_std, data_type)
+                                                                          nan_entries, headers, class_type, X, y, labels_std, data_type, SWRF_Tval, dist_array, sigmoid=True)
+            
             if len(NN_far) > 0:
-                scores[feature_num] += weights[feature_num]*compute_score(attr, mcmap, NN_far, feature_num, inst,
-                                                                          nan_entries, headers, class_type, X, y, labels_std, data_type, near=False)
-            #near is set to false for instances in the middle zone so that it will not be treated as a near instance. It is treated separately as a middle instance using sigmoid weighting.
-            if len(NN_middle) > 0:
-                scores[feature_num] += weights[feature_num]*compute_score(attr, mcmap, NN_middle, feature_num, inst,
-                                                                          nan_entries, headers, class_type, X, y, labels_std, data_type, near="middle")
+                scores[feature_num] -= weights[feature_num]*compute_score(attr, mcmap, NN_far, feature_num, inst,
+                                                                          nan_entries, headers, class_type, X, y, labels_std, data_type, SWRF_Tval, dist_array, sigmoid=True)
     else:
         for feature_num in range(num_attributes):
             if len(NN_near) > 0:
                 scores[feature_num] += compute_score(attr, mcmap, NN_near, feature_num, inst,
-                                                     nan_entries, headers, class_type, X, y, labels_std, data_type)
+                                                     nan_entries, headers, class_type, X, y, labels_std, data_type, SWRF_Tval, dist_array, sigmoid=True)
+            
             if len(NN_far) > 0:
-                scores[feature_num] += compute_score(attr, mcmap, NN_far, feature_num, inst,
-                                                     nan_entries, headers, class_type, X, y, labels_std, data_type, near=False)
-            if len(NN_middle) > 0:
-                scores[feature_num] += compute_score(attr, mcmap, NN_middle, feature_num, inst,
-                                                     nan_entries, headers, class_type, X, y, labels_std, data_type, near="middle")
-
+                scores[feature_num] -= compute_score(attr, mcmap, NN_far, feature_num, inst,
+                                                     nan_entries, headers, class_type, X, y, labels_std, data_type, SWRF_Tval, dist_array, sigmoid=True)
     return scores
