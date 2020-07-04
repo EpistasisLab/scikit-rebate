@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 Sample Run Code:
 python parseResults.py --output-path /Users/robert/Desktop/outputs --experiment-name rebate1
 
-python parseResults.py --output-path D:\MyProfile\Desktop\Outputs --experiment-name rebate2
+python parseResults.py --output-path D:\MyProfile\Desktop\outputs --experiment-name ReliefMultiset1
 '''
 
 def main(argv):
@@ -136,7 +136,7 @@ def getPercentile(ranked_features):
     predictive_features = []
     final_predictive_index = 0
     for feature_index in range(len(ranked_features)):
-        if ranked_features[feature_index][0] == 'M':
+        if ranked_features[feature_index][0] == 'M' or ranked_features[feature_index][0] == 'A':
             predictive_features.append(ranked_features[feature_index])
             final_predictive_index = feature_index
 
