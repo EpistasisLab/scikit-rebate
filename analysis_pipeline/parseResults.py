@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 Sample Run Code:
 python parseResults.py --output-path /Users/robert/Desktop/outputs --experiment-name rebate1
 
-python parseResults.py --output-path D:\MyProfile\Desktop\outputs --experiment-name ReliefMultiset1
+python parseResults.py --output-path D:\MyProfile\Desktop\outputs --experiment-name ReliefMultiset2
 '''
 
 def main(argv):
@@ -96,6 +96,9 @@ def main(argv):
         algos.remove('random_shuffle')
         algos.sort()
         algos.insert(0,'random_shuffle')
+
+       
+
         df_array = []
         for algo in algos:
             df_array.append(merged_dict[merged_dataset][algo])
@@ -107,11 +110,16 @@ def main(argv):
             cols.append(str(round(c/num_noisy_features*100))+'%')
         df = pd.DataFrame(df_array,columns=cols,index=algos)
 
+        #Replaces with correct capitalizations
+        new_index = {'multisurf':'MultiSURF','relieff_100nn':'ReliefF_100NN','multisurf_abs':'MultiSURF_abs','relieff_100nn_abs':'ReliefF_100NN_abs'}
+        df.rename(index=new_index,inplace=True)
+
         custom_cmap = sb.color_palette('Oranges', n_colors=1000)[:800] + sb.color_palette('Blues', n_colors=1000)[800:]
         ax = sb.heatmap(data=df, vmin=0, vmax=1, cmap=custom_cmap)
 
-        
+
         #This following code removes all the xtick labels and replaces it with regularly spaced ones
+        #Known bug that this causes some spacing issues on datasets with very few features (only known source of error is 6-bit multiplexer)
         new_labels=['Optimal','10%','20%','30%','40%','50%','60%','70%','80%','90%','']
         old_ticks = ax.get_xticks()
         new_ticks = np.linspace(np.min(old_ticks), np.max(old_ticks), len(new_labels))
