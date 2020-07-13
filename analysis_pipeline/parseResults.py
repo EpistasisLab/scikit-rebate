@@ -111,7 +111,7 @@ def main(argv):
         df = pd.DataFrame(df_array,columns=cols,index=algos)
 
         #Replaces with correct capitalizations
-        new_index = {'multisurf':'MultiSURF','relieff_100nn':'ReliefF_100NN','multisurf_abs':'MultiSURF_abs','relieff_100nn_abs':'ReliefF_100NN_abs'}
+        new_index = {'multisurf':'MultiSURF','relieff_100nn':'ReliefF 100NN','multisurf_abs':'MultiSURF abs','relieff_100nn_abs':'ReliefF 100NN abs'}
         df.rename(index=new_index,inplace=True)
 
         custom_cmap = sb.color_palette('Oranges', n_colors=1000)[:800] + sb.color_palette('Blues', n_colors=1000)[800:]
