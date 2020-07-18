@@ -27,7 +27,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from __future__ import print_function
 import numpy as np
 from .surfstar import SURFstar
+<<<<<<< HEAD
 from joblib import Parallel, delayed
+=======
+from sklearn.externals.joblib import Parallel, delayed
+>>>>>>> master
 from .scoring_utils import MultiSURF_compute_scores
 
 

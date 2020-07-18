@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # -*- coding: utf-8 -*-
 
 """
@@ -549,6 +550,8 @@ class ReliefF(BaseEstimator):
 
         return np.array(scores)
 =======
+=======
+>>>>>>> master
 # -*- coding: utf-8 -*-
 
 """
@@ -581,7 +584,11 @@ import time
 import warnings
 import sys
 from sklearn.base import BaseEstimator
+<<<<<<< HEAD
 from joblib import Parallel, delayed
+=======
+from sklearn.externals.joblib import Parallel, delayed
+>>>>>>> master
 from .scoring_utils import get_row_missing, ReliefF_compute_scores
 
 
@@ -1020,4 +1027,7 @@ class ReliefF(BaseEstimator):
             for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
 
         return np.array(scores)
+<<<<<<< HEAD
 >>>>>>> b3236154e5e6951007829a2ab34a043e7bc84fee
+=======
+>>>>>>> master
