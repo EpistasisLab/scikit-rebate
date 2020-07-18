@@ -1,7 +1,7 @@
 import sys
 import pandas as pd
 import time
-from skrebatewip import MultiSURF,TURF,VLS,Iter
+from skrebatewip import MultiSURF,TURF,VLS,Iter,ReliefF
 import random
 import numpy as np
 
@@ -64,6 +64,10 @@ def job(algorithm, datapath, class_label,random_state,outfile):
         estimator = Iter(VLS(MultiSURF(rank_absolute=True),random_state=random_state,size_feature_subset=size_feature_subset,num_feature_subset=num_feature_subset),max_iter=max_iter)
     elif algorithm == 'vls_turf_abs':
         estimator = TURF(VLS(MultiSURF(rank_absolute=True),random_state=random_state,size_feature_subset=size_feature_subset,num_feature_subset=num_feature_subset),num_scores_to_return=num_scores_to_return)
+    elif algorithm == 'relieff_100nn':
+        estimator = ReliefF()
+    elif algorithm == 'relieff_100nn_abs':
+        estimator = ReliefF(rank_absolute=True)
     else:
         raise Exception('Algorithm invalid')
 

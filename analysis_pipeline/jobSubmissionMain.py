@@ -7,6 +7,8 @@ import jobSubmission
 '''
 Sample Run Code:
 python jobSubmissionMain.py --data-path /home/robertzh/data --output-path /home/robertzh/outputs --experiment-name big1
+python jobSubmissionMain.py --data-path /home/robertzh/data --output-path /home/robertzh/outputs --experiment-name reliefF
+
 python jobSubmissionMain.py --data-path /Users/robert/Desktop/rebateDatasets --output-path /Users/robert/Desktop/outputs --experiment-name iter
 python jobSubmissionMain.py --data-path /Users/robert/Desktop/rebateDatasets --output-path /Users/robert/Desktop/outputs --experiment-name iter --do-cloud 0
 
@@ -53,7 +55,7 @@ def main(argv):
     #CONTROL PANEL######################################################################################################
     #Choose from 'multisurf','vls','iter','turf','vls_iter','vls_turf','multisurf_abs','vls_abs','iter_abs','turf_abs','vls_iter_abs','vls_turf_abs'
 
-    algorithms_to_use = ['iter_abs']
+    algorithms_to_use = ['relieff_100nn','relieff_100nn_abs']
 
     ####################################################################################################################
 
