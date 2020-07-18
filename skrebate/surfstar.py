@@ -28,7 +28,11 @@ from __future__ import print_function
 import numpy as np
 from .surf import SURF
 from .scoring_utils import SURFstar_compute_scores
+<<<<<<< HEAD
+from joblib import Parallel, delayed
+=======
 from sklearn.externals.joblib import Parallel, delayed
+>>>>>>> master
 
 
 class SURFstar(SURF):

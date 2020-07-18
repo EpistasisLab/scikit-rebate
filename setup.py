@@ -28,7 +28,11 @@ If you have any questions or comments about skrebate, please feel free to contac
 This project is hosted at https://github.com/EpistasisLab/scikit-rebate
 ''',
     zip_safe=True,
+<<<<<<< HEAD
+    install_requires=['numpy', 'scipy', 'scikit-learn', 'joblib'],
+=======
     install_requires=['numpy', 'scipy', 'scikit-learn'],
+>>>>>>> master
     classifiers=[
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
