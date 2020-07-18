@@ -24,15 +24,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
 from skrebate import ReliefF, SURF, SURFstar, MultiSURF, MultiSURFstar
-from skrebate.turf import TuRF
-from skrebate.vlsrelief import VLSRelief
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-<<<<<<< HEAD
-from sklearn.impute import SimpleImputer
-=======
 from sklearn.preprocessing import Imputer
->>>>>>> master
 from sklearn.model_selection import cross_val_score
 import pandas as pd
 import numpy as np
@@ -85,7 +79,7 @@ features_multiclass, labels_multiclass = genetic_data_multiclass.drop(
     'class', axis=1).values, genetic_data_multiclass['class'].values
 headers_multiclass = list(genetic_data_multiclass.drop("class", axis=1))
 
-#Initialization tests--------------------------------------------------------------------------------
+# Initialization tests--------------------------------------------------------------------------------
 def test_relieff_init():
     """Check: ReliefF constructor stores custom values correctly"""
     clf = ReliefF(n_features_to_select=7,
@@ -113,43 +107,6 @@ def test_surf_init():
     assert clf.verbose == True
     assert clf.n_jobs == 3
 
-
-def test_turf_init():
-    """Check: TuRF constructor stores custom values correctly"""
-    clf = TuRF(core_algorithm="MultiSURF", n_features_to_select=7,
-               n_neighbors=500,
-               pct=0.5,
-               discrete_threshold=20,
-               verbose=True,
-               n_jobs=3)
-
-    assert clf.core_algorithm == "MultiSURF"
-    assert clf.n_features_to_select == 7
-    assert clf.n_neighbors == 500
-    assert clf.pct == 0.5
-    assert clf.discrete_threshold == 20
-    assert clf.verbose == True
-    assert clf.n_jobs == 3
-
-
-def test_vlsrelief_init():
-    """Check: VLSRelief constructor stores custom values correctly"""
-    clf = VLSRelief(core_algorithm="MultiSURF", n_features_to_select=7,
-                    n_neighbors=500,
-                    discrete_threshold=20,
-                    verbose=True,
-                    n_jobs=3)
-
-    assert clf.core_algorithm == "MultiSURF"
-    assert clf.n_features_to_select == 7
-    assert clf.n_neighbors == 500
-    assert clf.discrete_threshold == 20
-    assert clf.verbose == True
-    assert clf.n_jobs == 3
-    assert clf.num_feature_subset == 20
-    assert clf.size_feature_subset == 10
-
-
 # Basic Parallelization Tests and Core binary data and discrete feature data testing (Focus on ReliefF only for efficiency)------------------------------------------------------------
 def test_relieff_pipeline():
     """Check: Data (Binary Endpoint, Discrete Features): ReliefF works in a sklearn pipeline"""
@@ -163,7 +120,7 @@ def test_relieff_pipeline():
 
 def test_relieff_pipeline_parallel():
     """Check: Data (Binary Endpoint, Discrete Features): ReliefF works in a sklearn pipeline when ReliefF is parallelized"""
-    #Note that the rebate algorithm cannot be parallelized with both the random forest and the cross validation all at once.  If the rebate algorithm is parallelized, the cross-validation scoring cannot be.
+    # Note that the rebate algorithm cannot be parallelized with both the random forest and the cross validation all at once.  If the rebate algorithm is parallelized, the cross-validation scoring cannot be.
     np.random.seed(49082)
 
     clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10, n_jobs=-1),
@@ -171,7 +128,7 @@ def test_relieff_pipeline_parallel():
 
     assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
 
-    
+
 def test_relieffpercent_pipeline():
     """Check: Data (Binary Endpoint, Discrete Features): ReliefF with % neighbors works in a sklearn pipeline"""
     np.random.seed(49082)
@@ -200,8 +157,8 @@ def test_surf_pipeline_parallel():
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
-    
-    
+
+
 def test_surfstar_pipeline():
     """Check: Data (Binary Endpoint, Discrete Features): SURF* works in a sklearn pipelined"""
     np.random.seed(9238745)
@@ -220,8 +177,8 @@ def test_surfstar_pipeline_parallel():
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
-    
-    
+
+
 def test_multisurfstar_pipeline():
     """Check: Data (Binary Endpoint, Discrete Features): MultiSURF* works in a sklearn pipeline"""
     np.random.seed(320931)
@@ -240,8 +197,8 @@ def test_multisurfstar_pipeline_parallel():
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
-    
-    
+
+
 def test_multisurf_pipeline():
     """Check: Data (Binary Endpoint, Discrete Features): MultiSURF works in a sklearn pipeline"""
     np.random.seed(320931)
@@ -260,308 +217,305 @@ def test_multisurf_pipeline_parallel():
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.7
-    
-    
+
+
 def test_turf_pipeline():
     """Check: Data (Binary Endpoint, Discrete Features): TuRF with ReliefF works in a sklearn pipeline"""
     np.random.seed(49082)
 
-    clf = make_pipeline(TuRF(core_algorithm="ReliefF", n_features_to_select=2, pct=0.5, n_neighbors=100),
-                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
-
-    assert np.mean(cross_val_score(clf, features, labels, fit_params={
-                   'turf__headers': headers}, cv=3, n_jobs=-1)) > 0.7
+    # clf = make_pipeline(TuRF(core_algorithm="ReliefF", n_features_to_select=2, pct=0.5, n_neighbors=100),
+    #                     RandomForestClassifier(n_estimators=100, n_jobs=-1))
+    #
+    # assert np.mean(cross_val_score(clf, features, labels, fit_params={
+    #                'turf__headers': headers}, cv=3, n_jobs=-1)) > 0.7
 
 
 def test_turf_pipeline_parallel():
     """Check: Data (Binary Endpoint, Discrete Features): TuRF with ReliefF works in a sklearn pipeline when TuRF is parallelized"""
     np.random.seed(49082)
 
-    clf = make_pipeline(TuRF(core_algorithm="ReliefF", n_features_to_select=2, pct=0.5, n_neighbors=100, n_jobs=-1),
-                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
-
-    assert np.mean(cross_val_score(clf, features, labels, fit_params={
-                   'turf__headers': headers}, cv=3)) > 0.7
+    # clf = make_pipeline(TuRF(core_algorithm="ReliefF", n_features_to_select=2, pct=0.5, n_neighbors=100, n_jobs=-1),
+    #                     RandomForestClassifier(n_estimators=100, n_jobs=-1))
+    #
+    # assert np.mean(cross_val_score(clf, features, labels, fit_params={
+    #                'turf__headers': headers}, cv=3)) > 0.7
 
 
 def test_vlsrelief_pipeline():
     """Check: Data (Binary Endpoint, Discrete Features): VLSRelief with ReliefF works in a sklearn pipeline"""
     np.random.seed(49082)
- 
-    clf = make_pipeline(VLSRelief(core_algorithm="ReliefF", n_features_to_select=2, n_neighbors=100),
-                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
-    assert np.mean(cross_val_score(clf, features, labels, fit_params={
-                   'vlsrelief__headers': headers}, cv=3, n_jobs=-1)) > 0.7
- 
- 
+
+    # clf = make_pipeline(VLSRelief(core_algorithm="ReliefF", n_features_to_select=2, n_neighbors=100),
+    #                     RandomForestClassifier(n_estimators=100, n_jobs=-1))
+    #
+    # assert np.mean(cross_val_score(clf, features, labels, fit_params={
+    #                'vlsrelief__headers': headers}, cv=3, n_jobs=-1)) > 0.7
+
+
 def test_vlsrelief_pipeline_parallel():
     """Check: Data (Binary Endpoint, Discrete Features): VLSRelief with ReliefF works in a sklearn pipeline when VLSRelief is parallelized"""
     np.random.seed(49082)
- 
-    clf = make_pipeline(VLSRelief(core_algorithm="ReliefF", n_features_to_select=2, n_neighbors=100, n_jobs=-1),
-                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
-    assert np.mean(cross_val_score(clf, features, labels, fit_params={
-                   'vlsrelief__headers': headers}, cv=3)) > 0.7
-                   
+
+    # clf = make_pipeline(VLSRelief(core_algorithm="ReliefF", n_features_to_select=2, n_neighbors=100, n_jobs=-1),
+    #                     RandomForestClassifier(n_estimators=100, n_jobs=-1))
+    #
+    # assert np.mean(cross_val_score(clf, features, labels, fit_params={
+    #                'vlsrelief__headers': headers}, cv=3)) > 0.7
+
+
+def test_iterrelief_pipeline():
+    """Check: Data (Binary Endpoint, Discrete Features): IterRelief with ReliefF works in a sklearn pipeline"""
+    np.random.seed(49082)
+
+    # clf = make_pipeline(IterRelief(core_algorithm="ReliefF", n_features_to_select=2, n_neighbors=100),
+    #                     RandomForestClassifier(n_estimators=100, n_jobs=-1))
+    #
+    # assert np.mean(cross_val_score(clf, features, labels, cv=3, n_jobs=-1)) > 0.5
+
+
+def test_iterrelief_pipeline_parallel():
+    """Check: Data (Binary Endpoint, Discrete Features): IterRelief with ReliefF works in a sklearn pipeline when VLSRelief is parallelized"""
+    np.random.seed(49082)
+
+    # clf = make_pipeline(IterRelief(core_algorithm="ReliefF", n_features_to_select=2, n_neighbors=100, n_jobs=-1),
+    #                     RandomForestClassifier(n_estimators=100, n_jobs=-1))
+    #
+    # assert np.mean(cross_val_score(clf, features, labels, cv=3)) > 0.5
+
 # Test Multiclass Data ------------------------------------------------------------------------------------
+
 
 def test_relieff_pipeline_multiclass():
     """Check: Data (Multiclass Endpoint): ReliefF works in a sklearn pipeline """
     np.random.seed(49082)
- 
+
     clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10),
-<<<<<<< HEAD
-                        SimpleImputer(),
-=======
                         Imputer(),
->>>>>>> master
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
-    assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3, n_jobs=-1)) > 0.7
- 
- 
+
+    assert np.mean(cross_val_score(clf, features_multiclass,
+                                   labels_multiclass, cv=3, n_jobs=-1)) > 0.7
+
+
 def test_surf_pipeline_multiclass():
     """Check: Data (Multiclass Endpoint): SURF works in a sklearn pipeline"""
     np.random.seed(240932)
- 
+
     clf = make_pipeline(SURF(n_features_to_select=2),
-<<<<<<< HEAD
-                        SimpleImputer(),
-=======
                         Imputer(),
->>>>>>> master
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
-    assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3, n_jobs=-1)) > 0.7
- 
- 
+
+    assert np.mean(cross_val_score(clf, features_multiclass,
+                                   labels_multiclass, cv=3, n_jobs=-1)) > 0.7
+
+
 def test_surfstar_pipeline_multiclass():
     """Check: Data (Multiclass Endpoint): SURF* works in a sklearn pipeline"""
     np.random.seed(9238745)
- 
+
     clf = make_pipeline(SURFstar(n_features_to_select=2),
-<<<<<<< HEAD
-                        SimpleImputer(),
-=======
                         Imputer(),
->>>>>>> master
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
-    assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3, n_jobs=-1)) > 0.7
- 
- 
+
+    assert np.mean(cross_val_score(clf, features_multiclass,
+                                   labels_multiclass, cv=3, n_jobs=-1)) > 0.7
+
+
 def test_multisurfstar_pipeline_multiclass():
     """Check: Data (Multiclass Endpoint): MultiSURF* works in a sklearn pipeline"""
     np.random.seed(320931)
- 
+
     clf = make_pipeline(MultiSURFstar(n_features_to_select=2),
-<<<<<<< HEAD
-                        SimpleImputer(),
-=======
                         Imputer(),
->>>>>>> master
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
-    assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3, n_jobs=-1)) > 0.7
-    
-    
+
+    assert np.mean(cross_val_score(clf, features_multiclass,
+                                   labels_multiclass, cv=3, n_jobs=-1)) > 0.7
+
+
 def test_multisurf_pipeline_multiclass():
     """Check: Data (Multiclass Endpoint): MultiSURF works in a sklearn pipeline"""
     np.random.seed(320931)
- 
+
     clf = make_pipeline(MultiSURF(n_features_to_select=2),
-<<<<<<< HEAD
-                        SimpleImputer(),
-=======
                         Imputer(),
->>>>>>> master
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
-    assert np.mean(cross_val_score(clf, features_multiclass, labels_multiclass, cv=3, n_jobs=-1)) > 0.7
- 
- 
+
+    assert np.mean(cross_val_score(clf, features_multiclass,
+                                   labels_multiclass, cv=3, n_jobs=-1)) > 0.7
+
+
 # Test Continuous Endpoint Data ------------------------------------------------------------------------------------
- 
+
 def test_relieff_pipeline_cont_endpoint():
     """Check: Data (Continuous Endpoint): ReliefF works in a sklearn pipeline"""
     np.random.seed(49082)
- 
+
     clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10),
                         RandomForestRegressor(n_estimators=100, n_jobs=-1))
- 
-    assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint, cv=3, n_jobs=-1))) < 0.5
- 
- 
+
+    assert abs(np.mean(cross_val_score(clf, features_cont_endpoint,
+                                       labels_cont_endpoint, cv=3, n_jobs=-1))) < 0.5
+
+
 def test_surf_pipeline_cont_endpoint():
     """Check: Data (Continuous Endpoint): SURF works in a sklearn pipeline"""
     np.random.seed(240932)
- 
+
     clf = make_pipeline(SURF(n_features_to_select=2),
                         RandomForestRegressor(n_estimators=100, n_jobs=-1))
- 
-    assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint, cv=3, n_jobs=-1))) < 0.5
- 
- 
+
+    assert abs(np.mean(cross_val_score(clf, features_cont_endpoint,
+                                       labels_cont_endpoint, cv=3, n_jobs=-1))) < 0.5
+
+
 def test_surfstar_pipeline_cont_endpoint():
     """Check: Data (Continuous Endpoint): SURF* works in a sklearn pipeline"""
     np.random.seed(9238745)
- 
+
     clf = make_pipeline(SURFstar(n_features_to_select=2),
                         RandomForestRegressor(n_estimators=100, n_jobs=-1))
- 
-    assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint, cv=3, n_jobs=-1))) < 0.5
 
- 
+    assert abs(np.mean(cross_val_score(clf, features_cont_endpoint,
+                                       labels_cont_endpoint, cv=3, n_jobs=-1))) < 0.5
+
+
 def test_multisurfstar_pipeline_cont_endpoint():
     """Check: Data (Continuous Endpoint): MultiSURF* works in a sklearn pipeline"""
     np.random.seed(320931)
- 
+
     clf = make_pipeline(MultiSURFstar(n_features_to_select=2),
                         RandomForestRegressor(n_estimators=100, n_jobs=-1))
- 
-    assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint, cv=3, n_jobs=-1))) < 0.5
- 
- 
+
+    assert abs(np.mean(cross_val_score(clf, features_cont_endpoint,
+                                       labels_cont_endpoint, cv=3, n_jobs=-1))) < 0.5
+
+
 def test_multisurf_pipeline_cont_endpoint():
     """Check: Data (Continuous Endpoint): MultiSURF works in a sklearn pipeline"""
     np.random.seed(320931)
- 
+
     clf = make_pipeline(MultiSURF(n_features_to_select=2),
                         RandomForestRegressor(n_estimators=100, n_jobs=-1))
- 
-    assert abs(np.mean(cross_val_score(clf, features_cont_endpoint, labels_cont_endpoint, cv=3, n_jobs=-1))) < 0.5
- 
+
+    assert abs(np.mean(cross_val_score(clf, features_cont_endpoint,
+                                       labels_cont_endpoint, cv=3, n_jobs=-1))) < 0.5
+
 # Test Mixed Attribute Data ------------------------------------------------------------------------------------
- 
+
+
 def test_relieff_pipeline_mixed_attributes():
     """Check: Data (Mixed Attributes): ReliefF works in a sklearn pipeline"""
     np.random.seed(49082)
- 
+
     clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
+
     assert np.mean(cross_val_score(clf, features_mixed_attributes,
                                    labels_mixed_attributes, cv=3, n_jobs=-1)) > 0.7
- 
- 
+
+
 def test_surf_pipeline_mixed_attributes():
     """Check: Data (Mixed Attributes): SURF works in a sklearn pipeline"""
     np.random.seed(240932)
- 
+
     clf = make_pipeline(SURF(n_features_to_select=2),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
+
     assert np.mean(cross_val_score(clf, features_mixed_attributes,
                                    labels_mixed_attributes, cv=3, n_jobs=-1)) > 0.7
- 
- 
+
+
 def test_surfstar_pipeline_mixed_attributes():
     """Check: Data (Mixed Attributes): SURF* works in a sklearn pipeline"""
     np.random.seed(9238745)
- 
+
     clf = make_pipeline(SURFstar(n_features_to_select=2),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
+
     assert np.mean(cross_val_score(clf, features_mixed_attributes,
                                    labels_mixed_attributes, cv=3, n_jobs=-1)) > 0.7
 
- 
+
 def test_multisurfstar_pipeline_mixed_attributes():
     """Check: Data (Mixed Attributes): MultiSURF* works in a sklearn pipeline"""
     np.random.seed(320931)
- 
+
     clf = make_pipeline(MultiSURFstar(n_features_to_select=2),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
+
     assert np.mean(cross_val_score(clf, features_mixed_attributes,
                                    labels_mixed_attributes, cv=3, n_jobs=-1)) > 0.7
 
- 
+
 def test_multisurf_pipeline_mixed_attributes():
     """Check: Data (Mixed Attributes): MultiSURF works in a sklearn pipeline"""
     np.random.seed(320931)
- 
+
     clf = make_pipeline(MultiSURF(n_features_to_select=2),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
+
     assert np.mean(cross_val_score(clf, features_mixed_attributes,
                                    labels_mixed_attributes, cv=3, n_jobs=-1)) > 0.7
-                                   
+
 # Test Missing Value Data ------------------------------------------------------------------------------------
- 
+
+
 def test_relieff_pipeline_missing_values():
     """Check: Data (Missing Values): ReliefF works in a sklearn pipeline"""
     np.random.seed(49082)
- 
+
     clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10),
-<<<<<<< HEAD
-                        SimpleImputer(),
-=======
                         Imputer(),
->>>>>>> master
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
-    assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values, cv=3, n_jobs=-1)) > 0.7
- 
- 
+
+    assert np.mean(cross_val_score(clf, features_missing_values,
+                                   labels_missing_values, cv=3, n_jobs=-1)) > 0.7
+
+
 def test_surf_pipeline_missing_values():
     """Check: Data (Missing Values): SURF works in a sklearn pipeline"""
     np.random.seed(240932)
- 
+
     clf = make_pipeline(SURF(n_features_to_select=2),
-<<<<<<< HEAD
-                        SimpleImputer(),
-=======
                         Imputer(),
->>>>>>> master
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
-    assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values, cv=3, n_jobs=-1)) > 0.7
- 
- 
+
+    assert np.mean(cross_val_score(clf, features_missing_values,
+                                   labels_missing_values, cv=3, n_jobs=-1)) > 0.7
+
+
 def test_surfstar_pipeline_missing_values():
     """Check: Data (Missing Values): SURF* works in a sklearn pipeline"""
     np.random.seed(9238745)
- 
+
     clf = make_pipeline(SURFstar(n_features_to_select=2),
-<<<<<<< HEAD
-                        SimpleImputer(),
-=======
                         Imputer(),
->>>>>>> master
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
-    assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values, cv=3, n_jobs=-1)) > 0.7
- 
- 
+
+    assert np.mean(cross_val_score(clf, features_missing_values,
+                                   labels_missing_values, cv=3, n_jobs=-1)) > 0.7
+
+
 def test_multisurfstar_pipeline_missing_values():
     """Check: Data (Missing Values): MultiSURF* works in a sklearn pipeline"""
     np.random.seed(320931)
- 
+
     clf = make_pipeline(MultiSURFstar(n_features_to_select=2),
-<<<<<<< HEAD
-                        SimpleImputer(),
-=======
                         Imputer(),
->>>>>>> master
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
-    assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values, cv=3, n_jobs=-1)) > 0.7
+
+    assert np.mean(cross_val_score(clf, features_missing_values,
+                                   labels_missing_values, cv=3, n_jobs=-1)) > 0.7
 
 
 def test_multisurf_pipeline_missing_values():
     """Check: Data (Missing Values): MultiSURF works in a sklearn pipeline"""
     np.random.seed(320931)
- 
+
     clf = make_pipeline(MultiSURF(n_features_to_select=2),
-<<<<<<< HEAD
-                        SimpleImputer(),
-=======
                         Imputer(),
->>>>>>> master
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
- 
-    assert np.mean(cross_val_score(clf, features_missing_values, labels_missing_values, cv=3, n_jobs=-1)) > 0.7
- 
+
+    assert np.mean(cross_val_score(clf, features_missing_values,
+                                   labels_missing_values, cv=3, n_jobs=-1)) > 0.7

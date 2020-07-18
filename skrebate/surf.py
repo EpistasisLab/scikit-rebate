@@ -7,16 +7,13 @@ scikit-rebate was primarily developed at the University of Pennsylvania by:
     - Ryan J. Urbanowicz (ryanurb@upenn.edu)
     - Weixuan Fu (weixuanf@upenn.edu)
     - and many more generous open source contributors
-
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without restriction,
 including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
 and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
 subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all copies or substantial
 portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
 LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
@@ -26,11 +23,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from __future__ import print_function
 import numpy as np
-<<<<<<< HEAD
 from joblib import Parallel, delayed
-=======
-from sklearn.externals.joblib import Parallel, delayed
->>>>>>> master
 from .relieff import ReliefF
 from .scoring_utils import SURF_compute_scores
 
@@ -38,17 +31,13 @@ from .scoring_utils import SURF_compute_scores
 class SURF(ReliefF):
 
     """Feature selection using data-mined expert knowledge.
-
     Based on the SURF algorithm as introduced in:
-
     Moore, Jason et al. Multiple Threshold Spatially Uniform ReliefF
     for the Genetic Analysis of Complex Human Diseases.
-
     """
 
     def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False, n_jobs=1):
         """Sets up ReliefF to perform feature selection.
-
         Parameters
         ----------
         n_features_to_select: int (default: 10)
@@ -64,7 +53,6 @@ class SURF(ReliefF):
             The number of cores to dedicate to computing the scores with joblib.
             Assigning this parameter to -1 will dedicate as many cores as are available on your system.
             We recommend setting this parameter to -1 to speed up the algorithm as much as possible.
-
         """
         self.n_features_to_select = n_features_to_select
         self.discrete_threshold = discrete_threshold
