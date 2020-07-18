@@ -28,7 +28,7 @@ from __future__ import print_function
 import numpy as np
 from .surfstar import SURFstar
 from .scoring_utils import MultiSURFstar_compute_scores
-from sklearn.externals.joblib import Parallel, delayed
+from joblib import Parallel, delayed
 
 
 class MultiSURFstar(SURFstar):
@@ -82,15 +82,9 @@ class MultiSURFstar(SURFstar):
         NN_near_list = [i[0] for i in NNlist]
         NN_far_list = [i[1] for i in NNlist]
 
-        if self.weight_flag == 2:
-            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-                MultiSURFstar_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                              NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type, self.weight_flag, self._weights)
-                for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
-        else:
-            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-                MultiSURFstar_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                              NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
-                for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
+        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+            MultiSURFstar_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
+                                          NN_near, NN_far, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
+            for instance_num, NN_near, NN_far in zip(range(self._datalen), NN_near_list, NN_far_list)), axis=0)
 
         return np.array(scores)
