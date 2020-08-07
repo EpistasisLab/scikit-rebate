@@ -2,8 +2,8 @@ import numpy as np
 import time
 import warnings
 import sys
-from sklearn.base import BaseEstimator
-from sklearn.base import TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils import check_array, column_or_1d
 # from sklearn.feature_selection.base import SelectorMixin
 from joblib import Parallel, delayed
 # from .scoring_utils import get_row_missing, ReliefF_compute_scores
@@ -72,8 +72,8 @@ class TuRF(BaseEstimator, TransformerMixin):
         Copy of the TuRF instance
         """
 
-        self.X_mat = X
-        self._y = y
+        self.X_mat = check_array(X, force_all_finite=False)
+        self._y = column_or_1d(y)
         self.headers = headers
         self._num_attributes = len(self.X_mat[0]) 
         self._lost = {}
@@ -184,7 +184,7 @@ class TuRF(BaseEstimator, TransformerMixin):
         if self._num_attributes < self.n_features_to_select:
             raise ValueError('Number of features to select is larger than the number of features in the dataset.')
         
-        return X[:, self.top_features_[:self.n_features_to_select]]
+        return check_array(X, force_all_finite=False)[:, self.top_features_[:self.n_features_to_select]]
         #return X[:, self.top_features_]
 
     #=========================================================================#

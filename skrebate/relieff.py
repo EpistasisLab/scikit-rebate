@@ -27,6 +27,7 @@ import time
 import warnings
 import sys
 from sklearn.base import BaseEstimator
+from sklearn.utils import check_array, column_or_1d
 from joblib import Parallel, delayed
 from .scoring_utils import get_row_missing, ReliefF_compute_scores
 
@@ -91,8 +92,8 @@ class ReliefF(BaseEstimator):
         -------
         Copy of the ReliefF instance
         """
-        self._X = X  # matrix of predictive variables ('independent variables')
-        self._y = y  # vector of values for outcome variable ('dependent variable')
+        self._X = check_array(X, force_all_finite=False)  # matrix of predictive variables ('independent variables')
+        self._y = column_or_1d(y)  # vector of values for outcome variable ('dependent variable')
 
         # Set up the properties for ReliefF -------------------------------------------------------------------------------------
         self._datalen = len(self._X)  # Number of training instances ('n')
@@ -220,7 +221,7 @@ class ReliefF(BaseEstimator):
         if self._num_attributes < self.n_features_to_select:
             raise ValueError('Number of features to select is larger than the number of features in the dataset.')
         
-        return X[:, self.top_features_[:self.n_features_to_select]]
+        return check_array(X, force_all_finite=False)[:, self.top_features_[:self.n_features_to_select]]
 
     #=========================================================================#
     def fit_transform(self, X, y):

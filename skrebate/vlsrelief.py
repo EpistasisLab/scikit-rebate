@@ -3,8 +3,8 @@ import pandas as pd
 import time
 import warnings
 import sys
-from sklearn.base import BaseEstimator
-from sklearn.base import TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils import check_array, column_or_1d
 # from sklearn.feature_selection.base import SelectorMixin
 from joblib import Parallel, delayed
 # from .scoring_utils import get_row_missing, ReliefF_compute_scores
@@ -77,8 +77,8 @@ class VLSRelief(BaseEstimator, TransformerMixin):
         Copy of the VLSRelief instance
         """
 
-        self.X_mat = X
-        self._y = y
+        self.X_mat = check_array(X, force_all_finite=False)
+        self._y = column_or_1d(y)
         self.headers = headers
 
         if self.core_algorithm.lower() == "multisurf":
@@ -152,7 +152,7 @@ class VLSRelief(BaseEstimator, TransformerMixin):
             Reduced feature matrix
         """
 
-        return X[:, self.top_features_[:self.n_features_to_select]]
+        return check_array(X, force_all_finite=False)[:, self.top_features_[:self.n_features_to_select]]
 
         # return X[:, self.top_features_]
 
