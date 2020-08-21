@@ -155,8 +155,9 @@ def sigmoid_function(data_type, attr, fname, xinstfeature, xNNifeature, SWRF_Tva
     standDev = attr[fname[4]] #Standard deviation (line 327 in relieff, set to 0 when discrete?)
     dist_array
 
-    diff = 2 * (1 / (1 + math.exp(-(SWRF_Tval-(dist_array))/(standDev/4)))) - 1 
-    #distarray parameter needs tweaking
+    diff = 2 * (1 / (1 + math.exp(-(SWRF_Tval-(dist_array))/(standDev/4)))) - 1 #is standDev 0 when discrete? check line 327 relieff
+    #distarray parameter needs tweaking, how to access specific values of dist_array that corresponds to that instance?
+    #SWRF_Tval should have the right value, but double check
 
 
 def ramp_function(data_type, attr, fname, xinstfeature, xNNifeature):
@@ -188,6 +189,8 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
     """Flexible feature scoring method that can be used with any core Relief-based method. Scoring proceeds differently
     based on whether endpoint is binary, multiclass, or continuous. This method is called for a single target instance
     + feature combination and runs over all items in NN. """
+
+    #not done adding sigmoid to all the different types of data in this function
 
     fname = headers[feature]  # feature identifier
     ftype = attr[fname][0]  # feature type
