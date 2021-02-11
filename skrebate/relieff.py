@@ -312,7 +312,7 @@ class ReliefF(BaseEstimator):
             d_dist = squareform(pdist(xd, metric='hamming'))
             # Cityblock is also known as Manhattan distance
             c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock'))
-            return np.add(d_dist, c_dist) / self._num_attributes
+            return np.add(d_dist * self._num_attributes, c_dist)
 
         else: #continuous features only
             #xc = pre_normalize(xc)
