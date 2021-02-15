@@ -36,7 +36,7 @@ class SURF(ReliefF):
     for the Genetic Analysis of Complex Human Diseases.
     """
 
-    def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False, n_jobs=1):
+    def __init__(self, n_features_to_select=10, discrete_threshold=10, verbose=False, n_jobs=1,weight_final_scores=False,rank_absolute=False):
         """Sets up ReliefF to perform feature selection.
         Parameters
         ----------
@@ -53,11 +53,17 @@ class SURF(ReliefF):
             The number of cores to dedicate to computing the scores with joblib.
             Assigning this parameter to -1 will dedicate as many cores as are available on your system.
             We recommend setting this parameter to -1 to speed up the algorithm as much as possible.
+        weight_final_scores: bool (default: False)
+            Whether to multiply given weights (in fit) to final scores. Only applicable if weights are given.
+        rank_absolute: bool (default: False)
+            Whether to give top features as by ranking features by absolute value.
         """
         self.n_features_to_select = n_features_to_select
         self.discrete_threshold = discrete_threshold
         self.verbose = verbose
         self.n_jobs = n_jobs
+        self.weight_final_scores = weight_final_scores
+        self.rank_absolute = rank_absolute
 
 ############################# SURF ############################################
     def _find_neighbors(self, inst, avg_dist):
@@ -89,9 +95,15 @@ class SURF(ReliefF):
         nan_entries = np.isnan(self._X)
 
         NNlist = [self._find_neighbors(datalen, avg_dist) for datalen in range(self._datalen)]
-        scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-            SURF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                 NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
-            for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
+        if isinstance(self._weights, np.ndarray) and self.weight_final_scores:
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+                SURF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
+                                     NN, self._headers, self._class_type, self._X, self._y, self._labels_std,self.data_type, self._weights)
+                                                         for instance_num, NN in zip(range(self._datalen), NNlist)),axis=0)
+        else:
+            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
+                SURF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
+                                     NN, self._headers, self._class_type, self._X, self._y, self._labels_std,self.data_type)
+                                                         for instance_num, NN in zip(range(self._datalen), NNlist)),axis=0)
 
         return np.array(scores)
