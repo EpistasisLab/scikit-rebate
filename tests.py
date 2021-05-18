@@ -26,7 +26,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from skrebate import ReliefF, SURF, SURFstar, MultiSURF, MultiSURFstar
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.preprocessing import Imputer
+from sklearn.impute import SimpleImputer
 from sklearn.model_selection import cross_val_score
 import pandas as pd
 import numpy as np
@@ -60,7 +60,8 @@ genetic_data_multiclass.rename(columns={'Class': 'class'}, inplace=True)
 genetic_data_multiclass = genetic_data_multiclass.sample(frac=0.25)
 
 
-features, labels = genetic_data.drop('class', axis=1).values, genetic_data['class'].values
+features_df, labels_s = genetic_data.drop('class', axis=1), genetic_data['class']
+features, labels = features_df.values, labels_s.values
 headers = list(genetic_data.drop("class", axis=1))
 
 features_cont_endpoint, labels_cont_endpoint = genetic_data_cont_endpoint.drop(
@@ -290,7 +291,7 @@ def test_relieff_pipeline_multiclass():
     np.random.seed(49082)
 
     clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features_multiclass,
@@ -302,7 +303,7 @@ def test_surf_pipeline_multiclass():
     np.random.seed(240932)
 
     clf = make_pipeline(SURF(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features_multiclass,
@@ -314,7 +315,7 @@ def test_surfstar_pipeline_multiclass():
     np.random.seed(9238745)
 
     clf = make_pipeline(SURFstar(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features_multiclass,
@@ -326,7 +327,7 @@ def test_multisurfstar_pipeline_multiclass():
     np.random.seed(320931)
 
     clf = make_pipeline(MultiSURFstar(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features_multiclass,
@@ -338,7 +339,7 @@ def test_multisurf_pipeline_multiclass():
     np.random.seed(320931)
 
     clf = make_pipeline(MultiSURF(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features_multiclass,
@@ -466,7 +467,7 @@ def test_relieff_pipeline_missing_values():
     np.random.seed(49082)
 
     clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features_missing_values,
@@ -478,7 +479,7 @@ def test_surf_pipeline_missing_values():
     np.random.seed(240932)
 
     clf = make_pipeline(SURF(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features_missing_values,
@@ -490,7 +491,7 @@ def test_surfstar_pipeline_missing_values():
     np.random.seed(9238745)
 
     clf = make_pipeline(SURFstar(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features_missing_values,
@@ -502,7 +503,7 @@ def test_multisurfstar_pipeline_missing_values():
     np.random.seed(320931)
 
     clf = make_pipeline(MultiSURFstar(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features_missing_values,
@@ -514,8 +515,70 @@ def test_multisurf_pipeline_missing_values():
     np.random.seed(320931)
 
     clf = make_pipeline(MultiSURF(n_features_to_select=2),
-                        Imputer(),
+                        SimpleImputer(),
                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
 
     assert np.mean(cross_val_score(clf, features_missing_values,
                                    labels_missing_values, cv=3, n_jobs=-1)) > 0.7
+
+# Test Dataframe handling:
+
+
+def test_relieff_pandas_inputs():
+    """Check: Data (pandas DataFrame/Series): ReliefF works with pandas DataFrame and Series inputs"""
+    np.random.seed(49082)
+    clf = make_pipeline(ReliefF(n_features_to_select=2, n_neighbors=10),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+    assert np.mean(cross_val_score(clf, features_df, labels_s, cv=3, n_jobs=-1)) > 0.7
+
+
+def test_surf_pandas_inputs():
+    """Check: Data (pandas DataFrame/Series): SURF works with pandas DataFrame and Series inputs"""
+    np.random.seed(240932)
+    clf = make_pipeline(SURF(n_features_to_select=2),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+    assert np.mean(cross_val_score(clf, features_df,
+                                   labels_s, cv=3, n_jobs=-1)) > 0.7
+
+
+def test_surfstar_pandas_inputs():
+    """Check: Data (pandas DataFrame/Series): SURF* works with pandas DataFrame and Series inputs"""
+    np.random.seed(9238745)
+    clf = make_pipeline(SURFstar(n_features_to_select=2),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+    assert np.mean(cross_val_score(clf, features_df,
+                                   labels_s, cv=3, n_jobs=-1)) > 0.7
+
+
+def test_multisurfstar_pandas_inputs():
+    """Check: Data (pandas DataFrame/Series): MultiSURF* works with pandas DataFrame and Series inputs"""
+    np.random.seed(320931)
+    clf = make_pipeline(MultiSURFstar(n_features_to_select=2),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+    assert np.mean(cross_val_score(clf, features_df,
+                                   labels_s, cv=3, n_jobs=-1)) > 0.7
+
+
+def test_multisurf_pandas_inputs():
+    """Check: Data (pandas DataFrame/Series): MultiSURF works with pandas DataFrame and Series inputs"""
+    np.random.seed(320931)
+    clf = make_pipeline(MultiSURF(n_features_to_select=2),
+                        RandomForestClassifier(n_estimators=100, n_jobs=-1))
+    assert np.mean(cross_val_score(clf, features_df,
+                                   labels_s, cv=3, n_jobs=-1)) > 0.7
+
+
+# def test_turf_pandas_inputs():
+#     """Check: Data (pandas DataFrame/Series): TuRF works with pandas DataFrame and Series inputs"""
+#     np.random.seed(320931)
+#     clf = make_pipeline(TuRF(core_algorithm="ReliefF", n_features_to_select=2, pct=0.5, n_neighbors=100),
+#                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
+#     assert np.mean(cross_val_score(clf, features, labels, fit_params={'turf__headers': headers}, cv=3, n_jobs=-1)) > 0.7
+
+
+# def test_vlsrelief_pandas_inputs():
+#     """Check: Data (pandas DataFrame/Series): VLSRelief works with pandas DataFrame and Series inputs"""
+#     np.random.seed(49082)
+#     clf = make_pipeline(VLSRelief(core_algorithm="ReliefF", n_features_to_select=2, n_neighbors=100),
+#                         RandomForestClassifier(n_estimators=100, n_jobs=-1))
+#     assert np.mean(cross_val_score(clf, features, labels, fit_params={'vlsrelief__headers': headers}, cv=3, n_jobs=-1)) > 0.7

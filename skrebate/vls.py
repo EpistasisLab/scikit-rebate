@@ -1,4 +1,5 @@
 from sklearn.base import BaseEstimator
+from sklearn.utils import check_array, column_or_1d
 import copy
 import random
 import numpy as np
@@ -40,6 +41,8 @@ class VLS(BaseEstimator):
          -------
          self
         """
+        X = check_array(X, force_all_finite=False)
+        y = column_or_1d(y)
         #random_state
         if self.random_state != None:
             np.random.seed(self.random_state)
@@ -155,6 +158,7 @@ class VLS(BaseEstimator):
             return False
 
     def transform(self, X):
+        X = check_array(X, force_all_finite=False)
         if X.shape[1] < self.relief_object.n_features_to_select:
             raise ValueError('Number of features to select is larger than the number of features in the dataset.')
 

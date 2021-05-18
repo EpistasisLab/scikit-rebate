@@ -1,6 +1,8 @@
 from sklearn.base import BaseEstimator
+from sklearn.utils import check_array, column_or_1d
 import copy
 import numpy as np
+
 
 class TURF(BaseEstimator):
 
@@ -35,6 +37,8 @@ class TURF(BaseEstimator):
          -------
          self
         """
+        X = check_array(X, force_all_finite=False)
+        y = column_or_1d(y)
         #Adjust num_scores_to_return
         num_features = X.shape[1]
         self.num_scores_to_return = min(self.num_scores_to_return,num_features)
@@ -141,9 +145,9 @@ class TURF(BaseEstimator):
             return False
 
     def transform(self, X):
+        X = check_array(X, force_all_finite=False)
         if X.shape[1] < self.relief_object.n_features_to_select:
             raise ValueError('Number of features to select is larger than the number of features in the dataset.')
-
         return X[:, self.top_features_[:self.relief_object.n_features_to_select]]
 
     def fit_transform(self, X, y):

@@ -27,6 +27,7 @@ import time
 import warnings
 import sys
 from sklearn.base import BaseEstimator
+from sklearn.utils import check_array, column_or_1d
 from joblib import Parallel, delayed
 from .scoring_utils import get_row_missing, ReliefF_compute_scores, get_row_missing_iter
 
@@ -99,8 +100,9 @@ class ReliefF(BaseEstimator):
         -------
         Copy of the ReliefF instance
         """
+        X = check_array(X, force_all_finite=False)
         self._X = X  # matrix of predictive variables ('independent variables')
-        self._y = y  # vector of values for outcome variable ('dependent variable')
+        self._y = column_or_1d(y)  # vector of values for outcome variable ('dependent variable')
         if isinstance(weights, np.ndarray):
             if isinstance(weights, np.ndarray):
                 if len(weights) != len(X[0]):
@@ -246,6 +248,7 @@ class ReliefF(BaseEstimator):
         X_reduced: array-like {n_samples, n_features_to_select}
             Reduced feature matrix
         """
+        X = check_array(X, force_all_finite=False)
         if self._num_attributes < self.n_features_to_select:
             raise ValueError('Number of features to select is larger than the number of features in the dataset.')
         
