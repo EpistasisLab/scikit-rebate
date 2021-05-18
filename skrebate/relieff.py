@@ -100,7 +100,8 @@ class ReliefF(BaseEstimator):
         -------
         Copy of the ReliefF instance
         """
-        self._X = check_array(X, force_all_finite=False)  # matrix of predictive variables ('independent variables')
+        X = check_array(X, force_all_finite=False)
+        self._X = X  # matrix of predictive variables ('independent variables')
         self._y = column_or_1d(y)  # vector of values for outcome variable ('dependent variable')
         if isinstance(weights, np.ndarray):
             if isinstance(weights, np.ndarray):
@@ -247,10 +248,11 @@ class ReliefF(BaseEstimator):
         X_reduced: array-like {n_samples, n_features_to_select}
             Reduced feature matrix
         """
+        X = check_array(X, force_all_finite=False)
         if self._num_attributes < self.n_features_to_select:
             raise ValueError('Number of features to select is larger than the number of features in the dataset.')
         
-        return check_array(X, force_all_finite=False)[:, self.top_features_[:self.n_features_to_select]]
+        return X[:, self.top_features_[:self.n_features_to_select]]
 
     #=========================================================================#
     def fit_transform(self, X, y):
