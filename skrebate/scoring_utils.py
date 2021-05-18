@@ -79,6 +79,66 @@ def get_row_missing(xc, xd, cdiffs, index, cindices, dindices):
 
     return row
 
+# For iter relief
+def get_row_missing_iter(xc, xd, cdiffs, index, cindices, dindices, weights):
+    """ Calculate distance between index instance and all other instances. """
+    row = np.empty(0, dtype=np.double)  # initialize empty row
+    cinst1 = xc[index]  # continuous-valued features for index instance
+    dinst1 = xd[index]  # discrete-valued features for index instance
+    # Boolean mask locating missing values for continuous features for index instance
+    can = cindices[index]
+    # Boolean mask locating missing values for discrete features for index instance
+    dan = dindices[index]
+    tf = len(cinst1) + len(dinst1)  # total number of features.
+    # Progressively compare current instance to all others. Excludes comparison with self indexed instance. (Building the distance matrix triangle).
+    for j in range(index):
+        dist = 0
+        dinst2 = xd[j]  # discrete-valued features for compared instance
+        cinst2 = xc[j]  # continuous-valued features for compared instance
+
+        # Manage missing values in discrete features
+        # Boolean mask locating missing values for discrete features for compared instance
+        dbn = dindices[j]
+        # indexes where there is at least one missing value in the feature between an instance pair.
+        idx = np.unique(np.append(dan, dbn))
+        # Number of features excluded from distance calculation due to one or two missing values within instance pair. Used to normalize distance values for comparison.
+        dmc = len(idx)
+        d1 = np.delete(dinst1, idx)  # delete unique missing features from index instance
+        d2 = np.delete(dinst2, idx)  # delete unique missing features from compared instance
+
+        wd = np.delete(weights, idx)  # delete weights corresponding to missing discrete features
+        # Manage missing values in continuous features
+        # Boolean mask locating missing values for continuous features for compared instance
+        cbn = cindices[j]
+        # indexes where there is at least one missing value in the feature between an instance pair.
+        idx = np.unique(np.append(can, cbn))
+        # Number of features excluded from distance calculation due to one or two missing values within instance pair. Used to normalize distance values for comparison.
+        cmc = len(idx)
+        c1 = np.delete(cinst1, idx)  # delete unique missing features from index instance
+        c2 = np.delete(cinst2, idx)  # delete unique missing features from compared instance
+        # delete unique missing features from continuous value difference scores
+        cdf = np.delete(cdiffs, idx)
+        wc = np.delete(weights, idx)  # delete weights corresponding to missing continuous features
+
+        # Add discrete feature distance contributions (missing values excluded) - Hamming distance
+        if len(d1)!=0: #To ensure there is atleast one discrete variable
+            hamming_dist = np.not_equal(d1, d2).astype(float)
+            weight_hamming_dist = np.dot(hamming_dist, wd)/np.sum(wd)
+            dist += weight_hamming_dist
+
+        # Add continuous feature distance contributions (missing values excluded) - Manhattan distance (Note that 0-1 continuous value normalization is included ~ subtraction of minimums cancel out)
+        if len(c1)!=0: #To ensure there is atleast one continuous variable
+            dist += np.dot((np.absolute(np.subtract(c1, c2)) / cdf), wc)/np.sum(wc)
+
+        # Normalize distance calculation based on total number of missing values bypassed in either discrete or continuous features.
+        tnmc = tf - dmc - cmc  # Total number of unique missing counted
+        # Distance normalized by number of features included in distance sum (this seeks to handle missing values neutrally in distance calculation)
+        dist = dist/float(tnmc)
+
+        row = np.append(row, dist)
+
+    return row
+
 
 def ramp_function(data_type, attr, fname, xinstfeature, xNNifeature):
     """ Our own user simplified variation of the ramp function suggested by Hong 1994, 1997. Hong's method requires the user to specifiy two thresholds
@@ -346,64 +406,87 @@ def compute_score(attr, mcmap, NN, feature, inst, nan_entries, headers, class_ty
     return diff
 
 
-def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std, data_type):
+def ReliefF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std, data_type, weights=None):
     """ Unique scoring procedure for ReliefF algorithm. Scoring based on k nearest hits and misses of current target instance. """
     scores = np.zeros(num_attributes)
-    for feature_num in range(num_attributes):
-        scores[feature_num] += compute_score(attr, mcmap, NN, feature_num, inst,
-                                             nan_entries, headers, class_type, X, y, labels_std, data_type)
+    if isinstance(weights, np.ndarray):
+        for feature_num in range(num_attributes):
+            scores[feature_num] += weights[feature_num] * compute_score(attr, mcmap, NN, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type)
+    else:
+        for feature_num in range(num_attributes):
+            scores[feature_num] += compute_score(attr, mcmap, NN, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type)
     return scores
 
-
-def SURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std, data_type):
+def SURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN, headers, class_type, X, y, labels_std, data_type, weights=None):
     """ Unique scoring procedure for SURF algorithm. Scoring based on nearest neighbors within defined radius of current target instance. """
     scores = np.zeros(num_attributes)
-    if len(NN) <= 0:
-        return scores
-    for feature_num in range(num_attributes):
-        scores[feature_num] += compute_score(attr, mcmap, NN, feature_num, inst,
-                                             nan_entries, headers, class_type, X, y, labels_std, data_type)
+    if isinstance(weights, np.ndarray):
+        if len(NN) <= 0:
+            return scores
+        for feature_num in range(num_attributes):
+            scores[feature_num] += weights[feature_num] * compute_score(attr, mcmap, NN, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type)
+    else:
+        if len(NN) <= 0:
+            return scores
+        for feature_num in range(num_attributes):
+            scores[feature_num] += compute_score(attr, mcmap, NN, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type)
     return scores
 
 
-def SURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, NN_far, headers, class_type, X, y, labels_std, data_type):
+def SURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, NN_far, headers, class_type, X, y, labels_std, data_type, weights=None):
     """ Unique scoring procedure for SURFstar algorithm. Scoring based on nearest neighbors within defined radius, as well as
     'anti-scoring' of far instances outside of radius of current target instance"""
     scores = np.zeros(num_attributes)
-    for feature_num in range(num_attributes):
-        if len(NN_near) > 0:
-            scores[feature_num] += compute_score(attr, mcmap, NN_near, feature_num, inst,
-                                                 nan_entries, headers, class_type, X, y, labels_std, data_type)
-        # Note that we are using the near scoring loop in 'compute_score' and then just subtracting it here, in line with original SURF* paper.
-        if len(NN_far) > 0:
-            scores[feature_num] -= compute_score(attr, mcmap, NN_far, feature_num, inst,
-                                                 nan_entries, headers, class_type, X, y, labels_std, data_type)
+    if isinstance(weights, np.ndarray):
+        for feature_num in range(num_attributes):
+            if len(NN_near) > 0:
+                scores[feature_num] += weights[feature_num] * compute_score(attr, mcmap, NN_near, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type)
+            # Note that we are using the near scoring loop in 'compute_score' and then just subtracting it here, in line with original SURF* paper.
+            if len(NN_far) > 0:
+                scores[feature_num] -= weights[feature_num] * compute_score(attr, mcmap, NN_far, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type)
+    else:
+        for feature_num in range(num_attributes):
+            if len(NN_near) > 0:
+                scores[feature_num] += compute_score(attr, mcmap, NN_near, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type)
+            # Note that we are using the near scoring loop in 'compute_score' and then just subtracting it here, in line with original SURF* paper.
+            if len(NN_far) > 0:
+                scores[feature_num] -= compute_score(attr, mcmap, NN_far, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type)
     return scores
 
 
-def MultiSURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, headers, class_type, X, y, labels_std, data_type):
+def MultiSURF_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, headers, class_type, X, y, labels_std, data_type, weights=None):
     """ Unique scoring procedure for MultiSURF algorithm. Scoring based on 'extreme' nearest neighbors within defined radius of current target instance. """
     scores = np.zeros(num_attributes)
-    for feature_num in range(num_attributes):
-        if len(NN_near) > 0:
-            scores[feature_num] += compute_score(attr, mcmap, NN_near, feature_num, inst,
-                                                 nan_entries, headers, class_type, X, y, labels_std, data_type)
+    if isinstance(weights, np.ndarray):
+        for feature_num in range(num_attributes):
+            if len(NN_near) > 0:
+                scores[feature_num] += weights[feature_num] * compute_score(attr, mcmap, NN_near, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type)
+    else:
+        for feature_num in range(num_attributes):
+            if len(NN_near) > 0:
+                scores[feature_num] += compute_score(attr, mcmap, NN_near, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type)
 
     return scores
 
 
-def MultiSURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, NN_far, headers, class_type, X, y, labels_std, data_type):
+def MultiSURFstar_compute_scores(inst, attr, nan_entries, num_attributes, mcmap, NN_near, NN_far, headers, class_type, X, y, labels_std, data_type, weights=None):
     """ Unique scoring procedure for MultiSURFstar algorithm. Scoring based on 'extreme' nearest neighbors within defined radius, as
     well as 'anti-scoring' of extreme far instances defined by outer radius of current target instance. """
     scores = np.zeros(num_attributes)
 
-    for feature_num in range(num_attributes):
-        if len(NN_near) > 0:
-            scores[feature_num] += compute_score(attr, mcmap, NN_near, feature_num, inst,
-                                                 nan_entries, headers, class_type, X, y, labels_std, data_type)
-        # Note that we add this term because we used the far scoring above by setting 'near' to False.  This is in line with original MultiSURF* paper.
-        if len(NN_far) > 0:
-            scores[feature_num] += compute_score(attr, mcmap, NN_far, feature_num, inst,
-                                                 nan_entries, headers, class_type, X, y, labels_std, data_type, near=False)
+    if isinstance(weights, np.ndarray):
+        for feature_num in range(num_attributes):
+            if len(NN_near) > 0:
+                scores[feature_num] += weights[feature_num] * compute_score(attr, mcmap, NN_near, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type)
+            # Note that we add this term because we used the far scoring above by setting 'near' to False.  This is in line with original MultiSURF* paper.
+            if len(NN_far) > 0:
+                scores[feature_num] += weights[feature_num] * compute_score(attr, mcmap, NN_far, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type, near=False)
+    else:
+        for feature_num in range(num_attributes):
+            if len(NN_near) > 0:
+                scores[feature_num] += compute_score(attr, mcmap, NN_near, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type)
+            # Note that we add this term because we used the far scoring above by setting 'near' to False.  This is in line with original MultiSURF* paper.
+            if len(NN_far) > 0:
+                scores[feature_num] += compute_score(attr, mcmap, NN_far, feature_num, inst, nan_entries, headers, class_type, X, y, labels_std, data_type, near=False)
 
     return scores

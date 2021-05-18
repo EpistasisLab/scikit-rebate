@@ -30,4 +30,6 @@ from .surf import SURF
 from .surfstar import SURFstar
 from .multisurf import MultiSURF
 from .multisurfstar import MultiSURFstar
-from .turf import TuRF
+from .turf import TURF
+from .vls import VLS
+from .iter import Iter
