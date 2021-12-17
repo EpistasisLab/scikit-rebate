@@ -67,7 +67,39 @@ Once the prerequisites are installed, you should be able to install scikit-rebat
 pip install skrebate
 ```
 
+Alternatively, for development you can use
+
+```
+pip install -r requirements.txt
+```
+
 Please [file a new issue](https://github.com/EpistasisLab/scikit-rebate/issues/new) if you run into installation problems.
+
+## Performance Testing
+
+This repo provides two basic tools for performance testing on your algorithms. This is important because in practice the datasets fed to the algorithms will be fairly large, and small performance regressions in core functions can be multiplied.
+
+The first tool for performance testing is 
+
+```
+python performance_tests.py
+```
+
+This can also be called to perform a parameter sweep across many different dataset sizes to extrapolate the performance characteristics on larger datasets.
+
+```
+python performance_tests.py sweep
+```
+
+Once a sweep has been run - you can use the Jupyter notebook `Visualize_Performance_Benchmarks.ipynb` to visualize the results.
+
+Additionally - a performance graph can be generated from cprofile data via
+
+```
+./run_performance_benchmark.sh
+```
+
+This will produce a data file and a png graph visualization in the main directory. Please note that this requires the installation of `gprof2dot` and `Graphviz`.
 
 ## Usage
 
