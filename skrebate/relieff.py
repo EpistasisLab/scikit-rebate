@@ -26,9 +26,93 @@ import numpy as np
 import time
 import warnings
 import sys
+from joblib import Parallel, delayed, cpu_count
+from numba import jit
+
+import numpy as np
 from sklearn.base import BaseEstimator
 from joblib import Parallel, delayed
 from .scoring_utils import get_row_missing, ReliefF_compute_scores, get_row_missing_iter
+
+
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
+
+# @jit will perform numba jit compilation on this code to speed it up
+# note that functions cannot arbitrarily be compiled via numba, numba
+# supports limited data types so functions must be optimized to support it.
+# nopython = True will prevent a silent fallback if the function cannot
+# be numba compiled for whatever reason.
+@jit(nopython=True)
+def find_neighbors_binary(
+    inst: int,
+    datalen: int,
+    distance_array: np.ndarray,
+    n_neighbors: int,
+    y: np.array,
+) -> np.array:
+    """
+    Identify k nearest hits and k nearest misses for given instance.
+    A hit is a neighbor with the same class value, a miss is the opposite.
+
+    Inputs:
+        inst - the index of the data row (instance) we're looking at
+        datalen - the number of rows in the data
+        distance_array - a 2d array with all pairwise distances
+            we provide lower triangle only, with 0s in the upper triangle
+        n_neighbors - the number of hit neighbors and miss neighbors we want
+            note that the total number of returned neighbors for binary class
+            data is 2 * n_neighbors
+        y - 1d array the class (labels) for the data rows y[i] = i class of i
+    Returns:
+        numpy array of all nearest neighbor indecies
+    """
+
+    dist_vect = np.zeros(datalen)
+    for other_inst in range(datalen):
+        if inst != other_inst:
+            # code to utilize the lower triangle dist matrix
+            if inst < other_inst:
+                dist_vect[other_inst] = distance_array[other_inst][inst]
+            else:
+                dist_vect[other_inst] = distance_array[inst][other_inst]
+        else:
+            # Ensures that target instance is never selected as neighbor.
+            # This allows us to argsort the array to get the indecies of the
+            # closest neighbors while ensuring that we don't include
+            # ints itself (inst - inst = 0)
+            dist_vect[other_inst] = sys.maxsize
+
+    nn_list = [0] * n_neighbors * 2
+    match_count = 0
+    miss_count = 0
+    for nn_index in np.argsort(dist_vect):
+        if nn_index == inst:
+            continue
+
+        # Hit neighbor identified
+        if y[inst] == y[nn_index]:
+            if match_count >= n_neighbors:
+                continue
+
+            nn_list[match_count+miss_count] = nn_index
+            match_count += 1
+        else:
+            # Miss neighbor identified
+            if miss_count >= n_neighbors:
+                continue
+
+            nn_list[match_count+miss_count] = nn_index
+            miss_count += 1
+        if match_count >= n_neighbors and miss_count >= n_neighbors:
+            break
+
+    return np.array(nn_list)
+
+
 
 
 class ReliefF(BaseEstimator):
@@ -367,38 +451,57 @@ class ReliefF(BaseEstimator):
         attrdiff = np.array(attrdiff)
 
         return attrdiff, cidx, didx
-    #==================================================================#
+
     def _distarray_missing(self, xc, xd, cdiffs):
         """Distance array calculation for data with missing values"""
         cindices = []
         dindices = []
-        # Get Boolean mask locating missing values for continuous and discrete features separately. These correspond to xc and xd respectively.
+        # Get Boolean mask locating missing values for continuous and
+        # discrete features separately. These correspond to
+        # xc and xd respectively.
         for i in range(self._datalen):
             cindices.append(np.where(np.isnan(xc[i]))[0])
             dindices.append(np.where(np.isnan(xd[i]))[0])
 
         if self.n_jobs != 1:
             dist_array = Parallel(n_jobs=self.n_jobs)(delayed(get_row_missing)(
-                xc, xd, cdiffs, index, cindices, dindices) for index in range(self._datalen))
+                xc, xd, cdiffs, index, cindices, dindices)
+                for index in range(self._datalen))
         else:
-            # For each instance calculate distance from all other instances (in non-redundant manner) (i.e. computes triangle, and puts zeros in for rest to form square).
-            dist_array = [get_row_missing(xc, xd, cdiffs, index, cindices, dindices)
-                          for index in range(self._datalen)]
+            # For each instance calculate distance from all other
+            # instances (in non-redundant manner) (i.e. computes triangle,
+            # and puts zeros in for rest to form square).
+            dist_array = [
+                get_row_missing(xc, xd, cdiffs, index, cindices, dindices)
+                for index in range(self._datalen)]
+
+        if type(self) == ReliefF:
+            # Pad the array with zeros back to square form so we can use
+            # numba operations later. Numba gets very confused with variable
+            # sized rows - as the array is interpreted as object type.
+            for i in range(len(dist_array)):
+                dist_array[i] = np.pad(dist_array[i], (0, self._datalen - i))
+
+            return np.array(dist_array, dtype='float64')
 
         return np.array(dist_array)
-    #==================================================================#
+
     # For Iter Relief
     def _distarray_no_missing_iter(self, xc, xd, weights):
-        """Distance array calculation for data with no missing values. The 'pdist() function outputs a condense distance array, and squareform() converts this vector-form
+        """Distance array calculation for data with no missing values.
+        The 'pdist() function outputs a condense distance array, and
+        squareform() converts this vector-form
         distance vector to a square-form, redundant distance matrix.
-        *This could be a target for saving memory in the future, by not needing to expand to the redundant square-form matrix. """
+        *This could be a target for saving memory in the future, by not
+        needing to expand to the redundant square-form matrix. """
         from scipy.spatial.distance import pdist, squareform
 
-        # ------------------------------------------#
         def pre_normalize(x):
-            """Normalizes continuous features so they are in the same range (0 to 1)"""
+            """Normalizes continuous features so they are in the
+            same range (0 to 1)"""
             idx = 0
-            # goes through all named features (doesn really need to) this method is only applied to continuous features
+            # goes through all named features (doesn really need to)
+            # this method is only applied to continuous features
             for i in sorted(self.attr.keys()):
                 if self.attr[i][0] == 'discrete':
                     continue
@@ -409,48 +512,93 @@ class ReliefF(BaseEstimator):
                 idx += 1
             return x
 
-        # ------------------------------------------#
-
-        if self.data_type == 'discrete':  # discrete features only
+        # discrete features only
+        if self.data_type == 'discrete':
             return squareform(pdist(self._X, metric='hamming', w=weights))
-        elif self.data_type == 'mixed':  # mix of discrete and continuous features
+        # mix of discrete and continuous features
+        elif self.data_type == 'mixed':
             d_dist = squareform(pdist(xd, metric='hamming', w=weights))
             # Cityblock is also known as Manhattan distance
-            c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock', w=weights))
+            c_dist = squareform(
+                pdist(pre_normalize(xc), metric='cityblock', w=weights))
             return np.add(d_dist, c_dist) / self._num_attributes
 
         else:  # continuous features only
             # xc = pre_normalize(xc)
-            return squareform(pdist(pre_normalize(xc), metric='cityblock', w=weights))
-
-    # ==================================================================#
+            return squareform(
+                pdist(pre_normalize(xc), metric='cityblock', w=weights))
 
     # For Iterrelief - get_row_missing_iter is called
-    def _distarray_missing_iter(self, xc, xd, cdiffs, weights):
+    def _distarray_missing_iter(self, xc, xd, cdiffs, weights, pad_mode=False):
         """Distance array calculation for data with missing values"""
         cindices = []
         dindices = []
-        # Get Boolean mask locating missing values for continuous and discrete features separately. These correspond to xc and xd respectively.
+        # Get Boolean mask locating missing values for continuous and discrete
+        # features separately. These correspond to xc and xd respectively.
         for i in range(self._datalen):
             cindices.append(np.where(np.isnan(xc[i]))[0])
             dindices.append(np.where(np.isnan(xd[i]))[0])
 
         if self.n_jobs != 1:
-            dist_array = Parallel(n_jobs=self.n_jobs)(delayed(get_row_missing_iter)(
-                xc, xd, cdiffs, index, cindices, dindices, weights) for index in range(self._datalen))
+            dist_array = Parallel(n_jobs=self.n_jobs)
+            (
+                delayed(get_row_missing_iter)(
+                        xc, xd, cdiffs, index, cindices, dindices, weights
+                    ) for index in range(self._datalen)
+            )
         else:
-            # For each instance calculate distance from all other instances (in non-redundant manner) (i.e. computes triangle, and puts zeros in for rest to form square).
-            dist_array = [get_row_missing_iter(xc, xd, cdiffs, index, cindices, dindices, weights)
-                          for index in range(self._datalen)]
+            # For each instance calculate distance from all other instances
+            # (in non-redundant manner) (i.e. computes triangle, and puts
+            # zeros in for rest to form square).
+            dist_array = [get_row_missing_iter(
+                xc, xd, cdiffs, index, cindices, dindices, weights)
+                 for index in range(self._datalen)]
+
+        if type(self) == ReliefF:
+            # Pad the array with zeros back to square form so we can use
+            # numba operations later. Numba gets very confused with variable
+            # sized rows - as the array is interpreted as object type.
+            for i in range(len(dist_array)):
+                dist_array[i] = np.pad(dist_array[i], (0, self._datalen - i))
+
+            return np.array(dist_array, dtype='float64')
 
         return np.array(dist_array)
-    # ==================================================================#
 
-############################# ReliefF ############################################
+    def _find_neighbors_batch(self, instances):
+        res = []
+        for inst in instances:
+            res.append(self._find_neighbors(inst))
+
+        return np.array(res)
 
     def _find_neighbors(self, inst):
-        """ Identify k nearest hits and k nearest misses for given instance. This is accomplished differently based on the type of endpoint (i.e. binary, multiclass, and continuous). """
-        # Make a vector of distances between target instance (inst) and all others
+        """ Identify k nearest hits and k nearest misses for given instance.
+        This is accomplished differently based on the type of endpoint
+        (i.e. binary, multiclass, and continuous). """
+
+        if self._class_type == 'binary':
+            return find_neighbors_binary(
+                    inst,
+                    self._datalen,
+                    self._distance_array,
+                    self.n_neighbors,
+                    self._y
+                )
+        elif self._class_type == 'multiclass':
+            # TODO - implement speedup
+            # Leaving this in to show how the pattern would work with
+            # additional performance optimization in each case
+            pass
+        else:
+            # continuous
+            # TODO - implement speedup
+            # Leaving this in to show how the pattern would work with
+            # additional performance optimization in each case
+            pass
+
+        # Make a vector of distances between target instance
+        # (inst) and all others
         dist_vect = []
         for j in range(self._datalen):
             if inst != j:
@@ -464,14 +612,15 @@ class ReliefF(BaseEstimator):
 
         dist_vect = np.array(dist_vect)
 
-        # Identify neighbors-------------------------------------------------------
+        # Identify neighbors
         """ NN for Binary Endpoints: """
         if self._class_type == 'binary':
             nn_list = []
             match_count = 0
             miss_count = 0
             for nn_index in np.argsort(dist_vect):
-                if self._y[inst] == self._y[nn_index]:  # Hit neighbor identified
+                if self._y[inst] == self._y[nn_index]:
+                    # Hit neighbor identified
                     if match_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
@@ -482,7 +631,8 @@ class ReliefF(BaseEstimator):
                     nn_list.append(nn_index)
                     miss_count += 1
 
-                if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
+                if match_count >= self.n_neighbors and \
+                        miss_count >= self.n_neighbors:
                     break
 
         elif self._class_type == 'multiclass':
@@ -490,7 +640,8 @@ class ReliefF(BaseEstimator):
             match_count = 0
             miss_count = dict.fromkeys(self._label_list, 0)
             for nn_index in np.argsort(dist_vect):
-                if self._y[inst] == self._y[nn_index]:  # Hit neighbor identified
+                if self._y[inst] == self._y[nn_index]:
+                    # Hit neighbor identified
                     if match_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
@@ -503,14 +654,18 @@ class ReliefF(BaseEstimator):
                             nn_list.append(nn_index)
                             miss_count[label] += 1
 
-                if match_count >= self.n_neighbors and all(v >= self.n_neighbors for v in miss_count.values()):
+                if match_count >= self.n_neighbors and \
+                        all(
+                            v >= self.n_neighbors for v in miss_count.values()
+                        ):
                     break
         else:
             nn_list = []
             match_count = 0
             miss_count = 0
             for nn_index in np.argsort(dist_vect):
-                if abs(self._y[inst]-self._y[nn_index]) < self._labels_std:  # Hit neighbor identified
+                if abs(self._y[inst]-self._y[nn_index]) < self._labels_std:
+                    # Hit neighbor identified
                     if match_count >= self.n_neighbors:
                         continue
                     nn_list.append(nn_index)
@@ -521,26 +676,54 @@ class ReliefF(BaseEstimator):
                     nn_list.append(nn_index)
                     miss_count += 1
 
-                if match_count >= self.n_neighbors and miss_count >= self.n_neighbors:
+                if match_count >= self.n_neighbors and \
+                        miss_count >= self.n_neighbors:
                     break
         return np.array(nn_list)
 
     def _run_algorithm(self):
-        """ Runs nearest neighbor (NN) identification and feature scoring to yield ReliefF scores. """
+        """ Runs nearest neighbor (NN) identification and feature scoring
+        to yield ReliefF scores. """
 
         # Find nearest neighbors
-        NNlist = map(self._find_neighbors, range(self._datalen))
+        if self.n_jobs != 1:
+            # we'll use this as an approx number of chunks for now
+            # chunking here seems to work better in testing - not clear why it
+            # does better than Parallel's built-in chunking
+            num_chunks = cpu_count() * 2
+            inst_chunks = list(chunks(range(self._datalen), num_chunks))
+            NNlist = np.concatenate(
+                Parallel(n_jobs=self.n_jobs)(
+                    delayed(self._find_neighbors_batch)(chunk)
+                    for chunk in inst_chunks
+                )
+            )
+        else:
+            NNlist = map(self._find_neighbors, range(self._datalen))
 
-        # Feature scoring - using identified nearest neighbors
         nan_entries = np.isnan(self._X)  # boolean mask for missing data values
-
-        # Call the scoring method for the ReliefF algorithm
         if isinstance(self._weights, np.ndarray) and self.weight_final_scores:
             # Call the scoring method for the ReliefF algorithm for IRelief
+
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-                ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                        NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type, self._weights)
-                                                         for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
+                ReliefF_compute_scores)(
+                    instance_num,
+                    self.attr,
+                    nan_entries,
+                    self._num_attributes,
+                    self.mcmap,
+                    NN,
+                    self._headers,
+                    self._class_type,
+                    self._X,
+                    self._y,
+                    self._labels_std,
+                    self.data_type,
+                    self._weights
+                ) for instance_num, NN in zip(
+                        range(self._datalen),
+                        NNlist)
+            ), axis=0)
         else:
             # Call the scoring method for the ReliefF algorithm
             scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
