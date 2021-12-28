@@ -113,6 +113,42 @@ def find_neighbors_binary(
     return np.array(nn_list)
 
 
+# interestingly, this is sometimes faster without numba
+def compute_score_binary(
+    inst_x: np.array,
+    nearest_neighbors_x: np.ndarray,
+    inst_y: np.array,
+    nearest_neighbors_y: np.ndarray
+) -> np.array:
+    """
+    Compute the ReliefF score for a binary dataset
+
+    Input:
+        inst_x - numpy array of instance values
+        nearest_neighbors_x - numpy 2d array containing instance values for
+            nearest neighbors
+        inst_y - class value for instance
+        nearest_neighbors_y - numpy array of class values for nearest neighbors
+
+    Returns:
+        numpy array with a score for each attribute
+    """
+
+    # get diffs
+    diffs = (inst_x != nearest_neighbors_x) * 1
+
+    # compare classes to determine hits and misses
+    hits = np.array((nearest_neighbors_y == inst_y), ndmin=2).T
+
+    # for hits, subtract 1 for each difference
+    # for misses, add 1 for each difference
+
+    # convert to -1 for hits (to penalize diffs)
+    # and 1 for misses (to reward far differences)
+    hits = (hits * -2) + 1
+    diffs *= hits
+
+    return np.nansum(diffs, axis=0)
 
 
 class ReliefF(BaseEstimator):
@@ -726,9 +762,38 @@ class ReliefF(BaseEstimator):
             ), axis=0)
         else:
             # Call the scoring method for the ReliefF algorithm
-            scores = np.sum(Parallel(n_jobs=self.n_jobs)(delayed(
-                ReliefF_compute_scores)(instance_num, self.attr, nan_entries, self._num_attributes, self.mcmap,
-                                        NN, self._headers, self._class_type, self._X, self._y, self._labels_std, self.data_type)
-                                                         for instance_num, NN in zip(range(self._datalen), NNlist)), axis=0)
+
+            if self._class_type == 'binary' and \
+                    all([x[0] == 'discrete' for x in self.attr.values()]):
+                # use optimized function
+                scores = np.sum(Parallel(n_jobs=self.n_jobs)(
+                    delayed(compute_score_binary)(
+                        self._X[instance_num],
+                        self._X[NNs],
+                        self._y[instance_num],
+                        self._y[NNs]
+                    ) for instance_num, NNs in zip(
+                        range(self._datalen),
+                        NNlist)
+                ), axis=0) / (self._datalen * self.n_neighbors * 2)
+            else:
+                scores = np.sum(Parallel(n_jobs=self.n_jobs)(
+                    delayed(ReliefF_compute_scores)(
+                        instance_num,
+                        self.attr,
+                        nan_entries,
+                        self._num_attributes,
+                        self.mcmap,
+                        NN,
+                        self._headers,
+                        self._class_type,
+                        self._X,
+                        self._y,
+                        self._labels_std,
+                        self.data_type
+                    ) for instance_num, NN in zip(
+                        range(self._datalen),
+                        NNlist)
+                ), axis=0)
 
         return np.array(scores)
