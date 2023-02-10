@@ -100,7 +100,7 @@ class ReliefF(BaseEstimator):
         Copy of the ReliefF instance
         """
         self._X = X  # matrix of predictive variables ('independent variables')
-        self._y = y  # vector of values for outcome variable ('dependent variable')
+        self._y = np.array(y).reshape(-1,)  # vector of values for outcome variable ('dependent variable')
         if isinstance(weights, np.ndarray):
             if isinstance(weights, np.ndarray):
                 if len(weights) != len(X[0]):
