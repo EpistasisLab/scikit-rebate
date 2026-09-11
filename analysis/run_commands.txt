@@ -1,0 +1,505 @@
+Main Benchmarking
+ 
+Heatmaps
+ 
+# 1) running run_rebate_analysis for all mainEff data with 100 features (a_100); no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_Datasets_Loc_1_Qnt_2_Pop_100000/a_100
+ 
+# command to get unified heatmap visualization for mainEff (100 features datasets)
+ 
+python run_process_heatmap_unified.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_Datasets_Loc_1_Qnt_2_Pop_100000/a_100 --prefix=mainEff_a100_rerun_
+ 
+# 2) running run_rebate_analysis for all core2wayEpistasis data with 100 features (a_100); no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_core2wayEpistasis_Datasets_Loc_2_Qnt_2_Pop_100000/a_100
+ 
+# command to get unified heatmap visualization for core2wayEpistasis (100 features datasets)
+ 
+python run_process_heatmap_unified.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_core2wayEpistasis_Datasets_Loc_2_Qnt_2_Pop_100000/a_100 --prefix=core2wayEpistasis_a100_rerun_
+ 
+# 3) running run_rebate_analysis for all XOR data (path structure is a bit different to core2wayEpistasis and mainEff, so can’t directly access 100 features datasets; do that in job_process_heatmap_unified)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_XOR
+ 
+# command to get individual heatmaps for XOR (100 features datasets)
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_XOR --prefix=XOR_a100_rerun_ 
+
+# zipping up heatmaps for mainEff, core2wayEpistasis, XOR 
+
+zip -r heatmaps_mainbenchmarking_rerun.zip AbsVal_Benchmark_Data -i '*rerun*.pdf' 
+
+# creating a copy of the zip file locally (HPC to local desktop) 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/unified_heatmaps_mainbenchmarking_rerun.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\"
+------------------------------------------------------------------ 
+Mean/median rank tables
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst mainEff only)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_Datasets_Loc_1_Qnt_2_Pop_100000
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst core2wayEpistasis only)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_core2wayEpistasis_Datasets_Loc_2_Qnt_2_Pop_100000
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst XOR only)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_XOR
+
+# zip up RBA rankings results 
+
+zip -r RBArankings_mainbenchmarking_rerun.zip AbsVal_Benchmark_Data -i "*mainEff_Datasets*rankings_list.csv" "*mainEff_Datasets*rba_rankings.csv" "*core2wayEpistasis*rankings_list.csv" "*core2wayEpistasis*rba_rankings.csv" "*XOR*rankings_list.csv" "*XOR*rba_rankings.csv" 
+
+# creating a copy of the zip file locally (HPC to local desktop) 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/RBArankings_mainbenchmarking_rerun.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\"
+---------------------------------------------------------------------------- 
+Statistical Significance Tests
+ 
+# computing Mann-Whitney U and Permutation Test for mainEff (on ranks)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_Datasets_Loc_1_Qnt_2_Pop_100000 --column rank --exclude shuffle
+ 
+# computing only Mann-Whitney U for mainEff (on feature_importances)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_Datasets_Loc_1_Qnt_2_Pop_100000 --column feature_importance --exclude shuffle
+ 
+# computing Mann-Whitney U and Permutation Test for core2wayEpistasis (on ranks)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_core2wayEpistasis_Datasets_Loc_2_Qnt_2_Pop_100000 --column rank --exclude shuffle
+ 
+# computing only Mann-Whitney U for core2wayEpistasis (on feature_importances)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_core2wayEpistasis_Datasets_Loc_2_Qnt_2_Pop_100000 --column feature_importance --exclude shuffle
+ 
+# computing Mann-Whitney U and Permutation Test for XOR 3-way (on ranks)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_XOR/xor_3/a_100/s_1600/xor_3_a_100s_1600_EDM-1/Results --column rank --exclude shuffle
+ 
+# computing only Mann-Whitney U for XOR 3-way (on feature_importances)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_XOR/xor_3/a_100/s_1600/xor_3_a_100s_1600_EDM-1/Results --column feature_importance --exclude shuffle
+
+# save mannwhitney_ranks.csv and mannwhitney_normalized_feature_importances.csv files (for mainEff, core2wayEpistasis, and XOR 3-way) 
+
+zip -r mannwhitney_results_rerun.zip AbsVal_Benchmark_Data -i '*mannwhitney_ranks*' '*mannwhitney_normalized_feature_importances*' 
+
+# creating a copy of the zip file locally (HPC to local desktop) 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/mannwhitney_results_rerun.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\" 
+----------------------------------------------------------------------- 
+Larger Feature Datasets (2wayEpiFeatures)
+ 
+Heatmaps
+ 
+# running run_rebate_analysis for 100 feature dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_100
+ 
+# running run_rebate_analysis for 1000 feature dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_1000
+ 
+# running run_rebate_analysis for 10000 feature dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_10000
+ 
+# running run_rebate_analysis for 100000 feature dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_100000 
+---------------- 
+# command to get heatmap visualization for 100 features dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_100 --prefix=100features_main_rerun_
+ 
+# command to get heatmap visualization for 1000 features dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_1000 --prefix=1000features_main_rerun_
+ 
+# command to get heatmap visualization for 10000 features dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_10000 --prefix=10000features_main_rerun_
+ 
+# command to get heatmap visualization for 100000 features dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_100000 --prefix=100000features_main_rerun_
+
+# zipping up heatmaps and runtimes for 2wayEpiFeatures datasets 
+
+zip -r heatmaps_andruntimes_2wayEpiFeatures_rerun.zip GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000 -i '*rerun*.pdf' '*runtime.csv' 
+
+# creating a copy of the zip file locally (HPC to local desktop) 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/heatmaps_andruntimes_2wayEpiFeatures_rerun.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\" 
+-------------------------------------- 
+Mean/median rank tables
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst 100 feature dataset)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_100
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst 1000 feature dataset)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_1000
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst 10000 feature dataset)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_10000
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst 100000 feature dataset)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_100000
+
+# zip up RBA rankings results 
+
+zip -r RBArankings_largefeaturedatasets_rerun.zip GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000 -i "*rankings_list.csv" "*rba_rankings.csv" 
+
+# creating a copy of the zip file locally (HPC to local desktop) 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/RBArankings_largefeaturedatasets_rerun.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\" 
+---------------------------------------------------------------------------- 
+Statistical Significance Tests
+ 
+# computing Mann-Whitney U and Permutation Test for 100 features (on ranks)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_100 --column rank --exclude shuffle
+ 
+# computing only Mann-Whitney U for 100 features (on feature_importances)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_100 --column feature_importance --exclude shuffle
+ 
+# computing Mann-Whitney U and Permutation Test for 1000 features (on ranks)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_1000 --column rank --exclude shuffle
+ 
+# computing only Mann-Whitney U for 1000 features (on feature_importances)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_1000 --column feature_importance --exclude shuffle
+ 
+# computing Mann-Whitney U and Permutation Test for 10,000 features (on ranks)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_10000 --column rank --exclude shuffle
+ 
+# computing only Mann-Whitney U for 10,000 features (on feature_importances)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_10000 --column feature_importance --exclude shuffle
+ 
+# computing Mann-Whitney U and Permutation Test for 100,000 features (on ranks)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_100000 --column rank --exclude shuffle
+ 
+# computing only Mann-Whitney U for 100,000 features (on feature_importances)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000/a_100000 --column feature_importance --exclude shuffle
+
+# save mannwhitney_ranks.csv and mannwhitney_normalized_feature_importances.csv files (for 2wayEpiFeatures) 
+
+zip -r mannwhitney_results_largefeaturedatasets_rerun.zip GAMETES_2.2_dev_peter_2wayEpiFeatures_Datasets_Loc_2_Qnt_2_Pop_100000 -i '*mannwhitney_ranks*' '*mannwhitney_normalized_feature_importances*' 
+
+# creating a copy of the zip file locally (HPC to local desktop) 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/mannwhitney_results_largefeaturedatasets_rerun.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\" 
+------------------------------------------------------------ 
+Larger Feature Datasets (1-feature mainEff)
+ 
+Heatmaps
+ 
+# running run_rebate_analysis for 1000 feature dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_1000_Feature_H_0.4_MAF_0.2_EDM-2
+ 
+# running run_rebate_analysis for 10000 feature dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_10000_Feature_H_0.4_MAF_0.2_EDM-2
+ 
+# running run_rebate_analysis for 100000 feature dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_100000_Feature_H_0.4_MAF_0.2_EDM-2 
+----------------
+# command to get heatmap visualization for 100 features dataset
+
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_Datasets_Loc_1_Qnt_2_Pop_100000/a_100/s_1600/her_0.4__maf_0.2/a_100s_1600her_0.4__maf_0.2_EDM-2 --prefix=100features_main_rerun_
+ 
+# command to get heatmap visualization for 1000 features dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_1000_Feature_H_0.4_MAF_0.2_EDM-2 --prefix=1000features_main_rerun_
+ 
+# command to get heatmap visualization for 10000 features dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_10000_Feature_H_0.4_MAF_0.2_EDM-2 --prefix=10000features_main_rerun_
+ 
+# command to get heatmap visualization for 100000 features dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_100000_Feature_H_0.4_MAF_0.2_EDM-2 --prefix=100000features_main_rerun_
+
+# zipping up heatmaps and runtimes for mainEff_largerfeatures datasets 
+
+zip -r heatmaps_andruntimes_mainEfflargerfeatures_rerun.zip mainEff_largerfeatures_data -i '*rerun*.pdf' '*runtime*.csv' 
+
+# creating a copy of the zip file locally (HPC to local desktop) 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/heatmaps_andruntimes_mainEfflargerfeatures_rerun.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\" 
+-------------------------------------- 
+Mean/median rank tables
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst 1000 feature dataset)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_1000_Feature_H_0.4_MAF_0.2_EDM-2
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst 10000 feature dataset)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_10000_Feature_H_0.4_MAF_0.2_EDM-2
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst 100000 feature dataset)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_100000_Feature_H_0.4_MAF_0.2_EDM-2
+
+# zip up RBA rankings results 
+
+zip -r RBArankings_mainEfflargefeaturedatasets_rerun.zip mainEff_largerfeatures_data -i "*rankings_list.csv" "*rba_rankings.csv" 
+
+# creating a copy of the zip file locally (HPC to local desktop) 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/RBArankings_mainEfflargefeaturedatasets_rerun.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\"
+---------------------------------------------------------------------------- 
+Statistical Significance Tests 
+
+# computing Mann-Whitney U and Permutation Test for 100 features (on ranks) 
+
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_Datasets_Loc_1_Qnt_2_Pop_100000/a_100/s_1600/her_0.4__maf_0.2/a_100s_1600her_0.4__maf_0.2_EDM-2/Results --column rank --exclude shuffle 
+
+# computing only Mann-Whitney U for 100 features (on feature_importances) 
+
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_Datasets_Loc_1_Qnt_2_Pop_100000/a_100/s_1600/her_0.4__maf_0.2/a_100s_1600her_0.4__maf_0.2_EDM-2/Results --column feature_importance --exclude shuffle 
+
+# computing Mann-Whitney U and Permutation Test for 1000 features (on ranks) 
+
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_1000_Feature_H_0.4_MAF_0.2_EDM-2 --column rank --exclude shuffle 
+
+# computing only Mann-Whitney U for 1000 features (on feature_importances) 
+
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_1000_Feature_H_0.4_MAF_0.2_EDM-2 --column feature_importance --exclude shuffle 
+
+# computing Mann-Whitney U and Permutation Test for 10,000 features (on ranks) 
+
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_10000_Feature_H_0.4_MAF_0.2_EDM-2 --column rank --exclude shuffle 
+
+# computing only Mann-Whitney U for 10,000 features (on feature_importances) 
+
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_10000_Feature_H_0.4_MAF_0.2_EDM-2 --column feature_importance --exclude shuffle 
+
+# computing Mann-Whitney U and Permutation Test for 100,000 features (on ranks) 
+
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_100000_Feature_H_0.4_MAF_0.2_EDM-2 --column rank --exclude shuffle 
+
+# computing only Mann-Whitney U for 100,000 features (on feature_importances) 
+
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/mainEff_largerfeatures_data/1-feature_100000_Feature_H_0.4_MAF_0.2_EDM-2 --column feature_importance --exclude shuffle 
+
+# save mannwhitney_ranks.csv and mannwhitney_normalized_feature_importances.csv files (for mainEff_largerfeatures_data) 
+
+zip -r mannwhitney_results_largefeaturedatasets_mainEff.zip mainEff_largerfeatures_data -i '*mannwhitney_ranks*' '*mannwhitney_normalized_feature_importances*' 
+
+# saving from HPC to local desktop 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/mannwhitney_results_largefeaturedatasets_mainEff.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\"  
+---------------------------------------------------------------------------- 
+Additional Dataset Groups (from Phil paper)
+ 
+Heatmaps
+ 
+# 2wayEpiHeterogeneity (100 feature datasets)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_2wayEpiHeterogeneity_Datasets_2Het_Loc_2_Qnt_2_Pop_100000/a_100
+  
+# epi_order (100 feature datasets)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_epi_order_Datasets_Loc_3_Qnt_2_Pop_100000/a_100
+
+# mainEff_additive_2 (100 feature datasets)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_additive_2_Datasets_2Het_Loc_1_Qnt_2_Pop_100000/a_100
+  
+# mainEff_additive_4 (100 feature datasets)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_additive_4_Datasets_2Het_Loc_1_Qnt_2_Pop_100000/a_100  
+---------------------------------------------------- 
+# ** now getting individual configuration heatmaps for each dataset group
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_2wayEpiHeterogeneity_Datasets_2Het_Loc_2_Qnt_2_Pop_100000/a_100 --prefix=2wayEpiHeterogeneity_main_rerun_
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_epi_order_Datasets_Loc_3_Qnt_2_Pop_100000/a_100 --prefix=epiorder_main_rerun_
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_additive_2_Datasets_2Het_Loc_1_Qnt_2_Pop_100000/a_100 --prefix=mainEffadditive2_main_rerun_
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_additive_4_Datasets_2Het_Loc_1_Qnt_2_Pop_100000/a_100 --prefix=mainEffadditive4_main_rerun_
+
+# zipping up heatmaps from new dataset groups 
+
+zip -r heatmaps_new_datasetgroups_rerun.zip AbsVal_Benchmark_Data -i "*rerun*.pdf" -x "*mainEff_Datasets*" "*core2wayEpistasis*" "*XOR*" 
+
+# creating a copy of the zip file locally (HPC to local desktop) 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/heatmaps_new_datasetgroups_rerun.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\"  
+--------------------------------------------------------------------------- 
+Mean/median rank tables
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst 2wayEpiHeterogeneity only)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_2wayEpiHeterogeneity_Datasets_2Het_Loc_2_Qnt_2_Pop_100000
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst epi_order only)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_epi_order_Datasets_Loc_3_Qnt_2_Pop_100000
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst mainEff_additive_2 only)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_additive_2_Datasets_2Het_Loc_1_Qnt_2_Pop_100000
+ 
+# computing mean/median rankings given by RBAs to predictive features (amongst mainEff_additive_4 only)
+ 
+python run_process_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_additive_4_Datasets_2Het_Loc_1_Qnt_2_Pop_100000
+
+# zip up RBA rankings results 
+
+zip -r RBArankings_newdatasetgroupsPhilpaper_rerun.zip AbsVal_Benchmark_Data -i "*mainEff_additive*rankings_list.csv" "*mainEff_additive*rba_rankings.csv" "*2wayEpiHeterogeneity*rankings_list.csv" "*2wayEpiHeterogeneity*rba_rankings.csv" "*epi_order*rankings_list.csv" "*epi_order*rba_rankings.csv" 
+
+# creating a copy of the zip file locally (HPC to local desktop) 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/RBArankings_newdatasetgroupsPhilpaper_rerun.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\"  
+---------------------------------------------------------------------------------------- 
+Statistical Significance Tests
+ 
+# computing Mann-Whitney U and Permutation Test for 2wayEpiHeterogeneity (on ranks)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_2wayEpiHeterogeneity_Datasets_2Het_Loc_2_Qnt_2_Pop_100000 --column rank --exclude shuffle
+ 
+# computing only Mann-Whitney U for 2wayEpiHeterogeneity (on feature_importances)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_2wayEpiHeterogeneity_Datasets_2Het_Loc_2_Qnt_2_Pop_100000 --column feature_importance --exclude shuffle
+ 
+# computing Mann-Whitney U and Permutation Test for epi_order (on ranks)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_epi_order_Datasets_Loc_3_Qnt_2_Pop_100000 --column rank --exclude shuffle
+ 
+# computing only Mann-Whitney U for epi_order (on feature_importances)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_epi_order_Datasets_Loc_3_Qnt_2_Pop_100000 --column feature_importance --exclude shuffle
+ 
+# computing Mann-Whitney U and Permutation Test for mainEff_additive_2 (on ranks)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_additive_2_Datasets_2Het_Loc_1_Qnt_2_Pop_100000 --column rank --exclude shuffle
+ 
+# computing only Mann-Whitney U for mainEff_additive_2 (on feature_importances)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_additive_2_Datasets_2Het_Loc_1_Qnt_2_Pop_100000 --column feature_importance --exclude shuffle
+ 
+# computing Mann-Whitney U and Permutation Test for mainEff_additive_4 (on ranks)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_additive_4_Datasets_2Het_Loc_1_Qnt_2_Pop_100000 --column rank --exclude shuffle
+ 
+# computing only Mann-Whitney U for mainEff_additive_4 (on feature_importances)
+ 
+python run_process_mannwhitney.py --basedir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data/GAMETES_2.2_dev_peter_mainEff_additive_4_Datasets_2Het_Loc_1_Qnt_2_Pop_100000 --column feature_importance --exclude shuffle
+
+# save mannwhitney_ranks.csv and mannwhitney_normalized_feature_importances.csv files (for new dataset groups from Phil paper) 
+
+zip -r mannwhitney_results_newdatasetgroupsPhilpaper_rerun.zip AbsVal_Benchmark_Data -i '*mannwhitney_ranks*' '*mannwhitney_normalized_feature_importances*' -x "*mainEff_Datasets*" "*core2wayEpistasis*" "*XOR*" 
+
+# creating a copy of the zip file locally (HPC to local desktop) 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/mannwhitney_results_newdatasetgroupsPhilpaper_rerun.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\" 
+-------------------------------------------------------------------------------------------- 
+Sanity Check Datasets
+ 
+Heatmaps
+ 
+# running run_rebate_analysis for CA (continuous attribute) dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/CA_Datasets_Loc_2_Qnt_2_Pop_100000/a_20
+ 
+# running run_rebate_analysis for MA (mixed attribute) dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/MA_Datasets_Loc_2_Qnt_2_Pop_100000/a_20
+ 
+# running run_rebate_analysis for CE_Threshold (continuous endpoint, threshold) dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/CE_Threshold_Datasets_Loc_2_Qnt_2_Pop_100000/a_20
+ 
+# running run_rebate_analysis for contEndpoint (continuous endpoint, SD version) dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpi_contEndpoint_Datasets_Loc_2_Qnt_2_Pop_100000/a_20
+ 
+# running run_rebate_analysis for NA (null values) dataset; can’t use mutual_info with missing data, so explicitly naming algorithms to use (instead of just using default)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpi_NA_Datasets_Loc_2_Qnt_2_Pop_100000/a_20 --algorithms random relieff10 relieff100 surf surfstar multisurf multisurfstar swrfstar swrf multiswrfstar multiswrf multiswrfdbstar multiswrfdb murelief10 murelief100
+  
+# running run_rebate_analysis for ImbalancedData dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpi_ImbalancedData_Datasets_Loc_2_Qnt_2_Pop_100000/a_20
+  
+# running run_rebate_analysis for 3Class (multi-class endpoint, 3 classes) dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/3Class_Datasets_Loc_2
+  
+# running run_rebate_analysis for 9Class (multi-class endpoint, 9 classes) dataset; no --algorithms specified means use the script’s default algorithms (all 16)
+ 
+python run_rebate_analysis.py --datadir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/9Class_Datasets_Loc_2  
+------------------------ 
+# command to get heatmap visualization for CA dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/CA_Datasets_Loc_2_Qnt_2_Pop_100000/a_20 --prefix=CA_main_rerun_
+ 
+# command to get heatmap visualization for MA dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/MA_Datasets_Loc_2_Qnt_2_Pop_100000/a_20 --prefix=MA_main_rerun_
+ 
+# command to get heatmap visualization for CE_Threshold dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/CE_Threshold_Datasets_Loc_2_Qnt_2_Pop_100000/a_20 --prefix=CEThreshold_main_rerun_
+ 
+# command to get heatmap visualization for contEndpoint dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpi_contEndpoint_Datasets_Loc_2_Qnt_2_Pop_100000/a_20 --prefix=contEndpoint_main_rerun_
+ 
+# command to get heatmap visualization for NA dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpi_NA_Datasets_Loc_2_Qnt_2_Pop_100000/a_20 --prefix=NA_main_rerun_
+ 
+# command to get heatmap visualization for ImbalancedData dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/GAMETES_2.2_dev_peter_2wayEpi_ImbalancedData_Datasets_Loc_2_Qnt_2_Pop_100000/a_20 --prefix=ImbalancedData_main_rerun_
+ 
+# command to get heatmap visualization for 3Class dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/3Class_Datasets_Loc_2 --prefix=3Class_main_rerun_
+ 
+# command to get heatmap visualization for 9Class dataset
+ 
+python run_process_heatmap.py --basedir=/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/Simulated_Benchmark_Archive/9Class_Datasets_Loc_2 --prefix=9Class_main_rerun_
+
+# zipping up heatmaps for Sanity Check datasets 
+
+zip -r heatmaps_sanitycheckdatasets_rerun.zip Simulated_Benchmark_Archive -i '*rerun*.pdf' -x '*2wayEpiFeatures*' 
+
+# creating a copy of the zip file locally (HPC to local desktop) 
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/data/Sanity_Check_Data/benchmark-data/heatmaps_sanitycheckdatasets_rerun.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\"  
+---------------------------------------------------------------- 
+Global Metrics
+
+Produces unique output file/metrics for: 2-way epistasis datasets, univariate + 2-way datasets, and univariate + 2-way + 3-way datasets
+ 
+# computing global mean/median ranks given by RBAs to predictive features (all dataset configurations with >= 100 features, excluding xor-4 and xor-5)
+ 
+python run_global_rba_rankings.py --rootdir=/home/kazemik/Repos/ReBATE/data/AbsVal_Benchmark_Data
+ 
+# zipping up different use case scenario ranking files 
+
+zip -r global_rankings.zip data -i '*global_rba_rankings_2wayonly.csv' '*global_rba_rankings_uni2way.csv' '*global_rba_rankings_uni2way3way.csv' 
+
+# creating a copy of the zip file locally (HPC to local desktop)
+
+pscp kazemik@esplhpccompbio-lv01:/home/kazemik/Repos/ReBATE/global_rankings.zip "C:\Users\KazemiK\OneDrive - Cedars-Sinai Health System\Desktop\" 

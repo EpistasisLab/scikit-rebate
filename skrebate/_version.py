@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-scikit-rebate was primarily developed at the University of Pennsylvania by:
+scikit-rebate was primarily developed at the University of Pennsylvania and at the Cedars-Sinai Health Sciences University by:
+    - Ryan J. Urbanowicz (ryanurbanowicz@gmail.com)
     - Randal S. Olson (rso@randalolson.com)
     - Pete Schmitt (pschmitt@upenn.edu)
-    - Ryan J. Urbanowicz (ryanurb@upenn.edu)
     - Weixuan Fu (weixuanf@upenn.edu)
+    - Ting-Hui Wu (tinghui333w@gmail.com)
+    - Kia Kazemi-Nia (kia.kazemi-nia@cshs.org)
     - and many more generous open source contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
@@ -24,4 +26,4 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__version__ = '0.7'
+__version__ = '0.8.3'

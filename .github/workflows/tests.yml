@@ -1,0 +1,38 @@
+name: Python Package CI
+
+on:
+  push:
+    branches: [master]
+  # push:
+  #   branches: [dev-kia-pypi]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Upgrade pip, install build tools
+        run: |
+          python -m pip install --upgrade pip setuptools wheel build
+
+      - name: Install your package with test dependencies
+        run: |
+          pip install .[test]   # assumes you've defined [project.optional-dependencies] in pyproject.toml
+
+      - name: Run pytest
+        run: |
+          pytest --disable-warnings --maxfail=1 --tb=short

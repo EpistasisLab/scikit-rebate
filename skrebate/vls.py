@@ -64,7 +64,7 @@ class VLS(BaseEstimator):
             if self.rank_absolute:
                 score.fill(0)
             else:
-                score.fill(np.NINF)
+                score.fill(-np.inf)
             counter = 0
             for index in subset:
                 score[index] = raw_score[counter]

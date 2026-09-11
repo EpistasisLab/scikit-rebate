@@ -1,3 +1,29 @@
+# scikit-rebate 0.8
+
+* Added new core Relief-based algorithms to scikit-rebate: SWRF, SWRF\*, MultiSWRF, MultiSWRF\*, MultiSWRFDB, MultiSWRFDB\*, and μ-Relief.
+
+* Refactored code to speed up runtime by 10-35x, improving the efficiency of the feature scoring process.
+
+* Added the 'categorical_features' hyperparameter, which allows users to manually specify which features should be treated as categorical.
+
+* Added the 'label_type' hyperparameter, which allows users to manually specify whether the target variable (label) is binary, multiclass, or continuous.
+
+* Added the 'multiclass_threshold' hyperparameter, which allows users to specify the maximum number of unique values a target variable can have before it is considered continuous (e.g. multiclass_threshold=10 means a target variable with > 10 unique values is considered continuous).
+
+* Changed the name of the 'discrete_threshold' hyperparameter to 'categorical_threshold'.
+
+* Now utilize np.nanmean instead of np.mean when the amount of missing data is substantial enough to derail computation.
+
+# scikit-rebate 0.7
+
+* The version of scikit-rebate uploaded to pypi (v0.7) and cloned from [https://github.com/EpistasisLab](https://github.com/EpistasisLab), last updated March 20, 2021. Ongoing development of scikit-rebate will take place on the UrbsLab GitHub page.
+
+* Preserves the underlying algorithm and algorithmically the same as scikit-rebate v0.62 on pypi. This release includes the analysis scripts used for the scikit-rebate paper exploring the ability of Relief-based algorithms to detect higher order interactions.
+
+* Fix for the TuRF wrapper algorithm as well as further fixes/updates to the preliminary implementations of VLS and ITER Relief wrapper algorithms.
+
+* As scikit-rebate development continues in the future we will use the UrbsLab/scikit-rebate repo to share code updates, as well as update pypi with the most recent updates continuing on from v0.7.1.
+
 # scikit-rebate 0.6
 
 * Fixed internal TuRF implementation so that it outputs scores for all features. Those that make it to the last iteration get true core algorithm scoring, while those that were removed along the way are assigned token scores (lower than the lowest true scoring feature) that indicate when the respective feature(s) were removed. This also alows for greater flexibility in the user specifying the number for features to return. 

@@ -5,6 +5,7 @@ run_test.py
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache
 
 # C extensions
 *.so
@@ -61,17 +62,27 @@ docs/_build/
 # PyBuilder
 target/
 
-#Ipython Notebook
+# Others
 .ipynb_checkpoints
-
-testing.ipynb
-
 *.lprof
-
 *.prof
-/demo_scikitrebate.ipynb
-
 *.DS_Store
-.idea/
+.idea/ 
 
-analysis_pipeline/skrebatewip
+# Files
+demo/data
+BenchmarkData.zip
+analysis_pipeline/
+BenchmarkData/
+BenchmarkData2/
+BenchmarkData3/
+BenchmarkData4/
+skrebate_old
+analysis/BasicXOR/
+analysis/BasicXOR2/
+analysis/BasicXOR2_2/
+analysis/BasicXOR3/
+analysis/jobs/
+analysis/logs/
+analysis/core2wayEpistasis
+*.zip

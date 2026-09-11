@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-scikit-rebate was primarily developed at the University of Pennsylvania by:
+scikit-rebate was primarily developed at the University of Pennsylvania and at the Cedars-Sinai Health Sciences University by:
+    - Ryan J. Urbanowicz (ryanurb@upenn.edu)
     - Randal S. Olson (rso@randalolson.com)
     - Pete Schmitt (pschmitt@upenn.edu)
-    - Ryan J. Urbanowicz (ryanurb@upenn.edu)
     - Weixuan Fu (weixuanf@upenn.edu)
+    - Ting-Hui Wu (tinghui333w@gmail.com)
+    - Kia Kazemi-Nia (kia.kazemi-nia@cshs.org)
     - and many more generous open source contributors
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -43,7 +45,10 @@ class ReliefF(BaseEstimator):
              * For ReliefF, the setting of k is <= to the number of instances that have the least frequent class label
              (binary and multiclass endpoint data. """
 
-    def __init__(self, n_features_to_select=10, n_neighbors=100, discrete_threshold=10, verbose=False, n_jobs=1,weight_final_scores=False,rank_absolute=False):
+    def __init__(self, n_features_to_select=10, n_neighbors=100, 
+                 categorical_features=None, categorical_threshold=10, multiclass_threshold=10,
+                 verbose=False, n_jobs=1, weight_final_scores=False, 
+                 rank_absolute=False, label_type=None):
         """Sets up ReliefF to perform feature selection. Note that an approximation of the original 'Relief'
         algorithm may be run by setting 'n_features_to_select' to 1. Also note that the original Relief parameter 'm'
         is not included in this software. 'm' specifies the number of random training instances out of 'n' (total
@@ -54,35 +59,48 @@ class ReliefF(BaseEstimator):
         Parameters
         ----------
         n_features_to_select: int (default: 10)
-            the number of top features (according to the relieff score) to
+            The number of top features (according to the feature importance score) to
             retain after feature selection is applied.
         n_neighbors: int or float (default: 100)
             The number of neighbors to consider when assigning feature
             importance scores. If a float number is provided, that percentage of
             training samples is used as the number of neighbors.
-            More neighbors results in more accurate scores, but takes longer.
-        discrete_threshold: int (default: 10)
-            Value used to determine if a feature is discrete or continuous.
-            If the number of unique levels in a feature is > discrete_threshold, then it is
-            considered continuous, or discrete otherwise.
+        categorical_features: list (default: None)
+            List of index columns indicating features to be treated as categorical.
+            If set to None, the features will be automatically classified based on the categorical_threshold below.
+        categorical_threshold: int (default: 10)
+            Value used to determine if a feature is categorical/discrete or continuous.
+            If the number of unique values in a feature is > categorical_threshold, then it is
+            considered continuous, or categorical otherwise.
+        multiclass_threshold: int (default: 10)
+            Value used to determine if a target is multiclass or continuous.
+            If the number of unique values in the target variable is > multiclass_threshold, then it is
+            considered continuous. If it is <= multiclass_threshold and > 2, it is considered multiclass.
         verbose: bool (default: False)
-            If True, output timing of distance array and scoring
+            If True, output the time taken for the distance array computation and scoring.
         n_jobs: int (default: 1)
             The number of cores to dedicate to computing the scores with joblib.
             Assigning this parameter to -1 will dedicate as many cores as are available on your system.
             We recommend setting this parameter to -1 to speed up the algorithm as much as possible.
-         weight_final_scores: bool (default: False)
+        weight_final_scores: bool (default: False)
             Whether to multiply given weights (in fit) to final scores. Only applicable if weights are given.
         rank_absolute: bool (default: False)
-            Whether to give top features as by ranking features by absolute value.
+            Whether to rank features according to the absolute value of their feature importance score.
+        label_type: str (default: None)
+            The default value is None, in which case the function automatically infers the label type
+            based on the number of unique labels: 2 for 'binary', 3-10 for 'multiclass', and >10 for 'continuous'.
+            Alternatively, you can specify one of the following strings: 'binary', 'multiclass', or 'continuous'.
         """
         self.n_features_to_select = n_features_to_select
         self.n_neighbors = n_neighbors
-        self.discrete_threshold = discrete_threshold
+        self.categorical_features = categorical_features
+        self.categorical_threshold = categorical_threshold
+        self.multiclass_threshold = multiclass_threshold
         self.verbose = verbose
         self.n_jobs = n_jobs
         self.weight_final_scores = weight_final_scores
         self.rank_absolute = rank_absolute
+        self.label_type = label_type
 
     #=========================================================================#
     def fit(self, X, y, weights=None):
@@ -128,27 +146,37 @@ class ReliefF(BaseEstimator):
 
         # Number of unique outcome (label) values (used to determine outcome variable type)
         self._label_list = list(set(self._y))
-        # Determine if label is discrete
-        discrete_label = (len(self._label_list) <= self.discrete_threshold)
 
-        # Identify label type (binary, multiclass, or continuous)
-        if discrete_label:
+        # If label_type is provided, use it; otherwise, identify label type (binary, multiclass, or continuous)
+        if len(self._label_list) == 1:
+            raise ValueError('All labels are of the same class.')
+        if self.label_type:
+            if self.label_type not in ['binary', 'multiclass', 'continuous']:
+                raise ValueError("Invalid label_type. Choose from 'binary', 'multiclass', or 'continuous'.")
+            if self.label_type == 'binary' and len(self._label_list) != 2:
+                raise ValueError("Specified 'binary' label type, but the number of unique labels is not 2.") 
+            if self.verbose:
+                print(f"Manually set up label type as {self.label_type}")
+            self._class_type = self.label_type
+        else:
             if len(self._label_list) == 2:
                 self._class_type = 'binary'
-                self.mcmap = 0
-            elif len(self._label_list) > 2:
+            elif len(self._label_list) <= self.multiclass_threshold:
                 self._class_type = 'multiclass'
-                self.mcmap = self._getMultiClassMap()
             else:
-                raise ValueError('All labels are of the same class.')
+                self._class_type = 'continuous'
+            if self.verbose:
+                print(f"Automatically identify label type as {self._class_type}")
 
-        else:
-            self._class_type = 'continuous'
+        # Set mcmap accordingly
+        if self._class_type in ('binary', 'continuous'):
             self.mcmap = 0
+        else:
+            self.mcmap = self._getMultiClassMap()
 
         # Training labels standard deviation -- only used if the training labels are continuous
         self._labels_std = 0.
-        if len(self._label_list) > self.discrete_threshold:
+        if len(self._label_list) > self.categorical_threshold:
             self._labels_std = np.std(self._y, ddof=1)
 
         self._num_attributes = len(self._X[0])  # Number of features in training data
@@ -165,21 +193,21 @@ class ReliefF(BaseEstimator):
 
         start = time.time()  # Runtime tracking
 
-        # Determine data types for all features/attributes in training data (i.e. discrete or continuous)
+        # Determine data types for all features/attributes in training data (i.e. categorical or continuous)
         C = D = False
-        # Examines each feature and applies discrete_threshold to determine variable type.
+        # Examines each feature and applies categorical_threshold to determine variable type.
         self.attr = self._get_attribute_info()
         for key in self.attr.keys():
-            if self.attr[key][0] == 'discrete':
+            if self.attr[key][0] == 'categorical':
                 D = True
             if self.attr[key][0] == 'continuous':
                 C = True
 
-        # For downstream computational efficiency, determine if dataset is comprised of all discrete, all continuous, or a mix of discrete/continuous features.
+        # For downstream computational efficiency, determine if dataset is comprised of all categorical, all continuous, or a mix of categorical/continuous features.
         if C and D:
             self.data_type = 'mixed'
         elif D and not C:
-            self.data_type = 'discrete'
+            self.data_type = 'categorical'
         elif C and not D:
             self.data_type = 'continuous'
         else:
@@ -187,13 +215,14 @@ class ReliefF(BaseEstimator):
         #--------------------------------------------------------------------------------------------------------------------
 
         # Compute the distance array between all data points ----------------------------------------------------------------
-        # For downstream efficiency, separate features in dataset by type (i.e. discrete/continuous)
+        # For downstream efficiency, separate features in dataset by type (i.e. categorical/continuous); categorical = didx (discrete)
         diffs, cidx, didx = self._dtype_array()
         cdiffs = diffs[cidx]  # max/min continuous value difference for continuous features.
 
         xc = self._X[:, cidx]  # Subset of continuous-valued feature data
-        xd = self._X[:, didx]  # Subset of discrete-valued feature data
+        xd = self._X[:, didx]  # Subset of categorical-valued feature data
 
+        self.distarray_has_nan = False
         """ For efficiency, the distance array is computed more efficiently for data with no missing values.
         This distance array will only be used to identify nearest neighbors. """
         if self._missing_data_count > 0:
@@ -201,6 +230,10 @@ class ReliefF(BaseEstimator):
                 self._distance_array = self._distarray_missing(xc, xd, cdiffs)
             else:
                 self._distance_array = self._distarray_missing_iter(xc, xd, cdiffs, self._weights)
+            
+            # if distance array has nan values, will use np.nanmean/np.nanstd downstream
+            if np.isnan(self._distance_array).any():
+                self.distarray_has_nan = True
         else:
             if not isinstance(self._weights, np.ndarray):
                 self._distance_array = self._distarray_no_missing(xc, xd)
@@ -290,27 +323,44 @@ class ReliefF(BaseEstimator):
         return mcmap
 
     def _get_attribute_info(self):
-        """ Preprocess the training dataset to identify which features/attributes are discrete vs. continuous valued. Ignores missing values in this determination."""
+        """ Preprocess the training dataset to identify which features/attributes are categorical vs. continuous valued. Ignores missing values in this determination."""
         attr = dict()
         d = 0
-        limit = self.discrete_threshold
         w = self._X.transpose()
 
-        for idx in range(len(w)):
-            h = self._headers[idx]
-            z = w[idx]
-            if self._missing_data_count > 0:
-                z = z[np.logical_not(np.isnan(z))]  # Exclude any missing values from consideration
-            zlen = len(np.unique(z))
-            if zlen <= limit:
-                attr[h] = ('discrete', 0, 0, 0, 0)
-                d += 1
-            else:
-                mx = np.max(z)
-                mn = np.min(z)
-                sd = np.std(z)
-                attr[h] = ('continuous', mx, mn, mx - mn, sd)
-        # For each feature/attribute we store (type, max value, min value, max min difference, average, standard deviation) - the latter three values are set to zero if feature is discrete.
+        if self.categorical_features is None:
+            limit = self.categorical_threshold
+            for idx in range(len(w)):
+                h = self._headers[idx]
+                z = w[idx]
+                if self._missing_data_count > 0:
+                    z = z[np.logical_not(np.isnan(z))]  # Exclude any missing values from consideration
+                zlen = len(np.unique(z))
+                if zlen <= limit:
+                    attr[h] = ('categorical', 0, 0, 0, 0)
+                    d += 1
+                else:
+                    mx = np.max(z)
+                    mn = np.min(z)
+                    sd = np.std(z)
+                    attr[h] = ('continuous', mx, mn, mx - mn, sd)
+        else:
+            for idx in range(len(w)):
+                h = self._headers[idx]
+                z = w[idx]
+                if self._missing_data_count > 0:
+                    z = z[np.logical_not(np.isnan(z))]  # Exclude any missing values from consideration
+                if idx in self.categorical_features:
+                    attr[h] = ('categorical', 0, 0, 0, 0)
+                    d += 1
+                else:
+                    mx = np.max(z)
+                    mn = np.min(z)
+                    sd = np.std(z)
+                    attr[h] = ('continuous', mx, mn, mx - mn, sd)
+        # For each feature/attribute we store (type, max value, min value, max min difference, average, standard deviation)
+        # the latter three values are set to zero if feature is categorical.
+        
         return attr
 
     def _distarray_no_missing(self, xc, xd):
@@ -325,19 +375,20 @@ class ReliefF(BaseEstimator):
             idx = 0
             # goes through all named features (doesn really need to) this method is only applied to continuous features
             for i in sorted(self.attr.keys()):
-                if self.attr[i][0] == 'discrete':
+                if self.attr[i][0] == 'categorical':
                     continue
                 cmin = self.attr[i][2]
                 diff = self.attr[i][3]
                 x[:, idx] -= cmin
-                x[:, idx] /= diff
+                x[:, idx] = x[:, idx] / diff
+                # x[:, idx] /= diff
                 idx += 1
             return x
         #------------------------------------------#
 
-        if self.data_type == 'discrete':  # discrete features only
+        if self.data_type == 'categorical':  # categorical features only
             return squareform(pdist(self._X, metric='hamming'))
-        elif self.data_type == 'mixed':  # mix of discrete and continuous features
+        elif self.data_type == 'mixed':  # mix of categorical and continuous features
             d_dist = squareform(pdist(xd, metric='hamming'))
             # Cityblock is also known as Manhattan distance
             c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock'))
@@ -349,7 +400,7 @@ class ReliefF(BaseEstimator):
 
     #==================================================================#
     def _dtype_array(self):
-        """Return mask for discrete(0)/continuous(1) attributes and their indices. Return array of max/min diffs of attributes."""
+        """Return mask for categorical(0)/continuous(1) attributes and their indices. Return array of max/min diffs of attributes."""
         attrtype = []
         attrdiff = []
 
@@ -372,7 +423,7 @@ class ReliefF(BaseEstimator):
         """Distance array calculation for data with missing values"""
         cindices = []
         dindices = []
-        # Get Boolean mask locating missing values for continuous and discrete features separately. These correspond to xc and xd respectively.
+        # Get Boolean mask locating missing values for continuous and categorical (discrete) features separately. These correspond to xc and xd respectively.
         for i in range(self._datalen):
             cindices.append(np.where(np.isnan(xc[i]))[0])
             dindices.append(np.where(np.isnan(xd[i]))[0])
@@ -385,6 +436,7 @@ class ReliefF(BaseEstimator):
             dist_array = [get_row_missing(xc, xd, cdiffs, index, cindices, dindices)
                           for index in range(self._datalen)]
 
+        # return np.array(dist_array, dtype=object)
         return np.array(dist_array)
     #==================================================================#
     # For Iter Relief
@@ -400,7 +452,7 @@ class ReliefF(BaseEstimator):
             idx = 0
             # goes through all named features (doesn really need to) this method is only applied to continuous features
             for i in sorted(self.attr.keys()):
-                if self.attr[i][0] == 'discrete':
+                if self.attr[i][0] == 'categorical':
                     continue
                 cmin = self.attr[i][2]
                 diff = self.attr[i][3]
@@ -411,9 +463,9 @@ class ReliefF(BaseEstimator):
 
         # ------------------------------------------#
 
-        if self.data_type == 'discrete':  # discrete features only
+        if self.data_type == 'categorical':  # categorical features only
             return squareform(pdist(self._X, metric='hamming', w=weights))
-        elif self.data_type == 'mixed':  # mix of discrete and continuous features
+        elif self.data_type == 'mixed':  # mix of categorical and continuous features
             d_dist = squareform(pdist(xd, metric='hamming', w=weights))
             # Cityblock is also known as Manhattan distance
             c_dist = squareform(pdist(pre_normalize(xc), metric='cityblock', w=weights))
@@ -430,7 +482,7 @@ class ReliefF(BaseEstimator):
         """Distance array calculation for data with missing values"""
         cindices = []
         dindices = []
-        # Get Boolean mask locating missing values for continuous and discrete features separately. These correspond to xc and xd respectively.
+        # Get Boolean mask locating missing values for continuous and categorical (discrete) features separately. These correspond to xc and xd respectively.
         for i in range(self._datalen):
             cindices.append(np.where(np.isnan(xc[i]))[0])
             dindices.append(np.where(np.isnan(xd[i]))[0])
@@ -443,8 +495,57 @@ class ReliefF(BaseEstimator):
             dist_array = [get_row_missing_iter(xc, xd, cdiffs, index, cindices, dindices, weights)
                           for index in range(self._datalen)]
 
+        # return np.array(dist_array, dtype=object)
         return np.array(dist_array)
     # ==================================================================#
+
+    # For verbose - gather information to print
+    def summary(self, sort=True, feature_name=None, show_feature_type=False):
+        """Provides a summary of the features with their importance scores, ranks, and feature types.
+        Parameters
+        ----------
+        sort: bool, optional
+            Whether to sort the features by importance. Default is True.
+        feature_name: list of str or None, optional
+            A list of feature names. If None, feature indicies will be used. Default is None.
+        show_feature_type: bool, optional
+            Whether to display the type of the features. Default if False.
+
+        Returns
+        -------
+        None
+            Prints the summary of the features directly to the console.
+        """
+
+        data_type = [v[0] for v in self.attr.values()]
+        id_order = self.top_features_ if sort else range(self._num_attributes)
+        rank_dict = {feature: rank + 1 for rank, feature in enumerate(self.top_features_)}
+
+        printed_name = feature_name if feature_name is not None else [str(i) for i in range(self._num_attributes)]
+
+        # Process feature name length
+        max_length = 40
+        min_width = 15
+        longest_name_length = max(len(name) for name in printed_name)
+        if longest_name_length > max_length:
+            printed_name = [
+                name if len(name) <= max_length else name[:max_length - 3] + "..."
+                for name in printed_name
+            ]
+            column_width = max_length+1 
+        else:
+            printed_name = printed_name
+            column_width = max(longest_name_length+1, min_width)
+
+        if show_feature_type:
+            print(f"{'Feature name':<{column_width}}{'Feature importances':<23}{'Feature rank':<15}{'Feature type':<15}")
+            for idx in id_order:
+                print(f"{printed_name[idx]:<{column_width}}{self.feature_importances_[idx]:<23.8f}{rank_dict[idx]:<15}{data_type[idx]:<15}")
+
+        else:
+            print(f"{'Feature name':<{column_width}}{'Feature importances':<23}{'Feature rank':<15}")
+            for idx in id_order:
+                print(f"{printed_name[idx]:<{column_width}}{self.feature_importances_[idx]:<23.8f}{rank_dict[idx]:<15}")
 
 ############################# ReliefF ############################################
 

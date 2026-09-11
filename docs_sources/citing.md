@@ -1,10 +1,13 @@
-If you use **scikit-rebate** or the **MultiSURF** algorithm in a scientific publication, please consider citing the following paper (currently available as a pre-print in arXiv):
+<!-- when new paper is published, add that paper and say "if you use SWRF, MultiSWRF/MultiSWRF*, or MultiSWRFDB/MultiSWRFDB*, cite the following paper" -->
+If you use **scikit-rebate** or the **MultiSURF** algorithm in a scientific publication, please consider citing the following paper:
 
-*Urbanowicz, Ryan J., Randal S. Olson, Peter Schmitt, Melissa Meeker, and Jason H. Moore. "Benchmarking relief-based feature selection methods." arXiv preprint arXiv:1711.08477 (2017).*
+<!-- *Urbanowicz, Ryan J., Randal S. Olson, Peter Schmitt, Melissa Meeker, and Jason H. Moore. "Benchmarking relief-based feature selection methods." arXiv preprint arXiv:1711.08477 (2017).* -->
+*Urbanowicz, Ryan J., Randal S. Olson, Peter Schmitt, Melissa Meeker, and Jason H. Moore. "Benchmarking relief-based feature selection methods for bioinformatics data mining." Journal of Biomedical Informatics, 85:168–188, 2018.*
 
 Alternatively a complete **review of Relief-based algorithms** is available at:
 
-*Urbanowicz, Ryan J., Melissa Meeker, William LaCava, Randal S. Olson, and Jason H. Moore. "Relief-based feature selection: introduction and review." arXiv preprint arXiv:1711.08421 (2017).*
+<!-- *Urbanowicz, Ryan J., Melissa Meeker, William LaCava, Randal S. Olson, and Jason H. Moore. "Relief-based feature selection: introduction and review." arXiv preprint arXiv:1711.08421 (2017).* -->
+*Urbanowicz, Ryan J., Melissa Meeker, William LaCava, Randal S. Olson, and Jason H. Moore. "Relief-based feature selection: introduction and review." Journal of Biomedical Informatics, 85:189–203, 2018.*
 
 To cite the **original Relief** paper:
 
@@ -16,7 +19,7 @@ To cite the **original ReliefF** paper:
 
 To cite the **original SURF** paper:
 
-*Greene, Casey S., Nadia M. Penrod, Jeff Kiralis, and Jason H. Moore. "Spatially uniform relieff (SURF) for computationally-efficient filtering of gene-gene interactions." BioData mining 2, no. 1 (2009): 5.*
+*Greene, Casey S., Nadia M. Penrod, Jeff Kiralis, and Jason H. Moore. "Spatially uniform relieff (SURF) for computationally-efficient filtering of gene-gene interactions." BioData Mining 2, no. 1 (2009): 5.*
 
 To cite the **original SURF\*** paper: 
 
@@ -25,6 +28,15 @@ To cite the **original SURF\*** paper:
 To cite the **original MultiSURF\*** paper:
 
 *Granizo-Mackenzie, Delaney, and Jason H. Moore. "Multiple threshold spatially uniform relieff for the genetic analysis of complex human diseases." In European Conference on Evolutionary Computation, Machine Learning and Data Mining in Bioinformatics, pp. 1-10. Springer, Berlin, Heidelberg, 2013.*
+
+<!-- Add citations for SWRF* and μ-Relief below -->
+To cite the **original SWRF\*** paper:
+
+*Stokes, Matthew E., and Shyam Visweswaran. "Application of a spatially-weighted relief algorithm for ranking genetic predictors of disease." BioData Mining, 5:20, 2012.*
+
+To cite the **original μ-Relief** paper:
+
+*Aggarwal, Nitisha, Unmesh Shukla, G. J. Saxena, et al. "Mean based relief: An improved feature selection method based on relieff." Applied Intelligence, 53:23004–23028, 2023.*
 
 To cite the **original TuRF** paper: 
 

@@ -3,8 +3,7 @@ import copy
 import numpy as np
 
 class TURF(BaseEstimator):
-
-    def __init__(self,relief_object,pct=0.5,num_scores_to_return=100):
+    def __init__(self, relief_object, pct=0.5, num_scores_to_return=100):
         '''
         :param relief_object:           Must be an object that implements the standard sklearn fit function, and after fit, has attributes feature_importances_
                                         and top_features_ that can be accessed. Scores must be a 1D np.ndarray of length # of features.
@@ -43,99 +42,62 @@ class TURF(BaseEstimator):
             raise Exception('num_scores_to_return != num_features and pct == 1. TURF will never reach your intended destination.')
 
         #Find out out how many features to use in each iteration
-        features_per_iteration = self.get_features_per_iteration(num_features,self.pct,self.num_scores_to_return)
+        current_features = list(range(num_features))
+        eliminated_tiers = []
 
-        #Iterate runs
-        binary_scores_existence_tracker = np.ones(num_features) #1 means score still left
+        N = int(1 / float(self.pct)) if self.check_is_float(self.pct) else num_features // self.pct
+        for i in range(N):
+            X_subset = X[:, current_features]
+            relief = copy.deepcopy(self.relief_object)
+            relief.fit(X_subset, y)
 
-        copy_relief_object = copy.deepcopy(self.relief_object)
-        copy_relief_object.fit(X, y)
-        features_per_iteration.pop(0)
-        for num_features_to_use_in_iteration in features_per_iteration:
-            #Find top raw features indices
-            best_raw_indices = copy_relief_object.top_features_[:num_features_to_use_in_iteration]
+            importances = relief.feature_importances_
+            ranks = np.argsort(importances)[::-1]
+            keep_count = int(np.ceil(len(current_features) * (1 - self.pct)))
+            keep_indices = sorted(ranks[:keep_count])
+            eliminate_indices = [j for j in range(len(current_features)) if j not in keep_indices]
 
-            #Map raw features indices to original feature indices array
-            onesCounter = 0
-            copy_tracker = copy.deepcopy(binary_scores_existence_tracker)
-            for i in range(len(binary_scores_existence_tracker)):
-                if not (onesCounter in best_raw_indices):
-                    binary_scores_existence_tracker[i] = 0
-                if copy_tracker[i] == 1:
-                    onesCounter+=1
+            eliminated_tiers.append([current_features[j] for j in eliminate_indices])
+            current_features = [current_features[j] for j in keep_indices]
 
-            #Get new X
-            new_indices = []
-            for i in range(len(binary_scores_existence_tracker)):
-                if binary_scores_existence_tracker[i] == 1:
-                    new_indices.append(i)
+            if len(current_features) <= self.num_scores_to_return:
+                break
 
-            ###DEBUGGING
-            # print(num_features_to_use_in_iteration)
-            # print(best_raw_indices)
-            # print(binary_scores_existence_tracker)
-            # print(new_indices)
-            # print()
+        # Final round on the reduced set
+        X_final = X[:, current_features]
+        relief = copy.deepcopy(self.relief_object)
+        relief.fit(X_final, y)
+        final_scores = relief.feature_importances_
 
-            new_X = X[:,new_indices]
+        # Build full-length feature_importances_ with tier scores for eliminated features
+        full_scores = np.zeros(num_features)
+        full_scores[current_features] = final_scores
 
-            #fit
-            copy_relief_object = copy.deepcopy(self.relief_object)
-            copy_relief_object.fit(new_X, y)
+        # Tier score fallback
+        min_score = min(final_scores)
+        max_score = max(final_scores)
+        score_range = max_score - min_score if max_score != min_score else 1.0
+        tier_penalty = 0.01 * score_range
 
-        #Return remaining scores in their original indices, having zeros for the rest
-        raw_scores = copy_relief_object.feature_importances_
-        counter = 0
-        for i in range(len(binary_scores_existence_tracker)):
-            if binary_scores_existence_tracker[i] == 1:
-                binary_scores_existence_tracker[i] = raw_scores[counter]
-                counter += 1
+        for k, tier in enumerate(reversed(eliminated_tiers)):
+            tier_score = min_score - tier_penalty * (k + 1)
+            for idx in tier:
+                full_scores[idx] = tier_score
 
-        # Save FI as feature_importances_
-        self.feature_importances_ = binary_scores_existence_tracker
-
-        if self.rank_absolute:
-            self.top_features_ = np.argsort(np.absolute(self.feature_importances_))[::-1]
-        else:
-            self.top_features_ = np.argsort(self.feature_importances_)[::-1]
-
+        self.feature_importances_ = full_scores
+        self.top_features_ = np.argsort(np.abs(full_scores) if self.rank_absolute else full_scores)[::-1]
         return self
 
-    def get_features_per_iteration(self,num_features,pct,num_scores_to_return):
-        features_per_iteration = [num_features]
-        features_left = num_features
-        if num_features != num_scores_to_return:
-            if self.check_is_int(pct):  # Is int
-                while True:
-                    if features_left - pct > num_scores_to_return:
-                        features_left -= pct
-                        features_per_iteration.append(features_left)
-                    else:
-                        features_per_iteration.append(num_scores_to_return)
-                        break
-            else:  # Is float
-                while True:
-                    if int(features_left * pct) > num_scores_to_return:
-                        features_left = int(features_left * pct)
-                        features_per_iteration.append(features_left)
-                    else:
-                        features_per_iteration.append(num_scores_to_return)
-                        break
-        return features_per_iteration
 
     def check_is_int(self, num):
         try:
-            n = float(num)
-            if num - int(num) == 0:
-                return True
-            else:
-                return False
+            return float(num).is_integer()
         except:
             return False
 
     def check_is_float(self, num):
         try:
-            n = float(num)
+            float(num)
             return True
         except:
             return False

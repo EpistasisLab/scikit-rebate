@@ -1,0 +1,13 @@
+name: testenv
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - numpy
+  - scipy
+  - scikit-learn
+  - pandas
+  - cython
+  - pip
+  - pip:
+      - pytest

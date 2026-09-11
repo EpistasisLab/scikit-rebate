@@ -25,7 +25,7 @@ You can retrieve basic information about your installed version of skrebate with
 pip show skrebate
 ```
 
-You can check that you have the most up to date pypi release of skrebate with the following pip command:
+You can check that you have the most up-to-date pypi release of skrebate with the following pip command:
 
 ```
 pip install skrebate -U
