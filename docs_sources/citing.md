@@ -1,13 +1,17 @@
+If you use scikit-rebate v0.8.0 or later and/or the SWRF, MultiSWRF*, MultiSWRF, MultiSWRFDB*, or MultiSWRFDB algorithms in a scientific publication, please consider citing the following paper (currently on arxiv):
+
+*Kia Kazemi-Nia, Harsh Bandhey, Philip J. Freda, Ryan J. Urbanowicz (2026). Advancing Interaction-Sensitive Feature Selection: Novel Relief-Based Algorithms, Expanded Comparisons, and Recommendations for Biomedical Data Mining. arXiv preprint arXiv:2608.28552, 2026*
+
 <!-- when new paper is published, add that paper and say "if you use SWRF, MultiSWRF/MultiSWRF*, or MultiSWRFDB/MultiSWRFDB*, cite the following paper" -->
 If you use **scikit-rebate** or the **MultiSURF** algorithm in a scientific publication, please consider citing the following paper:
 
 <!-- *Urbanowicz, Ryan J., Randal S. Olson, Peter Schmitt, Melissa Meeker, and Jason H. Moore. "Benchmarking relief-based feature selection methods." arXiv preprint arXiv:1711.08477 (2017).* -->
-*Urbanowicz, Ryan J., Randal S. Olson, Peter Schmitt, Melissa Meeker, and Jason H. Moore. "Benchmarking relief-based feature selection methods for bioinformatics data mining." Journal of Biomedical Informatics, 85:168–188, 2018.*
+*Ryan J. Urbanowicz, Randal S. Olson, Peter Schmitt, Melissa Meeker, and Jason H. Moore. "Benchmarking relief-based feature selection methods for bioinformatics data mining." Journal of Biomedical Informatics, 85:168–188, 2018.*
 
 Alternatively a complete **review of Relief-based algorithms** is available at:
 
 <!-- *Urbanowicz, Ryan J., Melissa Meeker, William LaCava, Randal S. Olson, and Jason H. Moore. "Relief-based feature selection: introduction and review." arXiv preprint arXiv:1711.08421 (2017).* -->
-*Urbanowicz, Ryan J., Melissa Meeker, William LaCava, Randal S. Olson, and Jason H. Moore. "Relief-based feature selection: introduction and review." Journal of Biomedical Informatics, 85:189–203, 2018.*
+*Ryan J. Urbanowicz, Melissa Meeker, William LaCava, Randal S. Olson, and Jason H. Moore. "Relief-based feature selection: introduction and review." Journal of Biomedical Informatics, 85:189–203, 2018.*
 
 To cite the **original Relief** paper:
 

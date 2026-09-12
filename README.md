@@ -14,7 +14,7 @@ Package information: ![Python 3.9](https://img.shields.io/badge/python-3.9-blue.
 
 # scikit-rebate
 
-Note: Ongoing development and maintenance of scikit-rebate will be managed by the [UrbsLab](https://github.com/UrbsLab/scikit-rebate). 
+Note: Ongoing development and maintenance of scikit-rebate will be managed by the [UrbsLab](https://github.com/UrbsLab/scikit-rebate) with periodic updates to the orginal [EpistasisLab](https://github.com/EpistasisLab/scikit-rebate) repository.
 
 This package includes a scikit-learn-compatible Python implementation of ReBATE, a suite of [Relief-based feature selection algorithms](<https://en.wikipedia.org/wiki/Relief_(feature_selection)>) (RBAs) for machine learning. These Relief-based algorithms (RBAs) are designed for feature weighting/selection as part of a machine learning pipeline (supervised learning). These algorithms offer a computationally efficient way to perform feature selection that is sensitive to feature interactions as well as simple univariate associations, unlike most currently available filter-based feature selection methods. The main benefit of Relief-based algorithms is that they identify feature interactions without having to exhaustively check every pairwise interaction, thus taking significantly less time than exhaustive pairwise search.
 
@@ -176,11 +176,24 @@ We welcome you to [check the existing issues](https://github.com/UrbsLab/scikit-
 Please refer to our [contribution guidelines](https://UrbsLab.github.io/scikit-rebate/contributing/) prior to working on a new feature or bug fix.
 
 ## Citing scikit-rebate
-Please note that a new manuscript on this updated ReBATE package has been recently submitted for publication.  In the meantime, if you use scikit-rebate in a scientific publication, please consider citing the following paper:
+If you use scikit-rebate in a scientific publication, please consider citing one of the following papers and include the version/release used:
+
+The most recent manuscript on scikit-rebate (as of 2026) is on arxiv, and is currently under review for publication.  
+
+Kia Kazemi-Nia, Harsh Bandhey, Philip J. Freda, Ryan J. Urbanowicz (2026). Advancing Interaction-Sensitive Feature Selection: Novel Relief-Based Algorithms, Expanded Comparisons, and Recommendations for Biomedical Data Mining. [Preprint on arxiv](https://arxiv.org/abs/2608.28552)
+
+```bibtex
+@article{kazemi2026advancing,
+  title={Advancing Interaction-Sensitive Feature Selection: Novel Relief-Based Algorithms, Expanded Comparisons, and Recommendations for Biomedical Data Mining},
+  author={Kazemi-Nia, Kia and Bandhey, Harsh and Freda, Philip J and Urbanowicz, Ryan J},
+  journal={arXiv preprint arXiv:2608.28552},
+  year={2026}
+}
+```
+
+The original 2018 publication on scikit-rebate is:
 
 Ryan J. Urbanowicz, Randal S. Olson, Peter Schmitt, Melissa Meeker, Jason H. Moore (2018). Benchmarking Relief-Based Feature Selection Methods for Bioinformatics Data Mining. _Journal of Biomedical Informatics_, 85, 168-188. DOI: [10.1016/j.jbi.2018.07.015](https://doi.org/10.1016/j.jbi.2018.07.015)
-
-### BibTeX entry:
 
 ```bibtex
 @article{Urbanowicz2018Benchmarking,
