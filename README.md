@@ -14,7 +14,7 @@ Package information: ![Python 3.9](https://img.shields.io/badge/python-3.9-blue.
 
 # scikit-rebate
 
-Note: Ongoing development and maintenance of scikit-rebate will be managed by the [UrbsLab](https://github.com/UrbsLab/scikit-rebate). 
+Note: Ongoing development and maintenance of scikit-rebate will be managed by the [UrbsLab](https://github.com/UrbsLab/scikit-rebate) with periodic updates to the orginal [EpistasisLab](https://github.com/EpistasisLab/scikit-rebate) repository.
 
 This package includes a scikit-learn-compatible Python implementation of ReBATE, a suite of [Relief-based feature selection algorithms](<https://en.wikipedia.org/wiki/Relief_(feature_selection)>) (RBAs) for machine learning. These Relief-based algorithms (RBAs) are designed for feature weighting/selection as part of a machine learning pipeline (supervised learning). These algorithms offer a computationally efficient way to perform feature selection that is sensitive to feature interactions as well as simple univariate associations, unlike most currently available filter-based feature selection methods. The main benefit of Relief-based algorithms is that they identify feature interactions without having to exhaustively check every pairwise interaction, thus taking significantly less time than exhaustive pairwise search.
 
